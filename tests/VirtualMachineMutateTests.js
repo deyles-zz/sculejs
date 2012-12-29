@@ -1,6 +1,7 @@
 var sculedb = require('../lib/com.scule.db.parser');
 var db      = require('../lib/com.scule.db');
 var vm      = require('../lib/com.scule.db.vm');
+var build   = require('../lib/com.scule.db.builder');
 var inst    = require('../lib/com.scule.instrumentation');
 var jsunit  = require('../lib/com.scule.jsunit');
 
@@ -38,7 +39,7 @@ function testVirtualMachineSimpleMutation() {
     var mutate   = null;
     var program  = null;
     var machine  = vm.getVirtualMachine();
-    var compiler = vm.getQueryCompiler();
+    var compiler = build.getQueryCompiler();
     
     compiler.explainMutate({
         $set:{

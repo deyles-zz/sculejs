@@ -34,26 +34,6 @@ module.exports = {
     JSUNIT:{}
 };
 
-Object.defineProperty(global, '__stack', {
-    get: function(){
-        var orig = Error.prepareStackTrace;
-        Error.prepareStackTrace = function(_, stack){
-            return stack;
-        };
-        var err = new Error;
-        Error.captureStackTrace(err, arguments.callee.caller.caller);
-        var stack = err.stack;
-        Error.prepareStackTrace = orig;
-        return stack;
-    }
-});
-
-Object.defineProperty(global, '__line', {
-    get: function(){
-        return __stack[1].getLineNumber();
-    }
-});
-
 /**
  * @private
  * @type {Object}
@@ -63,7 +43,7 @@ module.exports.JSUNIT.variables = {
     tests: [],
     passed: 0,
     failed: 0,
-    filename: __filename
+    output: ''
 };
 
 /**
@@ -75,18 +55,17 @@ module.exports.JSUNIT.variables = {
  */
 function assert(caller, assertion, expected) {
     if(assertion === expected) {
-        process.stdout.write('.');
+        module.exports.JSUNIT.variables.output += '.';
         module.exports.JSUNIT.variables.passed++;
     } else {
-        process.stdout.write('F');  
+        module.exports.JSUNIT.variables.output += 'F';  
         module.exports.JSUNIT.variables.failed++;
     }
     module.exports.JSUNIT.variables.assertions.push({
         caller: caller.name,
         callee: arguments.callee.caller.name,
         assertion: assertion,
-        expected: expected,
-        line:__line
+        expected: expected
     });
 };
 
@@ -241,7 +220,7 @@ module.exports.resetTests = function(filename) {
         tests: [],
         passed: 0,
         failed: 0,
-        filename: filename
+        output: ''
     };    
 };
 
@@ -260,10 +239,11 @@ module.exports.runTests = function(callback) {
 
     module.exports.JSUNIT.variables.tests.forEach(function(test) {
         if(!callback) {
-            console.log('');
-            console.log('Running: ' + module.exports.JSUNIT.variables.filename + ':' + test.name);
+            Ti.API.info('');
+            Ti.API.info('Running: ' + test.name);
         }
         test();
+        console.log(module.exports.JSUNIT.variables.output);
     });
     
     if(callback) {
@@ -271,20 +251,18 @@ module.exports.runTests = function(callback) {
         return;
     }
     
-    console.log('');
-    console.log('ran ' + module.exports.JSUNIT.variables.tests.length + ' tests ' 
+    Ti.API.info('');
+    Ti.API.info('ran ' + module.exports.JSUNIT.variables.tests.length + ' tests ' 
         + 'with ' + module.exports.JSUNIT.variables.assertions.length + ' assertions, ' 
         + module.exports.JSUNIT.variables.passed + ' passed, ' 
         + module.exports.JSUNIT.variables.failed + ' failed');
 
     module.exports.JSUNIT.variables.assertions.forEach(function(assertion) {
         if(assertion.assertion !== assertion.expected) {
-            console.log('Failed: ' + module.exports.JSUNIT.variables.filename + ':' + assertion.caller + ', line ' + 
-                assertion.line + ': ' + assertion.callee + 
-                ', expected: ' + assertion.expected + ', got: ' + assertion.assertion);
+            Ti.API.info('Failed: ' + assertion.caller + ': ' + assertion.expected + ', got: ' + assertion.assertion);
         }
     });
     
-    console.log('---------------------------------------------');
-    console.log('');
+    Ti.API.info('---------------------------------------------');
+    Ti.API.info('');
 };

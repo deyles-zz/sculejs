@@ -1,4 +1,31 @@
 /**
+ * Copyright (c) 2013, Dan Eyles (dan@irlgaming.com)
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the <organization> nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
  * Global namespace definitions
  */
 (function() {
@@ -104,6 +131,15 @@
         $f:Scule.require('global').functions
     });
 
+    Scule.registerNamespace('builder', {
+        functions:{},
+        classes:{},
+        variables:{
+            line:0
+        },
+        instructions:{}
+    });
+
     Scule.registerNamespace('vm', {
         constants:Scule.require('global').constants,
         functions:{},
@@ -114,7 +150,6 @@
             index:{}
         },
         variables:{
-            line:0,
             inst:0
         },
         $f:Scule.require('global').functions,
@@ -432,6 +467,17 @@
 
 (function(){
     
+    /*!
+     * Joseph Myer's md5() algorithm wrapped in a self-invoked function to prevent
+     * global namespace polution, modified to hash unicode characters as UTF-8.
+     *  
+     * Copyright 1999-2010, Joseph Myers, Paul Johnston, Greg Holt, Will Bond <will@wbond.net>
+     * http://www.myersdaily.org/joseph/javascript/md5-text.html
+     * http://pajhome.org.uk/crypt/md5
+     * 
+     * Released under the BSD license
+     * http://www.opensource.org/licenses/bsd-license
+     */
     Scule.global.classes.md5 = function() {
 
         this.md5cycle = function(x, k) {
@@ -534,6 +580,9 @@
         };
 
         this.md51 = function(s) {
+            if (/[\x80-\xFF]/.test(s)) {
+                s = unescape(encodeURI(s));
+            }
             txt = '';
             var n = s.length,
             state = [1732584193, -271733879, -1732584194, 271733878], i;
@@ -680,13 +729,17 @@
         }
         for(var a in o) {
             if(typeof(o[a]) == "object") {
-                c[a] = Scule.global.functions.cloneObject(o[a]);
+                if(o[a] instanceof RegExp) {
+                    c[a] = new RegExp(o[a].source);
+                } else {
+                    c[a] = Scule.global.functions.cloneObject(o[a]);
+                }
             } else {
                 c[a] = o[a];
             }
         }
         return c;
-    }; 
+    };  
 
     /**
      * Traverses a JavaScript object given a datastructure representing the path to
@@ -778,11 +831,17 @@
      * @return integer
      */
     Scule.global.functions.sizeOf = function(o) {
-        var size = 0, key;
-        for (key in o) {
-            if (o.hasOwnProperty(key)) size++;
+        if(o instanceof Array || typeof(o) === 'string') {
+            return o.length;
+        } else {
+    
+            var size = 0, key;
+            for (key in o) {
+                if (o.hasOwnProperty(key)) size++;
+            }
+            return size;
         }
-        return size;
+        return null;
     };
 
     /**
@@ -1067,6 +1126,9 @@
      */
     Scule.global.functions.searchObject = function(keys, o) {
         var srch = function(ks, o, composite) {
+            if(!o) {
+                return;
+            }            
             for(var k in ks) {
                 if(ks[k] == true) {
                     if(Scule.global.functions.isInteger(k) && Scule.global.functions.isArray(o)) {
@@ -1088,6 +1150,28 @@
         return composite;
     };
 
+    /**
+     * Retrieves a single attribute from an object given a path statement (e.g 'a.b')
+     * @public
+     * @param {String} path
+     * @param {Object} object
+     * @returns {Mixed}
+     */
+    Scule.global.functions.traverse = function(path, object) {
+        var t = function(p, o) {
+            if(o === undefined) {
+                return undefined;
+            }
+            if(p.length == 1) {
+                return o[p.pop()];
+            } else {
+                var idx = p.shift();
+                return t(p, o[idx]);
+            }
+        };
+        return t(path.split('.'), object);
+    };
+
 }());
 
 /**
@@ -1096,7 +1180,7 @@
 (function() {
 
 
-        /**
+    /**
      * Represents a singly linked list. The list is terminated by a null pointer.
      * @public
      * @constructor
@@ -3195,7 +3279,7 @@
         this.sequentialSearch = function(key) {
             var index = this.indexSearch(key);
             var element = this.data[index];
-            if(index < this.data.length && element.key === key) {
+            if(index < this.data.length && element.key == key) {
                 return element;
             }
             return null;
@@ -3299,7 +3383,7 @@
                 });
             } else {
                 var element = this.data[index];
-                if(element.key === key) {
+                if(element.key == key) {
                     element.value = value;
                 } else if(element.key < key) {
                     this.data.splice(index + 1, 0, {
@@ -3331,7 +3415,7 @@
         this.remove = function(key, parent) {
             var index   = this.indexSearch(key);
             var element = this.data[index];        
-            if(index < this.data.length && element.key === key) {
+            if(index < this.data.length && element.key == key) {
                 this.data.splice(index, 1);
                 this.lookup.remove(key);
                 if(!parent) {
@@ -3473,49 +3557,58 @@
                 max = null;
             }            
             var curr  = this;
-            var erng  = function(min, max, key, range, value) {
-                range.splice(range.length, 0, value);
-            };
-            var lrng  = function(min, max, key, range, value) {
-                if(key > min) {
-                    range.splice(range.length, 0, value);
-                }
-            };
-            var rrng  = function(min, max, key, range, value) {
-                if(value < key) {
-                    range.splice(range.length, 0, value);
-                }
-            };
-            var errng  = function(min, max, key, range, value) {
-                if(value <= key) {
-                    range.splice(range.length, 0, value);
-                }
-            };
-            var irng  = function(min, max, key, range, value) {
-                if(key > min) {
-                    if(max !== null) {
-                        if(key < max) {
-                            return range.concat(value);
+            var rng   = null;
+            if(includeMin && includeMax) {
+                rng = function(min, max, key, range, value) {
+                    if(min === null) {
+                        if(key <= max) {
+                            range = range.concat(value);
+                        }
+                    } else if(max === null) {
+                        if(key >= min) {
+                            range = range.concat(value);
                         }
                     } else {
-                        return range.concat(value);
+                        if(key >= min && key <= max) {
+                            range = range.concat(value);
+                        }
                     }
-                }
-                return range;
-            };
-            var rng;
-            if(includeMin && includeMax) {
-                rng = erng;
+                    return range;
+                };
             } else if(includeMin) {
-                if(!max) {
-                    rng = errng;
-                } else {
-                    rng = rrng;
-                }
-            } else if(includeMax) {
-                rng = lrng;
-            } else {
-                rng = irng;
+                rng = function(min, max, key, range, value) {
+                    if(min === null) {
+                        if(key < max) {
+                            range = range.concat(value);
+                        }
+                    } else if(max === null) {
+                        if(key >= min) {
+                            range = range.concat(value);
+                        }
+                    } else {
+                        if(key >= min && key < max) {
+                            range = range.concat(value);
+                        }
+                    }
+                    return range;
+                };
+            } else { // includeMax
+                rng = function(min, max, key, range, value) {
+                    if(min === null) {
+                        if(key <= max) {
+                            range = range.concat(value);
+                        }
+                    } else if(max === null) {
+                        if(key > min) {
+                            range = range.concat(value);
+                        }
+                    } else {
+                        if(key > min && key <= max) {
+                            range = range.concat(value);
+                        }
+                    }
+                    return range;
+                };            
             }
             var range = [];
                 outer:
@@ -3531,7 +3624,7 @@
                             if(max !== null && data[i].key > max) {
                                 break outer;
                             }
-                            rng(min, max, data[i].key, range, data[i].value);
+                            range = rng(min, max, data[i].key, range, data[i].value);
                         }
                     }
                     curr = curr.getRight();
@@ -4520,7 +4613,7 @@
  */
 (function() {
 
-        /**
+    /**
      * A simple timer for instrumenting intervals during program execution
      * @public
      * @constructor
@@ -5071,7 +5164,7 @@
                 /**
                  * Handle a scalar value - this is for implicit AND-s
                  */
-                if(Scule.global.functions.isScalar(query)) {
+                if(Scule.global.functions.isScalar(query) || query instanceof RegExp) {
                     if(type == Scule.parser.arities.variable || type == Scule.parser.arities.selective) {
                         token = new Scule.parser.classes.QueryOperator('$eq', Scule.parser.arities.binary);
                         scope.peek().addChild(token);
@@ -5210,16 +5303,13 @@
     
 }());
 
-/**
- * Virtual Machine
- */
 (function() {
-
+    
     /**
      * @private
      * @type {Object}
      */
-    Scule.vm.instructions.table = {
+    Scule.builder.instructions.table = {
         'halt':     0x00,
         'and':      0x01,
         'or':       0x02,
@@ -5271,17 +5361,59 @@
      * @private
      * @type {Object}
      */
-    Scule.vm.instructions.index = {
-        'find':  true,
-        'range': true,
-        'scan':  true
+    Scule.builder.instructions.lookup = {
+        0x00: 'halt',
+        0x01: 'and',
+        0x02: 'or',
+        0x03: 'nor',
+        0x04: 'not',
+        0x05: 'lt',
+        0x06: 'lte',
+        0x07: 'gt',
+        0x08: 'gte',
+        0x09: 'all',
+        0xA:  'in',
+        0xB:  'nin',
+        0xC:  'eq',
+        0xD:  'ne',
+        0xE:  'size',
+        0xF:  'exists',
+        0x10: 'within',
+        0x11: 'near',
+        0x12: 'set',
+        0x13: 'unset',
+        0x14: 'inc',
+        0x15: 'opull',
+        0x16: 'opullall',
+        0x17: 'opop',
+        0x18: 'opush',
+        0x19: 'opushall',
+        0x1A: 'break',
+        0x1B: 'find',
+        0x1C: 'scan',
+        0x1D: 'range',
+        0x1E: 'push',
+        0x1F: 'pop',
+        0x20: 'shift',
+        0x21: 'store',
+        0x22: 'merge',
+        0x23: 'intersect',
+        0x24: 'start',
+        0x25: 'jump',
+        0x26: 'goto',
+        0x27: 'read',
+        0x28: 'transpose',
+        0x29: 'limit',
+        0x2A: 'sort',
+        0x2B: 'rread',
+        0x2C: 'rindex'
     };
 
     /**
      * @private
      * @type {Object}
      */
-    Scule.vm.instructions.mapping = {
+    Scule.builder.instructions.mapping = {
         $eq:     'eq',
         $ne:     'ne',
         $gt:     'gt',
@@ -5310,6 +5442,16 @@
     };
 
     /**
+     * @private
+     * @type {Object}
+     */
+    Scule.builder.instructions.index = {
+        'find':  true,
+        'range': true,
+        'scan':  true
+    };
+
+    /**
      * A simple visitor pattern implementation
      * This object modifies a Scule QueryTree AST and replaces nodes covered by indices
      * with QueryIndex instances.
@@ -5320,7 +5462,7 @@
      * @param {Collection} collection
      * @returns {Void}
      */
-    Scule.vm.classes.QueryTreeIndexSelectionVisitor = function(collection) {
+    Scule.builder.classes.QueryTreeIndexSelectionVisitor = function(collection) {
 
         /**
          * @private
@@ -5353,7 +5495,6 @@
          * @returns {Void}
          */
         this.visit = function(tree) {
-
             var newRoot = Scule.global.functions.cloneObject(tree.getRoot());
             try {
                 this.visitNode(newRoot);
@@ -5361,7 +5502,6 @@
                 return;
             }
             tree.setRoot(newRoot);
-
         };    
 
         /**
@@ -5573,358 +5713,15 @@
     };
 
     /**
-     * Represents a program as a series of linked "blocks" during the 
-     * bytecode compilation process
-     * @public
-     * @constructor
-     * @class {SculeProgram}
-     * @returns {Void}
-     */
-    Scule.vm.classes.SculeProgram = function() {
-
-        /**
-         * @private
-         * @type {Array}
-         */
-        this.blocks = [];
-
-        /**
-         * @private
-         * @type {SculeProgramBlock}
-         */
-        this.last   = null;
-
-        /**
-         * @private
-         * @type {LIFOStack}
-         */
-        this.scope  = Scule.getLIFOStack();
-
-        /**
-         * @private
-         * @type {Number}
-         */
-        this.limit  = null;
-
-        /**
-         * @private
-         * @type {String}
-         */
-        this.sortk  = null;
-
-        /**
-         * @private
-         * @type {Number}
-         */
-        this.sortt  = null;
-
-        /**
-         * Sets the limit clause value for the program
-         * @public
-         * @param {Number} limit
-         * @returns {Void}
-         */
-        this.setLimit = function(limit) {
-            this.limit = limit;
-        };
-
-        /**
-         * Sets the sort condition clause value for the program
-         * @public
-         * @param {String} key the key sort on
-         * @param (Number} type the sort type constant value
-         * @returns {Void}
-         */
-        this.setSort = function(key, type) {
-            this.sortk = key;
-            this.sortt = type;
-        };
-
-        /**
-         * Opens a code block
-         * @public
-         * @returns {Void}
-         */
-        this.openBlock = function() {
-            var block = new Scule.vm.classes.SculeProgramBlock();
-            this.blocks.push(block);
-            this.scope.push(block);
-        };
-
-        /**
-         * Opens a loop code block - loops are slighly different to other blocks
-         * @public
-         * @returns {Void}
-         */
-        this.openLoopBlock = function() {
-            var block = new Scule.vm.classes.SculeProgramLoop();
-            this.blocks.push(block);
-            this.scope.push(block);        
-        };
-
-        /**
-         * Opens a sub-block within the currently open block
-         * @public
-         * @returns {Void}
-         */
-        this.openSubBlock = function() {
-            this.scope.push(this.scope.peek().openSubBlock());
-        };
-
-        /**
-         * Closes the current block
-         * @public
-         * @returns {Void}
-         */
-        this.closeBlock = function() {
-            if(this.scope.peek().hasSubBlocks()) {
-                this.scope.peek().closeSubBlock();
-            } else {
-                this.scope.pop();
-            }
-        };
-
-        /**
-         * Adds an instruction to the current block
-         * @public
-         * @param {String} opcode the opcode for the instruction (e.g. halt, jump, goto)
-         * @param {Array} args the arguments for the instruction
-         * @returns {Void}
-         */
-        this.addInstruction = function(opcode, args) {
-            Scule.vm.variables.inst++;
-            var instruction = new Scule.vm.classes.SculeInstruction(opcode, args);
-            if(!(opcode in Scule.vm.instructions.index) && (this.last.opcode in Scule.vm.instructions.index)) {
-                this.scope.peek().addInstruction(new Scule.vm.classes.SculeInstruction('intersect', []));
-                this.scope.peek().addInstruction(new Scule.vm.classes.SculeInstruction('store', []));
-                this.openLoopBlock();
-            }
-            this.scope.peek().addInstruction(instruction);
-            this.last = instruction;
-        };
-
-        /**
-         * Returns a bytecode representation of the program
-         * @public
-         * @returns {Array}
-         */
-        this.toByteCode = function() {
-            Scule.vm.variables.line = 0;
-            var code = [];
-            this.blocks.forEach(function(block) {
-                code = code.concat(block.toByteCode());
-            });
-            if(this.last.opcode in Scule.vm.instructions.index) {
-                code.push(new Scule.vm.classes.SculeInstruction('intersect', []).toByteCode());
-                code.push(new Scule.vm.classes.SculeInstruction('store', []).toByteCode());
-                code.push(new Scule.vm.classes.SculeInstruction('transpose', []).toByteCode());
-            }
-            if(this.sortk !== null) {
-                code.push((new Scule.vm.classes.SculeInstruction('sort', [this.sortk, this.sortt])).toByteCode());
-            }
-            if(this.limit !== null) {
-                code.push((new Scule.vm.classes.SculeInstruction('limit', [this.limit])).toByteCode());
-            }
-            code.push((new Scule.vm.classes.SculeInstruction('halt', [])).toByteCode());
-            return code;
-        };
-
-        /**
-         * Prints a human readable representation of the program to the console
-         * @public
-         * @returns {Void}
-         */
-        this.explain = function() {
-            Scule.vm.variables.line = 0;
-            this.blocks.forEach(function(block) {
-                block.explain();
-            });
-            if(this.last.opcode in Scule.vm.instructions.index) {
-                (new Scule.vm.classes.SculeInstruction('intersect', [])).explain();
-                (new Scule.vm.classes.SculeInstruction('store', [])).explain();
-                (new Scule.vm.classes.SculeInstruction('transpose', [])).explain();
-            }
-            if(this.sortk !== null) {
-                (new Scule.vm.classes.SculeInstruction('sort', [this.sortk, this.sortt])).explain();
-            }
-            if(this.limit !== null) {
-                (new Scule.vm.classes.SculeInstruction('limit', [this.limit])).explain();
-            }        
-            (new Scule.vm.classes.SculeInstruction('halt', [])).explain(); 
-        };
-
-    };
-
-    /**
-     * Represents a block of instructions in a Scule bytecode program
-     * @public
-     * @constructor
-     * @class {SculeProgramBlock}
-     * @returns {Void}
-     */
-    Scule.vm.classes.SculeProgramBlock = function() {
-
-        /**
-         * @private
-         * @type {Array}
-         */
-        this.instructions = [];
-
-        /**
-         * @private
-         * @type {Array}
-         */    
-        this.blocks       = [];
-
-        /**
-         * @private
-         * @type LIFOStack
-         */
-        this.scope        = Scule.getLIFOStack();
-
-        /**
-         * Adds an instruction to the program block
-         * @public
-         * @param {SculeInstruction} the instruction to add to the block
-         * @returns {Void}
-         */
-        this.addInstruction = function(instruction) {
-            this.instructions.push(instruction);
-        };
-
-        /**
-         * Opens a nested sub-block
-         * @returns {SculeProgramBlock}
-         */
-        this.openSubBlock = function() {
-            var block = new Scule.vm.classes.SculeProgramBlock();
-            this.blocks.push(block);
-            this.scope.push(block);
-            return block;        
-        };
-
-        /**
-         * Closes the last opened nested sub-block
-         * @return {Void}
-         */
-        this.closeSubBlock = function() {
-            this.scope.pop();
-        };
-
-        /**
-         * Returns a {Boolean} value indicating whether or not the block has any
-         * nested sub-blocks
-         * @return {Boolean}
-         */
-        this.hasSubBlocks = function() {
-            return this.blocks.length > 0;
-        };
-
-        /**
-         * Returns an {Array} of bytecode instructions
-         * @returns {Array}
-         */
-        this.toByteCode = function() {
-            var code = [];
-            this.instructions.forEach(function(instruction) {
-                code = code.concat([instruction.toByteCode()]);
-            });
-            this.blocks.forEach(function(block) {
-                code = code.concat(block.toByteCode());
-            });        
-            return code;
-        };
-
-        /**
-         * Prints a human readable version of the block to the console
-         * @returns {Void}
-         */
-        this.explain = function() {
-            this.instructions.forEach(function(instruction) {
-                instruction.explain();
-            });
-            this.blocks.forEach(function(block) {
-                block.explain();
-            });        
-        };
-
-    };
-
-    /**
-     * Represents a loop construct in the context of a Scule bytecode program
-     * @public
-     * @constructor
-     * @class {SculeProgramLoop}
-     * @extends {SculeProgramBlock}
-     * @returns {Void}
-     */
-    Scule.vm.classes.SculeProgramLoop = function() {
-
-        Scule.vm.classes.SculeProgramBlock.call(this);
-
-        this.instructions.push(new Scule.vm.classes.SculeInstruction('read', []));
-        Scule.vm.variables.inst++;
-
-        /**
-         * @private
-         * @type {Number}
-         */
-        this.readIndex = Scule.vm.variables.inst;
-
-        /**
-         * Returns an {Array} of bytecode instructions
-         * @returns {Array}
-         */
-        this.toByteCode = function() {
-            var code = [];
-            this.instructions.forEach(function(instruction) {
-                code = code.concat([instruction.toByteCode()]);
-            });
-            this.blocks.forEach(function(block) {
-                code = code.concat(block.toByteCode());
-            });
-            var ands = (this.instructions.length - 1) + this.blocks.length;
-            if(ands > 1 && (this.instructions[this.instructions.length - 1].opcode !== 'or' || this.blocks.length > 0)) {
-                code.push((new Scule.vm.classes.SculeInstruction('and', [ands])).toByteCode());
-            }
-            code.push((new Scule.vm.classes.SculeInstruction('shift', [])).toByteCode());
-            code.push((new Scule.vm.classes.SculeInstruction('jump', [Scule.vm.variables.line + 2])).toByteCode());
-            code.push((new Scule.vm.classes.SculeInstruction('goto', [this.readIndex])).toByteCode());        
-            return code;
-        };
-
-        /**
-         * Prints a human readable version of the block to the console
-         * @returns {Void}
-         */
-        this.explain = function() {
-            this.instructions.forEach(function(instruction) {
-                instruction.explain();
-            });
-            this.blocks.forEach(function(block) {
-                block.explain();
-            });
-            var ands = (this.instructions.length - 1) + this.blocks.length;
-            if(ands > 1 && (this.instructions[this.instructions.length - 1].opcode !== 'or' || this.blocks.length > 0)) {
-                (new Scule.vm.classes.SculeInstruction('and', [ands])).explain();
-            }
-            (new Scule.vm.classes.SculeInstruction('shift', [])).explain();
-            (new Scule.vm.classes.SculeInstruction('jump', [Scule.vm.variables.line + 2])).explain();
-            (new Scule.vm.classes.SculeInstruction('goto', [this.readIndex])).explain();        
-        };
-
-    };
-
-    /**
      * Represents a bytecode instruction
      * @public
      * @constructor
-     * @class {SculeInstruction}
+     * @class {ProgramInstruction}
      * @param {String} opcode the opcode for the instruction
      * @param {Array} args the parameters for the instruction
      * @returns {Void}
      */
-    Scule.vm.classes.SculeInstruction = function(opcode, args) {
+    Scule.builder.classes.ProgramInstruction = function(opcode, args) {
 
         /**
          * @private
@@ -5940,32 +5737,795 @@
 
         /**
          * Returns an {Array} of bytecode instructions
+         * @public
          * @returns {Array}
          */
         this.toByteCode = function() {
-            var self = this;
-            Scule.vm.variables.line++
-            return [Scule.vm.instructions.table[self.opcode], args];
+            Scule.builder.variables.line++;
+            return [Scule.builder.instructions.table[this.opcode], args];
         };
 
         /**
          * Prints a human readable version of the block to the console
+         * @public
          * @returns {Void}
          */
         this.explain = function() {
-            var args = [];
+            var a = [];
             this.args.forEach(function(arg) {
+                if(!arg) {
+                    return;
+                }
                 if(Scule.global.functions.isScalar(arg)) {
-                    args.push(arg);
+                    a.push(arg);
                 } else {
                     if('getName' in arg) {
-                        args.push(arg.getName()); 
+                        a.push(arg.getName()); 
                     } else {
-                        args.push(arg); 
+                        a.push(arg); 
                     }
                 }
             });
-            console.log((Scule.vm.variables.line++) + ' ' + this.opcode + ' ' + ((args.length > 0) ? JSON.stringify(args) : ''));
+            var encoded = '';
+            if(a.length > 0) {
+                try {
+                    encoded = JSON.stringify(a);
+                } catch (e) {
+                    encoded = a[0].getName();
+                }
+            }
+            console.log((Scule.builder.variables.line++) + ' ' + this.opcode + ' ' + encoded);
+        };
+
+    };
+
+    /**
+     * Represents a block of bytecode instructions in a scule program
+     * @public
+     * @constructor
+     * @class {ProgramBlock}
+     * @param {String} operand
+     * @returns {Void}
+     */
+    Scule.builder.classes.ProgramBlock = function(operand) {
+
+        /**
+         * @private
+         * @type {String}
+         */
+        this.operand      = operand;
+
+        /**
+         * @private
+         * @type {Array}
+         */
+        this.children     = [];
+
+        /**
+         * @private
+         * @type {Array}
+         */
+        this.instructions = [];
+
+        /**
+         * @private
+         * @type {LIFOStack}
+         */
+        this.scope = Scule.getLIFOStack();
+        this.scope.push(this);
+
+        /**
+         * Adds a sub-block to the current block
+         * @public
+         * @param {ProgramBlock} block
+         * @returns {Void}
+         */
+        this.addSubBlock = function(block) {
+            this.children.push(block);
+        };
+
+        /**
+         * Adds a new instruction to the block
+         * @public
+         * @param {String} opcode
+         * @param {Array} args
+         * @returns {Void}
+         */
+        this.addInstruction = function(opcode, args) {
+            this.scope.peek().instructions.push(new Scule.builder.classes.ProgramInstruction(opcode, args));
+        };
+
+        this.startBlock = function() {
+            var block = new Scule.builder.classes.ProgramBlock();
+            this.scope.peek().addSubBlock(block);
+            this.scope.push(block);        
+        };
+
+        /**
+         * Starts a header block
+         * @public
+         * @returns {Void}
+         */
+        this.startHeadBlock = function() {
+            var block = new Scule.builder.classes.ProgramBlock('head');
+            this.scope.peek().addSubBlock(block);
+            this.scope.push(block);
+        };
+
+        /**
+         * Starts a scan block
+         * @public
+         * @param {Collection} collection
+         * @param {Array} args
+         * @returns {Void}
+         */
+        this.startScanBlock  = function(collection, args) {
+            this.scope.peek().addInstruction('scan', [collection, args]);
+        };
+
+        /**
+         * Starts a find block
+         * @public
+         * @param {Index} index
+         * @param {Array} args
+         * @returns {Void}
+         */
+        this.startFindBlock = function(index, args) {
+            this.scope.peek().addInstruction('find', [index, args]);
+        };
+
+        /**
+         * Starts a range block
+         * @public
+         * @param {Index} index
+         * @param {Array} args
+         * @returns {Void}
+         */
+        this.startRangeBlock = function(index, args) {
+            this.scope.peek().addInstruction('range', [index, args]);
+        };
+
+        /**
+         * Starts a block of AND-ed logical expressions. Stack based logical operations
+         * use postfix polish notation http://en.wikipedia.org/wiki/Reverse_Polish_notation
+         * @public
+         * @returns {Void}
+         */
+        this.startAndBlock = function() {
+            var block = new Scule.builder.classes.ProgramAndBlock();
+            this.scope.peek().addSubBlock(block);
+            this.scope.push(block);        
+        };
+
+        /**
+         * Starts a block of OR-ed logical expressions. Stack based logical operations
+         * use postfix polish notation http://en.wikipedia.org/wiki/Reverse_Polish_notation
+         * @public
+         * @returns {Void}
+         */
+        this.startOrBlock = function() {
+            var block = new Scule.builder.classes.ProgramOrBlock();
+            this.scope.peek().addSubBlock(block);
+            this.scope.push(block);        
+        };
+
+        /**
+         * Starts a GOTO based block of looped logical expressions
+         * @public
+         * @returns {Void}
+         */
+        this.startLoopBlock = function() {
+            var block = new Scule.builder.classes.ProgramLoopBlock();
+            this.scope.peek().addSubBlock(block);
+            this.scope.push(block);        
+        };
+
+        /**
+         * Closes the currently opened sub-block
+         * @public
+         * @returns {Void}
+         */
+        this.stopBlock = function() {
+            this.scope.pop();
+        };
+
+        /**
+         * Returns the operand for the block
+         * @public
+         * @returns {String}
+         */
+        this.getOperand = function() {
+            return this.operand;
+        };
+
+        /**
+         * Returns the sub-blocks for the block
+         * @public
+         * @returns {Array}
+         */
+        this.getChildren = function() {
+            return this.children;
+        };
+
+        /**
+         * Returns a bytecode representation of the block as an array of instructions
+         * @public
+         * @returns {Array}
+         */
+        this.toByteCode = function() {
+            var code = [];
+            if(this.children.length > 0) {
+                this.children.forEach(function(block) {
+                    code = code.concat(block.toByteCode());
+                });
+            } else {
+                this.instructions.forEach(function(instruction) {
+                    code.push(instruction.toByteCode());
+                });
+            }        
+            return code;
+        };
+
+        /**
+         * Prints a human readable version of the block to the console
+         * @public
+         * @returns {Void}
+         */
+        this.explain = function() {
+            if(this.children.length > 0) {
+                this.children.forEach(function(block) {
+                    block.explain();
+                });
+            } else {
+                this.instructions.forEach(function(instruction) {
+                    instruction.explain();
+                });
+            }
+        };
+
+    };
+
+    /**
+     * Represents a block of OR-ed bytecode instructions in a scule program
+     * @public
+     * @constructor
+     * @class {ProgramOrBlock}
+     * @extends {ProgramBlock}
+     * @returns {Void}
+     */
+    Scule.builder.classes.ProgramOrBlock = function () {
+
+        Scule.builder.classes.ProgramBlock.call(this, 'or');
+
+        /**
+         * Returns a bytecode representation of the block as an array of instructions
+         * @public
+         * @returns {Array}
+         */
+        this.toByteCode = function() {
+            var code  = [];
+            this.children.forEach(function(block) {
+                code = code.concat(block.toByteCode());
+            });
+            if(this.children.length > 1) {
+                code.push([0x02, [this.children.length]]);
+                Scule.builder.variables.line++;
+            }
+            return code;
+        };
+
+        /**
+         * Prints a human readable version of the block to the console
+         * @public
+         * @returns {Void}
+         */
+        this.explain = function() {
+            this.children.forEach(function(block) {
+                block.explain();
+            });
+            if(this.children.length > 1) {
+                console.log((Scule.builder.variables.line++) + ' or [' + this.children.length + ']');
+            }
+        };
+
+    };
+
+    /**
+     * Represents a block of AND-ed bytecode instructions in a scule program
+     * @public
+     * @constructor
+     * @class {ProgramAndBlock}
+     * @extends {ProgramBlock}
+     * @returns {Void}
+     */
+    Scule.builder.classes.ProgramAndBlock = function () {
+
+        Scule.builder.classes.ProgramBlock.call(this, 'and');
+
+        /**
+         * Returns a bytecode representation of the block as an array of instructions
+         * @public
+         * @returns {Array}
+         */
+        this.toByteCode = function() {
+            var count = 0;
+            var code  = [];
+            this.instructions.forEach(function(block) {
+                code.push(block.toByteCode());
+                count++;
+            });
+            this.children.forEach(function(block) {
+                code = code.concat(block.toByteCode());
+                count++;
+            });
+            if(count > 1) {
+                code.push([0x01, [count]]);
+                Scule.builder.variables.line++;
+            }
+            return code;        
+        };
+
+        /**
+         * Prints a human readable version of the block to the console
+         * @public
+         * @returns {Void}
+         */    
+        this.explain = function() {
+            var count = 0;
+            this.instructions.forEach(function(block) {
+                block.explain();
+                count++;
+            });
+            this.children.forEach(function(block) {
+                block.explain();
+                count++;
+            });        
+            if(count > 1) {
+                console.log((Scule.builder.variables.line++) + ' and [' + count + ']');       
+            }
+        };
+
+    };
+
+    /**
+     * Represents a block of GOTO looped bytecode instructions in a scule program
+     * @public
+     * @constructor
+     * @class {ProgramLoopBlock}
+     * @extends {ProgramBlock}
+     * @returns {Void}
+     */
+    Scule.builder.classes.ProgramLoopBlock = function () {
+
+        Scule.builder.classes.ProgramBlock.call(this, 'loop');
+
+        /**
+         * Returns a bytecode representation of the block as an array of instructions
+         * @public
+         * @returns {Array}
+         */
+        this.toByteCode = function() {
+            var code = [];
+            var read = Scule.builder.variables.line;
+            code.push([0x27, []]);
+            Scule.builder.variables.line++;
+            this.children.forEach(function(block) {
+                code = code.concat(block.toByteCode());
+            });  
+            code.push([0x25, [(Scule.builder.variables.line + 3)]]);  
+            Scule.builder.variables.line++;
+            code.push([0x20, []]);
+            Scule.builder.variables.line++;
+            code.push([0x26, [read]]);
+            Scule.builder.variables.line++;
+            return code;
+        };
+
+        /**
+         * Prints a human readable version of the block to the console
+         * @public
+         * @returns {Void}
+         */
+        this.explain = function() {
+            var read = Scule.builder.variables.line;
+            console.log((Scule.builder.variables.line++) + ' read');
+            this.children.forEach(function(block) {
+                block.explain();
+            });    
+            console.log((Scule.builder.variables.line++) + ' jump [' + (Scule.builder.variables.line + 2) + ']');        
+            console.log((Scule.builder.variables.line++) + ' shift');
+            console.log((Scule.builder.variables.line++) + ' goto [' + read + ']');
+        };
+
+    };
+
+    /**
+     * Represents an entire program
+     * @public
+     * @constructor
+     * @class {Program}
+     * @extends {ProgramBlock}
+     * @returns {Void}
+     */
+    Scule.builder.classes.Program = function() {
+
+        this.bytecode = [];
+
+        Scule.builder.classes.ProgramBlock.call(this);
+
+        /**
+         * clears the generated bytecode instructions for the program
+         * @public
+         * @returns {Void}
+         */
+        this.clearByteCode = function() {
+            Scule.builder.variables.line = 0;
+            this.bytecode = [];
+        };
+
+        /**
+         * Returns the bytecode instructions for the program
+         * @public
+         * @returns {Array}
+         */
+        this.toByteCode = function() {
+            return this.bytecode;
+        };
+
+    };
+
+    /**
+     * The builder portion of the Builder Pattern. Builds the actual program.
+     * @see http://en.wikipedia.org/wiki/Builder_pattern
+     * @public
+     * @constructor
+     * @class {ProgramBuilder}
+     * @returns {Void}
+     */
+    Scule.builder.classes.ProgramBuilder = function() {
+
+        /**
+         * @private
+         * @type {Program}
+         */
+        this.program = new Scule.builder.classes.Program();
+
+        /**
+         * Builds the header of the program
+         * @public
+         * @returns {Void}
+         */
+        this.buildHead = function() {
+            var children = this.program.getChildren();
+            var block;
+            for(var i=0; i < children.length; i++) {
+                block = children[i];
+                if(block.getOperand() == 'head') {
+                    this.program.bytecode = this.program.bytecode.concat(block.toByteCode());
+                    break;
+                }
+            }
+            this.program.bytecode.push([0x23, []]);
+            Scule.builder.variables.line++;
+            this.program.bytecode.push([0x21, []]);
+            Scule.builder.variables.line++;
+        };
+
+        /**
+         * Prints a human readable version of the program to the console
+         * @public
+         * @returns {Void}
+         */
+        this.explainHead = function() {
+            var children = this.program.getChildren();
+            var block;
+            for(var i=0; i < children.length; i++) {
+                block = children[i];
+                if(block.getOperand() == 'head') {
+                    block.explain();
+                    break;
+                }
+            }
+            console.log((Scule.builder.variables.line++) + ' intersect');
+            console.log((Scule.builder.variables.line++) + ' store');
+        };
+
+        /**
+         * Builds the body of the program
+         * @public
+         * @returns {Void}
+         */
+        this.buildBody = function() {
+            var children = this.program.getChildren();
+            var count    = 0;
+            var block;
+            for(var i=0; i < children.length; i++) {
+                block = children[i];
+                if(block.getOperand() != 'head') {
+                    count++;
+                    this.program.bytecode = this.program.bytecode.concat(block.toByteCode());
+                }
+            }
+            if(count == 0) {
+                this.program.bytecode.push([0x28, []]);
+                Scule.builder.variables.line++;
+            }
+        };
+
+        /**
+         * Prints a human readable version of the program body to the console
+         * @public
+         * @returns {Void}
+         */
+        this.explainBody = function() {
+            var children = this.program.getChildren();
+            var count    = 0;
+            var block;
+            for(var i=0; i < children.length; i++) {
+                block = children[i];
+                if(block.getOperand() != 'head') {
+                    count++;
+                    block.explain();
+                }
+            }  
+            if(count == 0) {
+                console.log((Scule.builder.variables.line++) + ' transpose');
+            }
+        };
+
+        /**
+         * Builds the tail of the program
+         * @public
+         * @returns {Void}
+         */
+        this.buildTail = function() {
+            this.program.bytecode.push([0x00, []]);
+            Scule.builder.variables.line++;
+        };
+
+        /**
+         * Prints a human readable version of the program tail to the console
+         * @public
+         * @returns {Void}
+         */
+        this.explainTail = function() {
+            console.log((Scule.builder.variables.line++) + ' halt');
+        };
+
+        /**
+         * Returns the program instance for the builder
+         * @public
+         * @returns {Program}
+         */
+        this.getProgram = function() {
+            return this.program;
+        };
+
+        /**
+         * Prints a human readable version of the program to the console
+         * @public
+         * @returns {Void}
+         */
+        this.explainProgram = function() {
+            Scule.builder.variables.line = 0;
+            this.program.clearByteCode();
+            this.explainHead();
+            this.explainBody();
+            this.explainTail();        
+        };
+
+        /**
+         * Builds the program
+         * @public
+         * @returns {Void}
+         */
+        this.buildProgram = function() {
+            Scule.builder.variables.line = 0;
+            this.program.clearByteCode();
+            this.buildHead();
+            this.buildBody();
+            this.buildTail();
+        };
+
+    };
+
+    /**
+     * The director portion of the builder pattern
+     * @see http://en.wikipedia.org/wiki/Builder_pattern
+     * @public
+     * @constructor
+     * @class {ProgramDirector}
+     * @returns {Void}
+     */
+    Scule.builder.classes.ProgramDirector = function() {
+
+        /**
+         * @private
+         * @type {ProgramBuilder}
+         */
+        this.builder = null;
+
+        /**
+         * Sets the builder for the director
+         * @public
+         * @param {ProgramBuilder} builder
+         * @returns {Void}
+         */
+        this.setProgramBuilder = function(builder) {
+            this.builder = builder;
+        };
+
+        /**
+         * Returns the program for the director/builder
+         * @public
+         * @returns {Program} program
+         */
+        this.getProgram = function() {
+            return this.builder.getProgram();
+        }
+
+        /**
+         * Builds the program
+         * @public
+         * @returns {Void}
+         */
+        this.buildProgram = function() {
+            this.builder.buildProgram();
+        };
+
+        /**
+         * Prints a human readable version of the program to the console
+         * @public
+         * @returns {Void}
+         */
+        this.explainProgram = function() {
+            this.builder.explainProgram();
+        };
+
+    };
+
+    /**
+     * A class used to compile AST instances to scule bytecode
+     * @public
+     * @constructor
+     * @class {AbstractSyntaxTreeCompiler}
+     * @returns {Void}
+     */
+    Scule.builder.classes.AbstractSyntaxTreeCompiler = function() {
+
+        /**
+         * Compiles an AST to a scule program
+         * @public
+         * @param {QueryTree} tree
+         * @param {Object} conditions
+         * @param {Collection} collection
+         * @param {Boolean} explain
+         * @returns {Program}
+         */
+        this.compile = function(tree, conditions, collection, explain) {
+
+            if(!conditions) {
+                conditions = {};
+            }
+
+            var loop     = false;
+            var node     = tree.getRoot();
+
+            var director = new Scule.builder.classes.ProgramDirector();
+            director.setProgramBuilder(new Scule.builder.classes.ProgramBuilder());
+
+            var program  = director.getProgram();
+
+            program.startHeadBlock();
+            if(!node.hasChildren() || node.getFirstChild().getType() !== Scule.parser.arities.index) {
+                program.addInstruction('scan', [collection]);
+                program.stopBlock();
+                loop = (node.children.length > 0);
+            } else {
+                var i=0;
+                for(; i < node.children.length; i++) {
+                    var child = node.children[i];
+                    if(child.getType() !== Scule.parser.arities.index) {
+                        break;
+                    } else {
+                        if(child.range) {
+                            program.startRangeBlock(child.index, child.args);
+                        } else {
+                            program.startFindBlock(child.index, child.args);
+                        }                    
+                    } 
+                }
+                program.stopBlock();
+                loop = (i < node.children.length);
+            }
+
+            var compileVariable = function(variable) {
+                variable.children.forEach(function(operator) {
+                    switch(operator.getType()) {
+                        case Scule.parser.arities.selective:
+                            operator.children.forEach(function(op) {
+                                compileOperator(variable, op);
+                            });
+                            break;
+
+                        case Scule.parser.arities.array:
+                        case Scule.parser.arities.range:
+                        case Scule.parser.arities.binary:
+                        case Scule.parser.arities.negative:
+                            compileOperator(variable, operator);
+                            break;
+                    }
+                });
+            };
+
+            var compileOperator = function(variable, operator) {
+                var args = [operator.children[0].getSymbol()];
+                args.unshift(variable.getSymbol());
+                program.addInstruction(Scule.builder.instructions.mapping[operator.getSymbol()], args);
+            };        
+
+            var compile = function(node) {
+                node.children.forEach(function(child) {
+                    switch(child.getType()) {
+                        case Scule.parser.arities.selective:
+                            if(child.getSymbol() == '$or') {
+                                program.startOrBlock();
+                            } else {
+                                program.startAndBlock();
+                            }
+                            compile(child);
+                            program.stopBlock();
+                            break;
+
+                        case Scule.parser.arities.variable:
+                            compileVariable(child);
+                            break;
+
+                        case Scule.parser.arities.expression:
+                            program.startAndBlock();
+                            compile(child);
+                            program.stopBlock();
+                            break;
+                    }
+                });
+            };
+
+            if(loop) {
+                program.startLoopBlock();
+            }
+
+            program.startAndBlock();
+            compile(node);
+            program.stopBlock();
+
+            if(loop) {
+                program.stopBlock();
+            }
+
+            program.startBlock();
+            if('$sort' in conditions) {
+                for(var k in conditions.$sort) {
+                    program.addInstruction('sort', [k, conditions.$sort[k]]);
+                    break;
+                }
+            }
+            if('$limit' in conditions) {
+                program.addInstruction('limit', [conditions.$limit]);
+            }
+            program.stopBlock();
+
+            if(!loop) {
+                program.startBlock();
+                program.addInstruction('transpose', []);
+                program.stopBlock();
+            }
+
+            if(explain) {
+                director.explainProgram();
+            }
+
+            director.buildProgram();
+            return director.getProgram();
         };
 
     };
@@ -5977,25 +6537,31 @@
      * @class {QueryCompiler}
      * @returns {Void}
      */
-    Scule.vm.classes.QueryCompiler = function() {
+    Scule.builder.classes.QueryCompiler = function() {
 
         /**
          * @private
          * @type {LRUCache}
          */
-        this.cache   = Scule.getLRUCache(30);
+        this.cache    = Scule.getLRUCache(30);
 
         /**
          * @private
          * @type {QueryParser}
          */
-        this.parser  = Scule.getQueryParser();
+        this.parser   = Scule.getQueryParser();
 
         /**
          * @private
          * @type {QueryTreeIndexSelectionVisitor}
          */
-        this.visitor = new Scule.vm.classes.QueryTreeIndexSelectionVisitor();
+        this.visitor  = new Scule.builder.classes.QueryTreeIndexSelectionVisitor();
+
+        /**
+         * @private
+         * @type {AbstractSyntaxTreeCompiler}
+         */
+        this.compiler = new Scule.builder.classes.AbstractSyntaxTreeCompiler();
 
         /**
          * Generates an array of bytecode instructions given a mutate query expression
@@ -6008,18 +6574,18 @@
         this.compileMutate = function(query, collection) {
             var instructions = [];
 
-            instructions.push([Scule.vm.instructions.table['rread'], []]);
+            instructions.push([Scule.builder.instructions.table['rread'], []]);
             for(var operator in query) {
-                if(!(Scule.vm.instructions.mapping[operator] in Scule.vm.instructions.table)) {
+                if(!(Scule.builder.instructions.mapping[operator] in Scule.builder.instructions.table)) {
                     throw operator + ' is an unrecognized operator';
                 }            
                 for(var variable in query[operator]) {
-                    var opcode  = Scule.vm.instructions.table[Scule.vm.instructions.mapping[operator]];
+                    var opcode  = Scule.builder.instructions.table[Scule.builder.instructions.mapping[operator]];
                     instructions.push([opcode, [Scule.global.functions.parseAttributes(variable), query[operator][variable]]]);
                 }
             }
-            instructions.push([Scule.vm.instructions.table['rindex'], [collection]]);
-            instructions.push([Scule.vm.instructions.table['goto'], [0]]);
+            instructions.push([Scule.builder.instructions.table['rindex'], [collection]]);
+            instructions.push([Scule.builder.instructions.table['goto'], [0]]);
 
             return instructions;
         };
@@ -6038,11 +6604,11 @@
 
             console.log((line++) + ' rread');
             for(var operator in query) {
-                if(!(Scule.vm.instructions.mapping[operator] in Scule.vm.instructions.table)) {
+                if(!(Scule.builder.instructions.mapping[operator] in Scule.builder.instructions.table)) {
                     throw operator + ' is an unrecognized operator';
                 }             
                 for(var variable in query[operator]) {
-                    console.log((line++) + ' ' + Scule.vm.instructions.mapping[operator] + ' ' + variable + ', ' + JSON.stringify(query[operator][variable]));
+                    console.log((line++) + ' ' + Scule.builder.instructions.mapping[operator] + ' ' + variable + ', ' + JSON.stringify(query[operator][variable]));
                 }
             }
             console.log((line++) + ' rindex ' + collection.getName());
@@ -6065,14 +6631,19 @@
                 return this.cache.get(hash).toByteCode();
             }
 
-            Scule.vm.variables.inst = 0;
+            var walk = function(node) {
+                node.children.forEach(function(child) {
+                    walk(child);
+                });
+            };
+
             this.visitor.setCollection(collection);
-            var tree = this.parser.parseQuery(query);
+            var tree = this.parser.parseQuery(query);        
             tree.accept(this.visitor);
-            var program = this.compileSyntaxTree(tree, conditions, collection);
 
-            this.cache.put(hash, program);
+            var program = this.compiler.compile(tree, conditions, collection);
 
+            this.cache.put(hash, program);      
             return program.toByteCode();
 
         };
@@ -6089,131 +6660,62 @@
          */
         this.explainQuery = function(query, conditions, collection) {
 
-            var hash = Scule.md5.hash(JSON.stringify(query));
-            if(this.cache.contains(hash)) {
-                this.cache.get(hash).explain();
-                return;
-            }
-
-            Scule.vm.variables.inst = 0;
-            this.visitor.setCollection(collection);
+            this.visitor.setCollection(collection);        
             var tree = this.parser.parseQuery(query);
             tree.accept(this.visitor);
-            var program = this.compileSyntaxTree(tree, conditions, collection);
+            var program = this.compiler.compile(tree, conditions, collection, true);
 
-            this.cache.put(hash, program);
-
-            program.explain();
-        };
-
-        /**
-         * Compiles a Scule AST to a set of Scule virtual machine bytecode instructions
-         * @private
-         * @param {QueryParseTree} tree the {QueryParseTree} instance to compile to bytecode
-         * @param {Object} conditions the sort/limit conditions for the query
-         * @param {Collection} collection the collection to compile against - used for index selection
-         * @returns {Array}
-         */
-        this.compileSyntaxTree = function(tree, conditions, collection) {
-
-            var node = tree.getRoot();
-
-            var program = new Scule.vm.classes.SculeProgram();
-            program.openBlock();
-
-            if(!node.hasChildren() || node.getFirstChild().getType() !== Scule.parser.arities.index) {
-                program.addInstruction('scan', [collection]);
-            }
-
-            var compileVariable = function(variable) {
-                var ands = 0;
-                variable.children.forEach(function(operator) {
-                    switch(operator.getType()) {
-                        case Scule.parser.arities.selective:
-                            operator.children.forEach(function(op) {
-                                compileOperator(variable, op);
-                                ands++;
-                            });
-                            break;
-
-                        case Scule.parser.arities.array:
-                        case Scule.parser.arities.range:
-                        case Scule.parser.arities.binary:
-                        case Scule.parser.arities.negative:
-                            compileOperator(variable, operator);
-                            ands++;
-                            break;
-                    }
-                });
-                if(ands > 1) {
-                    program.addInstruction('and', [ands]);
-                }
-            };
-
-            var compileOperator = function(variable, operator) {
-                var args = [operator.children[0].getSymbol()];
-                args.unshift(Scule.global.functions.parseAttributes(variable.getSymbol()));
-                program.addInstruction(Scule.vm.instructions.mapping[operator.getSymbol()], args);
-            };
-
-            var compileIndex = function(index) {
-                var args = [index.index, index.args];
-                if(index.range) {
-                    program.addInstruction('range', args);
-                } else {
-                    program.addInstruction('find',  args);
-                }
-            };
-
-            var compile = function(node) {
-                node.children.forEach(function(child) {
-                    switch(child.getType()) {
-                        case Scule.parser.arities.index:
-                            compileIndex(child);
-                            break;
-
-                        case Scule.parser.arities.selective:
-                            var isOr = (child.getSymbol() == '$or');
-                            if(isOr) {
-                                program.openSubBlock();
-                            }
-                            compile(child);
-                            if(child.children.length > 1) {
-                                program.addInstruction(Scule.vm.instructions.mapping[child.getSymbol()], [isOr ? child.children.length : child.countOperands()]);
-                            }
-                            if(isOr) {
-                                program.closeBlock();
-                            }                        
-                            break;
-
-                        case Scule.parser.arities.variable:
-                            compileVariable(child);
-                            break;
-
-                        case Scule.parser.arities.expression:
-                            program.openBlock();
-                            compile(child);
-                            program.closeBlock();
-                            break;
-                    }
-                });
-            }
-            compile(node);
-            if('$sort' in conditions) {
-                for(var k in conditions.$sort) {
-                    program.setSort(k, conditions.$sort[k]);
-                    break;
-                }
-            }
-            if('$limit' in conditions) {
-                program.setLimit(conditions.$limit);
-            }
-            program.closeBlock();
-
-            return program;
         };
 
     };
+
+    /**
+     * Returns a new instance of the {QueryTreeIndexSelectionVisitor} class
+     * @param {Collection} collection the collection to visit
+     * @returns {QueryTreeIndexSelectionVisitor}
+     */
+    Scule.getQueryTreeIndexSelectionVisitor = function(collection) {
+        return new Scule.builder.classes.QueryTreeIndexSelectionVisitor(collection);
+    };
+
+    /**
+     * Returns a new instance of the {AbstractSyntaxTreeCompiler} class
+     * @returns {AbstractSyntaxTreeCompiler}
+     */
+    Scule.getAbstractSyntaxTreeCompiler = function() {
+        return new Scule.builder.classes.AbstractSyntaxTreeCompiler();
+    };
+
+    /**
+     * Returns a new instance of the {ProgramDirector} class
+     * @returns {ProgramDirector}
+     */
+    Scule.getProgramDirector = function() {
+        return new Scule.builder.classes.ProgramDirector();
+    };
+
+    /**
+     * Returns a new instance of the {ProgramBuilder} class
+     * @returns {ProgramBuilder}
+     */
+    Scule.getProgramBuilder = function() {
+        return new Scule.builder.classes.ProgramBuilder();
+    };
+
+    /**
+     * Returns an instance of the {QueryCompiler} class
+     * @returns {QueryCompiler}
+     */
+    Scule.getQueryCompiler = function() {
+        return new Scule.builder.classes.QueryCompiler();
+    };    
+    
+}());
+
+/**
+ * Virtual Machine
+ */
+(function() {
 
     /**
      * A hybrid (stack + registers) virtual machine that executes programs 
@@ -6524,8 +7026,12 @@
          */
         this.registerInstruction(0xC, function(vm, instruction) {
             var object = vm.registers[1];
-            var value  = Scule.global.functions.searchObject(instruction[1][0], object);
-            vm.stack.push(value.length > 0 && value[0] == instruction[1][1]);
+            var value  = Scule.global.functions.traverse(instruction[1][0], object);
+            if(instruction[1][1] instanceof RegExp) {
+                vm.stack.push(instruction[1][1].test(value));
+            } else {
+                vm.stack.push(value == instruction[1][1]);
+            }
             vm.ipointer++;
         });
 
@@ -6534,8 +7040,8 @@
          */
         this.registerInstruction(0xD, function(vm, instruction) {
             var object = vm.registers[1];
-            var value  = Scule.global.functions.searchObject(instruction[1][0], object);
-            vm.stack.push(value.length > 0 && value[0] !== instruction[1][1]);
+            var value  = Scule.global.functions.traverse(instruction[1][0], object);
+            vm.stack.push(value !== instruction[1][1]);
             vm.ipointer++;        
         });
 
@@ -6544,8 +7050,8 @@
          */
         this.registerInstruction(0x07, function(vm, instruction) {
             var object = vm.registers[1];
-            var value  = Scule.global.functions.searchObject(instruction[1][0], object);
-            vm.stack.push(value.length > 0 && value[0] > instruction[1][1]);
+            var value  = Scule.global.functions.traverse(instruction[1][0], object);
+            vm.stack.push(value > instruction[1][1]);
             vm.ipointer++;        
         });
 
@@ -6554,8 +7060,8 @@
          */
         this.registerInstruction(0x08, function(vm, instruction) {
             var object = vm.registers[1];
-            var value  = Scule.global.functions.searchObject(instruction[1][0], object);
-            vm.stack.push(value.length > 0 && value[0] >= instruction[1][1]);
+            var value  = Scule.global.functions.traverse(instruction[1][0], object);
+            vm.stack.push(value >= instruction[1][1]);
             vm.ipointer++;        
         });
 
@@ -6564,8 +7070,8 @@
          */
         this.registerInstruction(0x05, function(vm, instruction) {
             var object = vm.registers[1];
-            var value  = Scule.global.functions.searchObject(instruction[1][0], object);
-            vm.stack.push(value.length > 0 && value[0] < instruction[1][1]);
+            var value  = Scule.global.functions.traverse(instruction[1][0], object);
+            vm.stack.push(value < instruction[1][1]);
             vm.ipointer++;        
         });
 
@@ -6574,8 +7080,8 @@
          */
         this.registerInstruction(0x06, function(vm, instruction) {
             var object = vm.registers[1];
-            var value  = Scule.global.functions.searchObject(instruction[1][0], object);
-            vm.stack.push(value.length > 0 && value[0] <= instruction[1][1]);
+            var value  = Scule.global.functions.traverse(instruction[1][0], object);
+            vm.stack.push(value <= instruction[1][1]);
             vm.ipointer++;        
         });
 
@@ -6584,11 +7090,11 @@
          */
         this.registerInstruction(0xA, function(vm, instruction) {
             var object = vm.registers[1];
-            var value  = Scule.global.functions.searchObject(instruction[1][0], object);
-            if(value.length == 0) {
+            var value  = Scule.global.functions.traverse(instruction[1][0], object);
+            if(value === undefined) {
                 vm.stack.push(false);
             } else {
-                vm.stack.push(instruction[1][1].contains(value[0]));
+                vm.stack.push(instruction[1][1].contains(value));
             }
             vm.ipointer++;
         });
@@ -6598,11 +7104,11 @@
          */
         this.registerInstruction(0xB, function(vm, instruction) {
             var object = vm.registers[1];
-            var value  = Scule.global.functions.searchObject(instruction[1][0], object);
-            if(value.length == 0) {
+            var value  = Scule.global.functions.traverse(instruction[1][0], object);
+            if(value === undefined) {
                 vm.stack.push(true);
             } else {
-                vm.stack.push(!instruction[1][1].contains(value[0]));
+                vm.stack.push(!instruction[1][1].contains(value));
             }
             vm.ipointer++;
         });
@@ -6612,8 +7118,8 @@
          */
         this.registerInstruction(0xE, function(vm, instruction) {
             var object = vm.registers[1];
-            var value  = Scule.global.functions.searchObject(instruction[1][0], object);
-            vm.stack.push(Scule.global.functions.isArray(value[0]) && value[0].length == instruction[1][1]);
+            var value  = Scule.global.functions.traverse(instruction[1][0], object);
+            vm.stack.push(Scule.global.functions.sizeOf(value) == instruction[1][1]);
             vm.ipointer++;
         });
 
@@ -6622,8 +7128,8 @@
          */
         this.registerInstruction(0xF, function(vm, instruction) {
             var object = vm.registers[1];
-            var value  = Scule.global.functions.searchObject(instruction[1][0], object);
-            vm.stack.push(value.length > 0 && value[0] !== undefined);
+            var value  = Scule.global.functions.traverse(instruction[1][0], object);
+            vm.stack.push(value !== undefined);
             vm.ipointer++;
         });
 
@@ -6632,12 +7138,12 @@
          */
         this.registerInstruction(0x09, function(vm, instruction) {
             var object = vm.registers[1];
-            var value  = Scule.global.functions.searchObject(instruction[1][0], object);
-            if(!Scule.global.functions.isArray(value[0])) {
+            var value  = Scule.global.functions.traverse(instruction[1][0], object);
+            if(!Scule.global.functions.isArray(value)) {
                 vm.stack.push(false);
             } else {
                 var table = instruction[1][1];
-                if(value[0].length < table.getLength()) {
+                if(value.length < table.getLength()) {
                     vm.stack.push(false);
                 } else {
                     var tmp  = Scule.getHashTable();
@@ -6645,9 +7151,9 @@
                     keys.forEach(function(key) {
                         tmp.put(key, false);
                     });
-                    for(var i=0; i < value[0].length; i++) {
-                        if(tmp.contains(value[0][i])) {
-                            tmp.remove(value[0][i]);
+                    for(var i=0; i < value.length; i++) {
+                        if(tmp.contains(value[i])) {
+                            tmp.remove(value[i]);
                         }
                     }
                     vm.stack.push(tmp.getLength() == 0);
@@ -6852,7 +7358,7 @@
          */
         this.registerInstruction(0x10, function(vm, instruction) {
             var document = vm.registers[1];
-            var loc1     = Scule.global.functions.traverseObject(instruction[1][0], document);
+            var loc1     = Scule.global.functions.traverseObject(Scule.global.functions.parseAttributes(instruction[1][0]), document);
             if(loc1.length < 2 || !('loc' in loc1[1])) {
                 vm.stack.push(false);
             } else {        
@@ -6882,7 +7388,7 @@
          */
         this.registerInstruction(0x11, function(vm, instruction) {
             var document = vm.registers[1];
-            var loc1     = Scule.global.functions.traverseObject(instruction[1][0], document);
+            var loc1     = Scule.global.functions.traverseObject(Scule.global.functions.parseAttributes(instruction[1][0]), document);
             if(loc1.length < 2 || !('loc' in loc1[1])) {
                 vm.stack.push(false);
             } else {
@@ -6950,6 +7456,9 @@
                 list = o;
             }
         });
+        if(!list) {
+            return [];
+        }
         list.forEach(function(o) {
             table.put(Scule.global.functions.getObjectId(o), {
                 c:1, 
@@ -6973,23 +7482,6 @@
             });
         }
         return intersection;
-    };
-
-    /**
-     * Returns an instance of the {QueryTreeIndexSelectionVisitor} class
-     * @param {Collection} collection the collection to visit
-     * @returns {QueryTreeIndexSelectionVisitor}
-     */
-    Scule.getQueryTreeIndexSelectionVisitor = function(collection) {
-        return new Scule.vm.classes.QueryTreeIndexSelectionVisitor(collection);
-    };
-
-    /**
-     * Returns an instance of the {QueryCompiler} class
-     * @returns {QueryCompiler}
-     */
-    Scule.getQueryCompiler = function() {
-        return new Scule.vm.classes.QueryCompiler();
     };
 
     /**
@@ -7070,7 +7562,7 @@
                 });
             } else {
                 var element = this.data[index];
-                if(element.key === key) {
+                if(element.key == key) {
                     element.value.put(Scule.global.functions.getObjectId(value, true), value);
                 } else if(element.key < key) {
                     table = Scule.getHashTable();
@@ -7159,53 +7651,60 @@
                 max = null;
             }
             var curr  = this;
-            var erng  = function(min, max, key, range, value) {
-                return range.concat(value);
-            };
-            var lrng  = function(min, max, key, range, value) {
-                if(key > min) {
-                    return range.concat(value);
-                }
-                return range;
-            };
-            var rrng  = function(min, max, key, range, value) {
-                if(value < key) {
-                    return range.concat(value);
-                }
-                return range;
-            };
-            var errng  = function(min, max, key, range, value) {
-                if(value <= key) {
-                    return range.concat(value);
-                }
-                return range;
-            };
-            var irng  = function(min, max, key, range, value) {
-                if(key > min) {
-                    if(max !== null) {
-                        if(key < max) {
-                            return range.concat(value);
+            var rng = null;
+            if(includeMin && includeMax) {
+                rng = function(min, max, key, range, value) {
+                    if(min === null) {
+                        if(key <= max) {
+                            range = range.concat(value);
+                        }
+                    } else if(max === null) {
+                        if(key >= min) {
+                            range = range.concat(value);
                         }
                     } else {
-                        return range.concat(value);
+                        if(key >= min && key <= max) {
+                            range = range.concat(value);
+                        }
                     }
-                }
-                return range;
-            };
-            var rng;
-            if(includeMin && includeMax) {
-                rng = erng;
+                    return range;
+                };
             } else if(includeMin) {
-                if(!max) {
-                    rng = errng;
-                } else {
-                    rng = rrng;
-                }
-            } else if(includeMax) {
-                rng = lrng;
-            } else {
-                rng = irng;
+                rng = function(min, max, key, range, value) {
+                    if(min === null) {
+                        if(key < max) {
+                            range = range.concat(value);
+                        }
+                    } else if(max === null) {
+                        if(key >= min) {
+                            range = range.concat(value);
+                        }
+                    } else {
+                        if(key >= min && key < max) {
+                            range = range.concat(value);
+                        }
+                    }
+                    return range;
+                };
+            } else { // includeMax
+                rng = function(min, max, key, range, value) {
+                    if(min === null) {
+                        if(key <= max) {
+                            range = range.concat(value);
+                        }
+                    } else if(max === null) {
+                        if(key > min) {
+                            range = range.concat(value);
+                        }
+                    } else {
+                        if(key > min && key <= max) {
+                            range = range.concat(value);
+                        }
+                    }
+                    return range;
+                };            
             }
+
             var range = [];
                 outer:
                 while(curr) {
@@ -7691,7 +8190,7 @@
         this.verifyObjectSignature = function(object, secret, salt) {
             var oldSig = object._sig;
             var newSig = this.signObject(object, secret, salt);
-            return oldSig === newSig;      
+            return oldSig == newSig;      
         };
 
     };
@@ -8534,6 +9033,7 @@
          * @returns {Array}
          */
         this.update = function(query, updates, conditions, upsert, callback) {
+            this.vm.reset();
             var result = this.vm.execute(this.compiler.compileQuery(query, conditions, this), this.compiler.compileMutate(updates, this), upsert);
             if(callback) {
                 callback(result);
@@ -8545,13 +9045,14 @@
          * Returns a count of the number of documents matching the query criteria
          * @public
          * @param {Object} query the query expression(s) to execute against the collection
+         * @param {Object} conditions the limit and sort conditions for the query
          * @param {Function} callback the callback to be executed once the query is complete. The only
          * argument for the callback closure is the result set for the query. If no callback is provided
          * the results are returned directly.
          * @returns {Number}
          */
-        this.count = function(query, callback) {
-            var count = this.find(query).length;
+        this.count = function(query, conditions, callback) {
+            var count = this.find(query, conditions).length;
             if(callback) {
                 callback(count);
             }

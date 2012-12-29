@@ -1,6 +1,6 @@
 var sculedb = require('../lib/com.scule.db.parser');
 var db      = require('../lib/com.scule.db');
-var vm      = require('../lib/com.scule.db.vm');
+var build   = require('../lib/com.scule.db.builder');
 var inst    = require('../lib/com.scule.instrumentation');
 var jsunit  = require('../lib/com.scule.jsunit');
 
@@ -20,6 +20,7 @@ function testQueryTreeVisitor() {
     collection.ensureBTreeIndex('d', {
         order:100
     });
+    collection.ensureHashIndex('d');
     
     var query = {
         a:{$gt:2, $in:[4, 5, 7, 8, 9], $eq:666},
@@ -30,7 +31,7 @@ function testQueryTreeVisitor() {
     };
     
     var parser  = sculedb.getQueryParser();
-    var visitor = vm.getQueryTreeIndexSelectionVisitor(collection);
+    var visitor = build.getQueryTreeIndexSelectionVisitor(collection);
     var tree = parser.parseQuery(query, {}, collection);
     tree.accept(visitor);
 
@@ -60,6 +61,7 @@ function testQueryTreeVisitor2() {
     collection.ensureBTreeIndex('d', {
         order:100
     });
+    collection.ensureHashIndex('d');
     
     var query = {
         a:{$gt:2, $in:[4, 5, 7, 8, 9], $eq:666},
@@ -70,8 +72,8 @@ function testQueryTreeVisitor2() {
     };
     
     var parser  = sculedb.getQueryParser();
-    var visitor = vm.getQueryTreeIndexSelectionVisitor(collection);
-    var tree = parser.parseQuery(query, {}, collection);
+    var visitor = build.getQueryTreeIndexSelectionVisitor(collection);
+    var tree    = parser.parseQuery(query, {}, collection);
     tree.accept(visitor);
 
     jsunit.assertEquals(tree.getRoot().getChild(0).getSymbol(), 'd');
@@ -93,6 +95,7 @@ function testQueryTreeVisitor3() {
     collection.ensureBTreeIndex('a', {
         order:100
     });
+    collection.ensureHashIndex('d');
     
     var query = {
         a:{$gt:2, $in:[4, 5, 7, 8, 9], $eq:666},
@@ -103,8 +106,8 @@ function testQueryTreeVisitor3() {
     };
     
     var parser  = sculedb.getQueryParser();
-    var visitor = vm.getQueryTreeIndexSelectionVisitor(collection);
-    var tree = parser.parseQuery(query, {}, collection);
+    var visitor = build.getQueryTreeIndexSelectionVisitor(collection);
+    var tree    = parser.parseQuery(query, {}, collection);
     tree.accept(visitor);
 
     jsunit.assertEquals(tree.getRoot().getChild(0).getSymbol(), 'a');
@@ -132,6 +135,7 @@ function testQueryCompiler() {
     collection.ensureBTreeIndex('d', {
         order:100
     });
+    collection.ensureHashIndex('d');
     
     var query = {
         a:{$gt:2, $in:[4, 5, 7, 8, 9]},
@@ -141,8 +145,9 @@ function testQueryCompiler() {
         foo:'bar'
     };
 
-    var compiler = vm.getQueryCompiler();
-    var program = compiler.compileQuery(query, {}, collection);
+    var compiler = build.getQueryCompiler();
+    compiler.explainQuery(query, {}, collection);
+    var program  = compiler.compileQuery(query, {}, collection);
 
     jsunit.assertEquals(program.length, 15);
     jsunit.assertEquals(program[0][0], 0x1D);
@@ -163,14 +168,16 @@ function testQueryCompiler2() {
     collection.ensureBTreeIndex('a,b', {
         order:100
     });
+    collection.ensureHashIndex('a,b');
     
     var query = {
         a:666,
         b:3
     };
 
-    var compiler = vm.getQueryCompiler();    
-    var program = compiler.compileQuery(query, {}, collection);
+    var compiler = build.getQueryCompiler();    
+    compiler.explainQuery(query, {}, collection);
+    var program  = compiler.compileQuery(query, {}, collection);
     
     jsunit.assertEquals(program.length, 5);
     jsunit.assertEquals(program[0][0], 0x1B);
@@ -197,6 +204,7 @@ function testQueryCompilerSortLimit() {
     collection.ensureBTreeIndex('d', {
         order:100
     });
+    collection.ensureHashIndex('d');
     
     var query = {
         a:{$gt:2, $in:[4, 5, 7, 8, 9]},
@@ -206,7 +214,7 @@ function testQueryCompilerSortLimit() {
         foo:'bar'
     };
 
-    var compiler = vm.getQueryCompiler();
+    var compiler = build.getQueryCompiler();
     compiler.explainQuery(query, {$limit:100, $sort:{a:-1}}, collection);
 
 };
@@ -216,7 +224,19 @@ function testQueryCompilerOr() {
     db.dropAll();
     var collection = db.factoryCollection('scule+dummy://unittest');
     collection.ensureHashIndex('a,b,c');
+    collection.ensureHashIndex('z');
     var query = {a:{$in:[1,2,3,4,5]}, b:10, c:99, $or:[{z:11},{k:12}]};
+    collection.explain(query, {});
+
+};
+
+function testQueryCompilerOr2() {
+
+    db.dropAll();
+    var collection = db.factoryCollection('scule+dummy://unittest');
+    collection.ensureHashIndex('a,b,c');
+    collection.ensureHashIndex('z');
+    var query = {$and:[{$or:[{z:11},{k:12},{a:14, c:15}]},{$or:[{d:16},{c:17}]}]};
     collection.explain(query, {});
 
 };
@@ -230,5 +250,6 @@ function testQueryCompilerOr() {
     jsunit.addTest(testQueryCompiler2);
     jsunit.addTest(testQueryCompilerSortLimit);
     jsunit.addTest(testQueryCompilerOr);
+    jsunit.addTest(testQueryCompilerOr2);
     jsunit.runTests();
 }());

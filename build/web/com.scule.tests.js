@@ -1,3 +1,30 @@
+/**
+ * Copyright (c) 2013, Dan Eyles (dan@irlgaming.com)
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the <organization> nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 (function() {
     
     Scule.registerNamespace('tests', {
@@ -88,7 +115,17 @@
 
     function testSearchObject() {
         var composite;
-        var keys = {a:true, c:{d:true}, e:{f:{'0':true}}};
+        var keys = {
+            a:true, 
+            c:{
+                d:true
+            }, 
+            e:{
+                f:{
+                    '0':true
+                }
+            }
+        };
         var object = {
             a: 10,
             c: {
@@ -104,7 +141,9 @@
         JSUNIT.assertEquals(composite[1], 'foo');
         JSUNIT.assertEquals(composite[2], 11);
 
-        keys.e.f = {'2':true};
+        keys.e.f = {
+            '2':true
+        };
         keys.f = true;
         composite = Scule.global.functions.searchObject(keys, object);
         JSUNIT.assertEquals(composite[0], 10);
@@ -125,13 +164,23 @@
             },
             f: 12
         }    
-        var result = Scule.global.functions.traverseObject({f:true}, object);
+        var result = Scule.global.functions.traverseObject({
+            f:true
+        }, object);
         JSUNIT.assertEquals('{"a":10,"c":{"d":"foo"},"e":{"f":[11,12,23,33]},"f":12}', JSON.stringify(result[1]));
         JSUNIT.assertEquals(result[0], 'f');
-        result = Scule.global.functions.traverseObject({e:{f:true}}, object);
+        result = Scule.global.functions.traverseObject({
+            e:{
+                f:true
+            }
+        }, object);
         JSUNIT.assertEquals('{"f":[11,12,23,33]}', JSON.stringify(result[1]));
         JSUNIT.assertEquals(result[0], 'f');
-        result = Scule.global.functions.traverseObject({e:{z:true}}, object);
+        result = Scule.global.functions.traverseObject({
+            e:{
+                z:true
+            }
+        }, object);
         JSUNIT.assertEquals('{"f":[11,12,23,33]}', JSON.stringify(result[1]));
         JSUNIT.assertEquals(result[0], 'z');
     };
@@ -1406,7 +1455,7 @@
                 if(i > 0) {
                     for(var j=0; j < i; j++) {
                         if(node.data[j].key >= node.data[i].key) {
-                            //console.log(node.data[j].key + ' >= ' + node.data[i].key);
+                        //console.log(node.data[j].key + ' >= ' + node.data[i].key);
                         }
                         JSUNIT.assertFalse(node.data[j].key >= node.data[i].key);
                     }
@@ -1465,8 +1514,8 @@
             JSUNIT.assertEquals(table.getLength(), 10);
             var keys = table.getKeys();
             keys.forEach(function(key) {
-               JSUNIT.assertEquals(table.get(key).key, i);
-               JSUNIT.assertEquals(table.get(key)._id.toString(), key);
+                JSUNIT.assertEquals(table.get(key).key, i);
+                JSUNIT.assertEquals(table.get(key)._id.toString(), key);
             });
         }
     }
@@ -1880,8 +1929,14 @@
         var i = 0;
         for(; i < 10000; i++) {
             value = 'test' + Scule.global.functions.randomFromTo(100000, 200000);
-            list.add({key:i, value:value});
-            clist.add({key:i, value:value})
+            list.add({
+                key:i, 
+                value:value
+            });
+            clist.add({
+                key:i, 
+                value:value
+            })
         }
         for(i=0; i < 1000; i++) {
             clist.search(Scule.global.functions.randomFromTo(1, 100000));
@@ -2225,7 +2280,9 @@
 
         timer.startInterval('HashMap.Insert');
         for(var i=0; i < 10000; i++) {
-            map.put('foo' + i, {bar:i});
+            map.put('foo' + i, {
+                bar:i
+            });
         }
         timer.stopInterval();
         timer.startInterval('HashMap.Seek');
@@ -2236,7 +2293,9 @@
 
         timer.startInterval('HashTable.Insert');
         for(var i=0; i < 10000; i++) {
-            table.put('foo' + i, {bar:i});
+            table.put('foo' + i, {
+                bar:i
+            });
         }
         timer.stopInterval();   
         timer.startInterval('HashTable.Seek');
@@ -2247,7 +2306,9 @@
 
         timer.startInterval('BPlusTree.Insert');
         for(var i=0; i < 10000; i++) {
-            tree.insert('foo' + i, {bar:i});
+            tree.insert('foo' + i, {
+                bar:i
+            });
         }
         timer.stopInterval();   
         timer.startInterval('BPlusTree.Seek');
@@ -2389,16 +2450,34 @@
 
     function testLRUCacheFunctionality() {
         var cache = Scule.getLRUCache(5);
-        cache.put(1, {foo:'bar1'});
-        cache.put(2, {foo:'bar2'});
-        cache.put(3, {foo:'bar3'});
-        cache.put(4, {foo:'bar4'});
-        cache.put(5, {foo:'bar5'});
+        cache.put(1, {
+            foo:'bar1'
+        });
+        cache.put(2, {
+            foo:'bar2'
+        });
+        cache.put(3, {
+            foo:'bar3'
+        });
+        cache.put(4, {
+            foo:'bar4'
+        });
+        cache.put(5, {
+            foo:'bar5'
+        });
         cache.get(1);
-        JSUNIT.assertEquals(JSON.stringify(cache.get(1)), JSON.stringify({foo:'bar1'}));
-        JSUNIT.assertNotEquals(JSON.stringify(cache.get(1)), JSON.stringify({foo:'bar2'}));
-        cache.put(6, {foo:'bar6'});
-        cache.put(7, {foo:'bar7'});
+        JSUNIT.assertEquals(JSON.stringify(cache.get(1)), JSON.stringify({
+            foo:'bar1'
+        }));
+        JSUNIT.assertNotEquals(JSON.stringify(cache.get(1)), JSON.stringify({
+            foo:'bar2'
+        }));
+        cache.put(6, {
+            foo:'bar6'
+        });
+        cache.put(7, {
+            foo:'bar7'
+        });
         JSUNIT.assertFalse(cache.contains(3));
     };
 
@@ -2757,7 +2836,10 @@
     function testQueryParser() {
 
         var parser = Scule.getQueryParser();
-        var tree   = parser.parseQuery({a:1, b:2});
+        var tree   = parser.parseQuery({
+            a:1, 
+            b:2
+        });
 
         JSUNIT.assertEquals(tree.getRoot().getType(), -1); // should be an expression
 
@@ -2781,7 +2863,36 @@
     function testQueryParserNormalization() {
 
         var parser = Scule.getQueryParser();
-        var tree   = parser.parseQuery({a:1, b:2, $or:[{a:2, b:3}, {a:3, b:4}], $and:[{c:11}, {$or:[{a:4, b:5}, {a:5, b:6}]}, {$or:[{a:6, b:7}, {a:7, b:8}]}]});
+        var tree   = parser.parseQuery({
+            a:1, 
+            b:2, 
+            $or:[{
+                a:2, 
+                b:3
+            }, {
+                a:3, 
+                b:4
+            }], 
+            $and:[{
+                c:11
+            }, {
+                $or:[{
+                    a:4, 
+                    b:5
+                }, {
+                    a:5, 
+                    b:6
+                }]
+            }, {
+                $or:[{
+                    a:6, 
+                    b:7
+                }, {
+                    a:7, 
+                    b:8
+                }]
+            }]
+        });
 
         JSUNIT.assertEquals(tree.getRoot().getType(), -1); // should be an expression
 
@@ -2826,7 +2937,12 @@
 
         var flag = false;
         try {
-            parser.parseQuery({a:1, $and:[{b:2}]});
+            parser.parseQuery({
+                a:1, 
+                $and:[{
+                    b:2
+                }]
+            });
         } catch (e) {
             flag = true;
         }
@@ -2834,7 +2950,14 @@
 
         flag = false;
         try {
-            parser.parseQuery({a:1, $and:[{b:2},{c:2}]});
+            parser.parseQuery({
+                a:1, 
+                $and:[{
+                    b:2
+                },{
+                    c:2
+                }]
+            });
         } catch (e) {
             flag = true;
         }
@@ -2842,7 +2965,12 @@
 
         flag = false;
         try {
-            parser.parseQuery({a:1, $or:[{b:2}]});
+            parser.parseQuery({
+                a:1, 
+                $or:[{
+                    b:2
+                }]
+            });
         } catch (e) {
             flag = true;
         }
@@ -2850,7 +2978,20 @@
 
         flag = false;
         try {
-            parser.parseQuery({a:1, $and:[{b:2},{c:2},{$and:[{d:3},{e:4}]}]});
+            parser.parseQuery({
+                a:1, 
+                $and:[{
+                    b:2
+                },{
+                    c:2
+                },{
+                    $and:[{
+                        d:3
+                    },{
+                        e:4
+                    }]
+                }]
+            });
         } catch (e) {
             flag = true;
         }
@@ -2858,7 +2999,20 @@
 
         flag = false;
         try {
-            parser.parseQuery({a:1, $and:[{b:2},{c:2},{$or:[{d:3},{e:4}]}]});
+            parser.parseQuery({
+                a:1, 
+                $and:[{
+                    b:2
+                },{
+                    c:2
+                },{
+                    $or:[{
+                        d:3
+                    },{
+                        e:4
+                    }]
+                }]
+            });
         } catch (e) {
             flag = true;
         }
@@ -2866,7 +3020,20 @@
 
         flag = false;
         try {
-            parser.parseQuery({a:1, $or:[{b:2},{c:2},{$or:[{d:3},{e:4}]}]});
+            parser.parseQuery({
+                a:1, 
+                $or:[{
+                    b:2
+                },{
+                    c:2
+                },{
+                    $or:[{
+                        d:3
+                    },{
+                        e:4
+                    }]
+                }]
+            });
         } catch (e) {
             flag = true;
         }
@@ -2905,10 +3072,20 @@
         });
 
         var query = {
-            a:{$gt:2, $in:[4, 5, 7, 8, 9], $eq:666},
+            a:{
+                $gt:2, 
+                $in:[4, 5, 7, 8, 9], 
+                $eq:666
+            },
             b:3,
-            c:{$in:[2,1,3,9,7], $nin:['a', 'c', 'b', 10, 0, 'z']},
-            d:{$gt:10, $lte:240},
+            c:{
+                $in:[2,1,3,9,7], 
+                $nin:['a', 'c', 'b', 10, 0, 'z']
+            },
+            d:{
+                $gt:10, 
+                $lte:240
+            },
             foo:'bar'
         };
 
@@ -2945,10 +3122,20 @@
         });
 
         var query = {
-            a:{$gt:2, $in:[4, 5, 7, 8, 9], $eq:666},
+            a:{
+                $gt:2, 
+                $in:[4, 5, 7, 8, 9], 
+                $eq:666
+            },
             b:3,
-            c:{$in:[2,1,3,9,7], $nin:['a', 'c', 'b', 10, 0, 'z']},
-            d:{$gt:10, $lte:240},
+            c:{
+                $in:[2,1,3,9,7], 
+                $nin:['a', 'c', 'b', 10, 0, 'z']
+            },
+            d:{
+                $gt:10, 
+                $lte:240
+            },
             foo:'bar'
         };
 
@@ -2978,10 +3165,20 @@
         });
 
         var query = {
-            a:{$gt:2, $in:[4, 5, 7, 8, 9], $eq:666},
+            a:{
+                $gt:2, 
+                $in:[4, 5, 7, 8, 9], 
+                $eq:666
+            },
             b:3,
-            c:{$in:[2,1,3,9,7], $nin:['a', 'c', 'b', 10, 0, 'z']},
-            d:{$gt:10, $lte:240},
+            c:{
+                $in:[2,1,3,9,7], 
+                $nin:['a', 'c', 'b', 10, 0, 'z']
+            },
+            d:{
+                $gt:10, 
+                $lte:240
+            },
             foo:'bar'
         };
 
@@ -3017,16 +3214,26 @@
         });
 
         var query = {
-            a:{$gt:2, $in:[4, 5, 7, 8, 9]},
+            a:{
+                $gt:2, 
+                $in:[4, 5, 7, 8, 9]
+            },
             b:3,
-            c:{$in:[2,1,3,9,7], $nin:['a', 'c', 'b', 10, 0, 'z']},
-            d:{$gt:10, $lte:240},
+            c:{
+                $in:[2,1,3,9,7], 
+                $nin:['a', 'c', 'b', 10, 0, 'z']
+            },
+            d:{
+                $gt:10, 
+                $lte:240
+            },
             foo:'bar'
         };
 
         var compiler = Scule.getQueryCompiler();
+        compiler.explainQuery(query, {}, collection);
         var program = compiler.compileQuery(query, {}, collection);
-        JSUNIT.assertEquals(program.length, 16);
+        JSUNIT.assertEquals(program.length, 15);
         JSUNIT.assertEquals(program[0][0], 0x1D);
         JSUNIT.assertEquals(program[1][0], 0x1D);
         JSUNIT.assertEquals(program[2][0], 0x1B);
@@ -3034,7 +3241,7 @@
         JSUNIT.assertEquals(program[4][0], 0x23);
         JSUNIT.assertEquals(program[5][0], 0x21);
         JSUNIT.assertEquals(program[6][0], 0x27);
-        JSUNIT.assertEquals(program[14][0], 38);
+        JSUNIT.assertEquals(program[14][0], 0x00);
 
     };
 
@@ -3052,6 +3259,7 @@
         };
 
         var compiler = Scule.getQueryCompiler();    
+        compiler.explainQuery(query, {}, collection);
         var program = compiler.compileQuery(query, {}, collection);
 
         JSUNIT.assertEquals(program.length, 5);
@@ -3060,7 +3268,6 @@
         JSUNIT.assertEquals(program[2][0], 0x21);
         JSUNIT.assertEquals(program[3][0], 0x28);
         JSUNIT.assertEquals(program[4][0], 0x00);
-
     };
 
     function testQueryCompilerSortLimit() {
@@ -3081,15 +3288,24 @@
         });
 
         var query = {
-            a:{$gt:2, $in:[4, 5, 7, 8, 9]},
+            a:{
+                $gt:2, 
+                $in:[4, 5, 7, 8, 9]
+            },
             b:3,
-            c:{$in:[2,1,3,9,7], $nin:['a', 'c', 'b', 10, 0, 'z']},
-            d:{$gt:10, $lte:240},
+            c:{
+                $in:[2,1,3,9,7], 
+                $nin:['a', 'c', 'b', 10, 0, 'z']
+            },
+            d:{
+                $gt:10, 
+                $lte:240
+            },
             foo:'bar'
         };
 
         var compiler = Scule.getQueryCompiler();
-//        compiler.explainQuery(query, {$limit:100, $sort:{a:-1}}, collection);
+    //        compiler.explainQuery(query, {$limit:100, $sort:{a:-1}}, collection);
 
     };
 
@@ -3098,8 +3314,19 @@
         Scule.dropAll();
         var collection = Scule.factoryCollection('scule+dummy://unittest');
         collection.ensureHashIndex('a,b,c');
-        var query = {a:{$in:[1,2,3,4,5]}, b:10, c:99, $or:[{z:11},{k:12}]};
-//        collection.explain(query, {});
+        var query = {
+            a:{
+                $in:[1,2,3,4,5]
+            }, 
+            b:10, 
+            c:99, 
+            $or:[{
+                z:11
+            },{
+                k:12
+            }]
+        };
+    //        collection.explain(query, {});
 
     };
 
@@ -3166,8 +3393,8 @@
         var machine = Scule.getVirtualMachine();
         machine.reset();
         machine.registerInstruction(0x42, function(vm, instruction) {
-            machine.stack.push(instruction[1][0])
-            machine.ipointer++;
+            vm.stack.push(instruction[1][0])
+            vm.ipointer++;
         });
         JSUNIT.assertEquals(machine.ipointer, 0);
         machine.executeInstruction([0x42, ['lol']]);
@@ -3368,10 +3595,10 @@
     function testVirtualMachineIntersectInstruction() {
         var machine = Scule.getVirtualMachine();
         machine.reset();
-
+    
         var list1 = [];
         var list2 = [];
-
+    
         for(var i=0; i < 1000; i++) {
             var o = {
                 _id:Scule.getObjectId()
@@ -3381,7 +3608,7 @@
                 list2.push(o);
             }
         }
-
+    
         machine.running;
         machine.stack.push(list1);
         machine.stack.push(list2);
@@ -3464,13 +3691,9 @@
         };
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0xC, [{
-            c:{
-                d:true
-            }
-        }, 3]]);
-    JSUNIT.assertEquals(machine.ipointer, 1);
-    JSUNIT.assertTrue(machine.stack.peek());
+        machine.executeInstruction([0xC, ['c.d', 3]]);
+        JSUNIT.assertEquals(machine.ipointer, 1);
+        JSUNIT.assertTrue(machine.stack.peek());
     };
 
     function testVirtualMachineNeInstruction() {
@@ -3486,18 +3709,14 @@
         };
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0xD, [{
-            c:{
-                d:true
-            }
-        }, 3]]);
+        machine.executeInstruction([0xD, ['c.d', 3]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertFalse(machine.stack.peek());
     };
 
     function testVirtualMachineGtInstruction() {
         var machine = Scule.getVirtualMachine();
-
+    
         machine.reset();
         machine.running;
         machine.registers[1] = {
@@ -3509,11 +3728,7 @@
         };
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0x07, [{
-            c:{
-                d:true
-            }
-        }, 2]]);
+        machine.executeInstruction([0x07, ['c.d', 2]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertTrue(machine.stack.peek());
 
@@ -3528,18 +3743,14 @@
         };
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0x07, [{
-            c:{
-                d:true
-            }
-        }, 3]]);
+        machine.executeInstruction([0x07, ['c.d', 3]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertFalse(machine.stack.peek());    
     };
 
     function testVirtualMachineGteInstruction() {
         var machine = Scule.getVirtualMachine();
-
+    
         machine.reset();
         machine.running;
         machine.registers[1] = {
@@ -3551,11 +3762,7 @@
         };
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0x08, [{
-            c:{
-                d:true
-            }
-        }, 2]]);
+        machine.executeInstruction([0x08, ['c.d', 2]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertTrue(machine.stack.peek());
 
@@ -3570,18 +3777,14 @@
         };
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0x08, [{
-            c:{
-                d:true
-            }
-        }, 3]]);
+        machine.executeInstruction([0x08, ['c.d', 3]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertTrue(machine.stack.peek());    
     };
 
     function testVirtualMachineLtInstruction() {
         var machine = Scule.getVirtualMachine();
-
+    
         machine.reset();
         machine.running;
         machine.registers[1] = {
@@ -3593,11 +3796,7 @@
         };
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0x05, [{
-            c:{
-                d:true
-            }
-        }, 4]]);
+        machine.executeInstruction([0x05, ['c.d', 4]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertTrue(machine.stack.peek());
 
@@ -3612,18 +3811,14 @@
         };
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0x05, [{
-            c:{
-                d:true
-            }
-        }, 3]]);
+        machine.executeInstruction([0x05, ['c.d', 3]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertFalse(machine.stack.peek());    
     };
 
     function testVirtualMachineLteInstruction() {
         var machine = Scule.getVirtualMachine();
-
+    
         machine.reset();
         machine.running;
         machine.registers[1] = {
@@ -3635,11 +3830,7 @@
         };
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0x06, [{
-            c:{
-                d:true
-            }
-        }, 4]]);
+        machine.executeInstruction([0x06, ['c.d', 4]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertTrue(machine.stack.peek());
 
@@ -3654,11 +3845,7 @@
         };
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0x06, [{
-            c:{
-                d:true
-            }
-        }, 3]]);
+        machine.executeInstruction([0x06, ['c.d', 3]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertTrue(machine.stack.peek());    
     };
@@ -3680,11 +3867,7 @@
         table.put(4, true);
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0xA, [{
-            c:{
-                d:true
-            }
-        }, table]]);
+        machine.executeInstruction([0xA, ['c.d', table]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertTrue(machine.stack.peek());
         machine.reset();
@@ -3698,9 +3881,7 @@
         };
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0xA, [{
-            c:true
-        }, table]]);
+        machine.executeInstruction([0xA, ['c', table]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertFalse(machine.stack.peek());    
     };
@@ -3722,11 +3903,7 @@
         table.put(4, true);
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0xB, [{
-            c:{
-                d:true
-            }
-        }, table]]);
+        machine.executeInstruction([0xB, ['c.d', table]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertFalse(machine.stack.peek());
         machine.reset();
@@ -3740,16 +3917,14 @@
         };
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0xB, [{
-            c:true
-        }, table]]);
+        machine.executeInstruction([0xB, ['c', table]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertTrue(machine.stack.peek());    
     };
 
     function testVirtualMachineSizeInstruction() {
         var machine = Scule.getVirtualMachine();
-
+    
         machine.reset();
         machine.running;
         machine.registers[1] = {
@@ -3757,10 +3932,10 @@
         };
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0xE, [{a:true}, 7]]);
+        machine.executeInstruction([0xE, ['a', 7]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertTrue(machine.stack.peek());
-
+    
         machine.reset();
         machine.running;
         machine.registers[1] = {
@@ -3768,14 +3943,14 @@
         };
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0xE, [{a:true}, 5]]);
+        machine.executeInstruction([0xE, ['a', 5]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertFalse(machine.stack.peek());    
     };
 
     function testVirtualMachineExistsInstruction() {
         var machine = Scule.getVirtualMachine();
-
+    
         machine.reset();
         machine.running;
         machine.registers[1] = {
@@ -3783,10 +3958,10 @@
         };
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0xF, [{a:true}]]);
+        machine.executeInstruction([0xF, ['a']]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertTrue(machine.stack.peek());
-
+    
         machine.reset();
         machine.running;
         machine.registers[1] = {
@@ -3794,7 +3969,7 @@
         };
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0xF, [{c:true}]]);
+        machine.executeInstruction([0xF, ['c']]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertFalse(machine.stack.peek());    
     };
@@ -3804,7 +3979,7 @@
         var table = Scule.getHashTable();
         table.put('foo', true);
         table.put('bar', true);
-
+    
         machine.reset();
         machine.running;
         machine.registers[1] = {
@@ -3812,10 +3987,10 @@
         };
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0x09, [{a:true}, table]]);
+        machine.executeInstruction([0x09, ['a', table]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertTrue(machine.stack.peek());
-
+    
         table.put('lol');
         machine.reset();
         machine.running;
@@ -3824,7 +3999,7 @@
         };
         JSUNIT.assertEquals(machine.ipointer, 0);
         JSUNIT.assertTrue(machine.stack.isEmpty());
-        machine.executeInstruction([0x09, [{c:true}]]);
+        machine.executeInstruction([0x09, ['c']]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertFalse(machine.stack.peek());    
     };
@@ -3848,14 +4023,18 @@
             _id:Scule.getObjectId(),
             foo:'bar'
         };
-
+    
         machine.running = true;
         machine.upsert  = false;
         JSUNIT.assertEquals(machine.ipointer, 0);
-        machine.executeInstruction([0x12, [{foo:true}, 'lol']]);
+        machine.executeInstruction([0x12, [{
+            foo:true
+        }, 'lol']]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertEquals(machine.registers[1].foo, 'lol');
-        machine.executeInstruction([0x12, [{bar:true}, 'foo']]);
+        machine.executeInstruction([0x12, [{
+            bar:true
+        }, 'foo']]);
         JSUNIT.assertEquals(machine.ipointer, 2);
         JSUNIT.assertFalse(('bar' in machine.registers[1]));
 
@@ -3867,10 +4046,14 @@
             foo:'bar'
         };    
         JSUNIT.assertEquals(machine.ipointer, 0);
-        machine.executeInstruction([0x12, [{foo:true}, 'lol']]);
+        machine.executeInstruction([0x12, [{
+            foo:true
+        }, 'lol']]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertEquals(machine.registers[1].foo, 'lol');
-        machine.executeInstruction([0x12, [{bar:true}, 'foo']]);
+        machine.executeInstruction([0x12, [{
+            bar:true
+        }, 'foo']]);
         JSUNIT.assertEquals(machine.ipointer, 2);
         JSUNIT.assertEquals(machine.registers[1].bar, 'foo');
     };
@@ -3881,31 +4064,37 @@
             _id:Scule.getObjectId(),
             foo:'bar'
         };
-
+    
         machine.running = true;
         machine.upsert  = false;
         JSUNIT.assertEquals(machine.ipointer, 0);
-        machine.executeInstruction([0x13, [{foo:true}]]);
+        machine.executeInstruction([0x13, [{
+            foo:true
+        }]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertFalse('foo' in machine.registers[1]);
     };
 
     function testVirtualMachineIncInstruction() {
-
+    
         var machine = Scule.getVirtualMachine();
         machine.registers[1] = {
             _id:Scule.getObjectId(),
             foo:'bar',
             count:0
         };
-
+    
         machine.running = true;
         machine.upsert  = false;
         JSUNIT.assertEquals(machine.ipointer, 0);
-        machine.executeInstruction([0x14, [{foo:true}, 2]]);
+        machine.executeInstruction([0x14, [{
+            foo:true
+        }, 2]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertEquals(machine.registers[1].foo, 'bar');
-        machine.executeInstruction([0x14, [{count:true}, 2]]);
+        machine.executeInstruction([0x14, [{
+            count:true
+        }, 2]]);
         JSUNIT.assertEquals(machine.ipointer, 2);
         JSUNIT.assertEquals(machine.registers[1].count, 2);
 
@@ -3915,14 +4104,16 @@
             foo:'bar',
             count:0
         };
-
+    
         machine.running = true;
         machine.upsert  = true;
         JSUNIT.assertEquals(machine.ipointer, 0);
-        machine.executeInstruction([0x14, [{count1:true}, 66]]);
+        machine.executeInstruction([0x14, [{
+            count1:true
+        }, 66]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertEquals(machine.registers[1].count1, 66);
-
+    
     };
 
     function testVirtualMachineOPullInstruction() {
@@ -3934,7 +4125,9 @@
         };
         machine.running = true;
         JSUNIT.assertEquals(machine.ipointer, 0);
-        machine.executeInstruction([0x15, [{arr:true}, 'poo']]);
+        machine.executeInstruction([0x15, [{
+            arr:true
+        }, 'poo']]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar']));
     };
@@ -3948,7 +4141,9 @@
         };
         machine.running = true;
         JSUNIT.assertEquals(machine.ipointer, 0);
-        machine.executeInstruction([0x16, [{arr:true}, ['poo', 'foo']]]);
+        machine.executeInstruction([0x16, [{
+            arr:true
+        }, ['poo', 'foo']]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['bar']));
     };
@@ -3962,10 +4157,14 @@
         };
         machine.running = true;
         JSUNIT.assertEquals(machine.ipointer, 0);
-        machine.executeInstruction([0x17, [{arr:true}]]);
+        machine.executeInstruction([0x17, [{
+            arr:true
+        }]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar']));
-        machine.executeInstruction([0x17, [{arr:true}]]);
+        machine.executeInstruction([0x17, [{
+            arr:true
+        }]]);
         JSUNIT.assertEquals(machine.ipointer, 2);
         JSUNIT.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo']));
     };
@@ -3979,10 +4178,14 @@
         };
         machine.running = true;
         JSUNIT.assertEquals(machine.ipointer, 0);
-        machine.executeInstruction([0x18, [{arr:true}, 'poo']]);
+        machine.executeInstruction([0x18, [{
+            arr:true
+        }, 'poo']]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar', 'poo', 'poo']));
-        machine.executeInstruction([0x18, [{arr:true}, 'poo2']]);
+        machine.executeInstruction([0x18, [{
+            arr:true
+        }, 'poo2']]);
         JSUNIT.assertEquals(machine.ipointer, 2);
         JSUNIT.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar', 'poo', 'poo', 'poo2']));    
     };
@@ -3996,10 +4199,13 @@
         };
         machine.running = true;
         JSUNIT.assertEquals(machine.ipointer, 0);
-        machine.executeInstruction([0x19, [{arr:true}, ['poo', 'foo']]]);
+        machine.executeInstruction([0x19, [{
+            arr:true
+        }, ['poo', 'foo']]]);
         JSUNIT.assertEquals(machine.ipointer, 1);
         JSUNIT.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar', 'poo', 'poo', 'foo']));
     };
+    
 
     (function() {
         JSUNIT.resetTests();
@@ -4158,27 +4364,27 @@
             [0x1A, []], // break point              5
             [0x27, []], // read                     6
             [0x1A, []], // break point              7
-            [0xC,  [{a:true}, 1]], // eq            8
+            [0xC,  ['a', 1]], // eq                 8
             [0x1A, []], // break point              9
-            [0xD,  [{e:true}, 7]], // ne            10
+            [0xD,  ['e', 7]], // ne                 10
             [0x1A, []], // break point              11
-            [0x07, [{b:true}, 1]], // gt            12
+            [0x07, ['b', 1]], // gt                 12
             [0x1A, []], // break point              13
-            [0x05, [{b:true}, 3]], // lt            14
+            [0x05, ['b', 3]], // lt                 14
             [0x1A, []], // break point              15
-            [0x08, [{c:true}, 1]], // gte           16
+            [0x08, ['c', 1]], // gte                16
             [0x1A, []], // break point              17
-            [0x06, [{c:true}, 4]], // lte           18
+            [0x06, ['c', 4]], // lte                18
             [0x1A, []], // break point              19
-            [0xA,  [{d:true}, table2]], // in       20
+            [0xA,  ['d', table2]], // in            20
             [0x1A, []], // break point              21
-            [0xB,  [{d:true}, table3]], // nin      22
+            [0xB,  ['d', table3]], // nin           22
             [0x1A, []], // break point              23
-            [0x09, [{tags:true}, table1]], // all   24
+            [0x09, ['tags', table1]], // all        24
             [0x1A, []], // break point              25
-            [0xE,  [{tags:true}, 4]], // size       26
+            [0xE,  ['tags', 4]], // size            26
             [0x1A, []], // break point              27
-            [0xF,  [{e:true}]], // exists           28
+            [0xF,  ['e']], // exists                28
             [0x1A, []], // break point              29
             [0x01, [11]], // and                    30
             [0x1A, []], // break point              31
@@ -4280,8 +4486,12 @@
 
         Scule.dropAll();
         var collection = Scule.factoryCollection('scule+dummy://unittest');
-        collection.ensureBTreeIndex('a', {order:1000});
-        collection.ensureBTreeIndex('b', {order:1000});
+        collection.ensureBTreeIndex('a', {
+            order:1000
+        });
+        collection.ensureBTreeIndex('b', {
+            order:1000
+        });
 
         for(var i=0; i < 10000; i++) {
             var a = [];
@@ -4305,10 +4515,26 @@
         var compiler = Scule.getQueryCompiler();
         var timer    = Scule.getTimer();
 
-        compiler.explainQuery({a:3, b:4}, {$limit:100, $sort:{e:1}}, collection);
+        compiler.explainQuery({
+            a:3, 
+            b:4
+        }, {
+            $limit:100, 
+            $sort:{
+                e:1
+            }
+        }, collection);
 
         timer.startInterval('CompileQuery');
-        program = compiler.compileQuery({a:3, b:4}, {$limit:10, $sort:{e:1}}, collection);
+        program = compiler.compileQuery({
+            a:3, 
+            b:4
+        }, {
+            $limit:10, 
+            $sort:{
+                e:1
+            }
+        }, collection);
         timer.stopInterval();
         timer.startInterval('ExecuteQuery');
         result = machine.execute(program);
@@ -4317,7 +4543,15 @@
 
         machine.reset();
         timer.startInterval('CompileQuery');
-        program = compiler.compileQuery({a:3, b:4}, {$limit:10, $sort:{e:1}}, collection);
+        program = compiler.compileQuery({
+            a:3, 
+            b:4
+        }, {
+            $limit:10, 
+            $sort:{
+                e:1
+            }
+        }, collection);
         timer.stopInterval();
         timer.startInterval('ExecuteQuery');
         result = machine.execute(program);
@@ -4362,36 +4596,21 @@
         });
         timer.stopInterval();
 
-        compiler.explainQuery({a:3, c:{$gt:4, $lte:10}}, {}, collection);
-
-        timer.startInterval('CompileQuery');
-        program  = compiler.compileQuery({a:3, c:{$gt:4, $lte:10}}, {}, collection);
-        timer.stopInterval();
-        timer.startInterval('ExecuteQuery');
-        result   = machine.execute(program);
-        timer.stopInterval();
-        timer.logToConsole();
-
         machine.reset();
-        timer.resetTimer();
         timer.startInterval('CompileQuery');
-        program  = compiler.compileQuery({a:3, c:{$gt:4, $lte:10}}, {}, collection);
+        program  = compiler.compileQuery({
+            a:3, 
+            c:{
+                $gt:4, 
+                $lte:10
+            }
+        }, {}, collection);
         timer.stopInterval();
         timer.startInterval('ExecuteQuery');
         result   = machine.execute(program);
         timer.stopInterval();
         timer.logToConsole();
-
-        machine.reset();
-        timer.resetTimer();
-        timer.startInterval('CompileQuery');
-        program  = compiler.compileQuery({a:3, c:{$gt:4, $lte:10}}, {}, collection);
-        timer.stopInterval();
-        timer.startInterval('ExecuteQuery');
-        result   = machine.execute(program);
-        timer.stopInterval();
-        timer.logToConsole();
-
+        
         JSUNIT.assertEquals(count, result.length);
     };
 
@@ -4994,16 +5213,18 @@
     function testCollectionFactory() {
         Scule.dropAll();
         var collection = Scule.factoryCollection('scule+dummy://unittest');
-        collection.ensureIndex(Scule.global.constants.INDEX_TYPE_BTREE, 'a.b', {order:100});
+        collection.ensureIndex(Scule.global.constants.INDEX_TYPE_BTREE, 'a.b', {
+            order:100
+        });
         for(var i=0; i < 1000; i++) {
             var r = i%10;
             collection.save({
-               a: {
-                   b:r
-               },
-               bar:'foo'+r,
-               arr: [r, r+1, r+2, r+3],
-               scl: r
+                a: {
+                    b:r
+                },
+                bar:'foo'+r,
+                arr: [r, r+1, r+2, r+3],
+                scl: r
             });
         }
         JSUNIT.assertEquals(collection.getLength(), 1000);
@@ -5019,12 +5240,12 @@
         for(var i=0; i < 1000; i++) {
             var r = i%10;
             var o = {
-               a:{
-                   b:Scule.global.functions.randomFromTo(1, 10)
-               },
-               bar:'foo'+r,
-               arr:[r, r+1, r+2, r+3],
-               scl:i
+                a:{
+                    b:Scule.global.functions.randomFromTo(1, 10)
+                },
+                bar:'foo'+r,
+                arr:[r, r+1, r+2, r+3],
+                scl:i
             };
             collection1.save(o);
             collection2.save(o);
@@ -5034,12 +5255,12 @@
         for(var i=0; i < 1000; i++) {
             var r = i%10;
             var o = {
-               a:{
-                   b:Scule.global.functions.randomFromTo(1, 10)
-               },
-               bar:'foo'+r,
-               arr:[r, r+1, r+2, r+3],
-               scl:i
+                a:{
+                    b:Scule.global.functions.randomFromTo(1, 10)
+                },
+                bar:'foo'+r,
+                arr:[r, r+1, r+2, r+3],
+                scl:i
             };
             collection2.save(o);
         } 
@@ -5061,21 +5282,25 @@
     function testCollectionMapReduce() {
         Scule.dropAll();
         var collection = Scule.factoryCollection('scule+dummy://unittest');
-        collection.ensureIndex(Scule.global.constants.INDEX_TYPE_BTREE, 'a.b', {order:100});
+        collection.ensureIndex(Scule.global.constants.INDEX_TYPE_BTREE, 'a.b', {
+            order:100
+        });
         for(var i=0; i < 1000; i++) {
             var r = i%10;
             collection.save({
-               a:{
-                   b:Scule.global.functions.randomFromTo(1, 10)
-               },
-               bar:'foo'+r,
-               arr:[r, r+1, r+2, r+3],
-               scl:i
+                a:{
+                    b:Scule.global.functions.randomFromTo(1, 10)
+                },
+                bar:'foo'+r,
+                arr:[r, r+1, r+2, r+3],
+                scl:i
             });
         }
         collection.mapReduce(
             function(document, emit) {
-                emit(document.bar, {scl: document.scl});
+                emit(document.bar, {
+                    scl: document.scl
+                });
             },
             function(key, reduce) {
                 var o = {
@@ -5121,7 +5346,7 @@
                 JSUNIT.assertEquals(o[9].total, 50400);
                 JSUNIT.assertEquals(o[9].finalized, o[9].key);
             }
-        );
+            );
     };
 
     (function() {
@@ -5140,19 +5365,36 @@
         for(var i=0; i < 5000; i++) {
             var r = i%10;
             collection.save({
-               a: {
-                   b:r
-               },
-               loc:{
-                   lat:Scule.global.functions.randomFromTo(-90, 90),
-                   lon:Scule.global.functions.randomFromTo(-70, 70)
-               },
-               bar:'foo'+r,
-               arr: [r, r+1, r+2, r+3],
-               scl: r
+                a: {
+                    b:r
+                },
+                loc:{
+                    lat:Scule.global.functions.randomFromTo(-90, 90),
+                    lon:Scule.global.functions.randomFromTo(-70, 70)
+                },
+                bar:'foo'+r,
+                arr: [r, r+1, r+2, r+3],
+                scl: r
             });
         }
-        collection.find({'loc':{$near:{lat:53, lon:-67, distance:1000}}}, {}, function(o) {
+        collection.explain({
+            'loc':{
+                $near:{
+                    lat:53, 
+                    lon:-67, 
+                    distance:1000
+                }
+            }
+        }, {});
+        collection.find({
+            'loc':{
+                $near:{
+                    lat:53, 
+                    lon:-67, 
+                    distance:1000
+                }
+            }
+        }, {}, function(o) {
             o.forEach(function(document) {
                 JSUNIT.assertTrue('_meta' in document);
                 JSUNIT.assertLessThanEqualTo(document._meta.distance, 1000);
@@ -5163,23 +5405,33 @@
     function testGeoQueriesNear() {
         Scule.dropAll();
         var collection = Scule.factoryCollection('scule+dummy://unittest');
-        collection.ensureIndex(Scule.global.constants.INDEX_TYPE_BTREE, 'a.b', {order:100});
+        collection.ensureIndex(Scule.global.constants.INDEX_TYPE_BTREE, 'a.b', {
+            order:100
+        });
         for(var i=0; i < 5000; i++) {
             var r = i%10;
             collection.save({
-               a: {
-                   b:r
-               },
-               loc:{
-                   lat:Scule.global.functions.randomFromTo(-90, 90),
-                   lon:Scule.global.functions.randomFromTo(-180, 180)
-               },           
-               bar:'foo'+r,
-               arr: [r, r+1, r+2, r+3],
-               scl: r
+                a: {
+                    b:r
+                },
+                loc:{
+                    lat:Scule.global.functions.randomFromTo(-90, 90),
+                    lon:Scule.global.functions.randomFromTo(-180, 180)
+                },           
+                bar:'foo'+r,
+                arr: [r, r+1, r+2, r+3],
+                scl: r
             });
         }
-        collection.find({'loc':{$within:{lat:53, lon:-67, distance:10}}}, {}, function(o) {
+        collection.find({
+            'loc':{
+                $within:{
+                    lat:53, 
+                    lon:-67, 
+                    distance:10
+                }
+            }
+        }, {}, function(o) {
             o.forEach(function(document) {
                 JSUNIT.assertTrue('_meta' in document);
                 JSUNIT.assertLessThanEqualTo(document._meta.distance, 10);
@@ -5194,4 +5446,201 @@
         JSUNIT.runTests();
     }());
 
+}());
+
+(function() {
+    
+    function testQueries() {
+
+        Scule.dropAll();
+
+        var timer = Scule.getTimer();
+        var collection = Scule.factoryCollection('scule+dummy://unittest');
+
+        collection.ensureBTreeIndex('loc.lat', {order:1000});
+        collection.ensureBTreeIndex('i',       {order:1000});
+        collection.ensureBTreeIndex('n',       {order:1000});    
+
+        collection.clear();    
+
+        var k = 0;
+        var names = ['Tom', 'Dick', 'Harry', 'John'];
+        for(var i=0; i < 10000; i++) {
+                var a = [];
+                var n = i%10;
+                for(var j=0; j < n; j++) {
+                        a.push(j);
+                }
+                var o = {
+                        i:i,
+                        n:n,
+                        s:names[k++],
+                        a:a,
+                        as:a.length,
+                        term: Math.random().toString(36).substring(7),
+                        ts:(new Date()).getTime(),
+                        foo:['bar','bar2'],
+                        o: {
+                                a: i,
+                                b: i+1,
+                                c: i+2,
+                                d: i+3,
+                                e: i+4
+                        },
+                        loc: {
+                                lng: Scule.global.functions.randomFromTo(-130, 130),
+                                lat: Scule.global.functions.randomFromTo(-130, 130)
+                        }
+                };
+                collection.save(o);
+                if(k == 4) {
+                    k = 0;
+                }
+        }
+
+        timer.startInterval("collection - {i:{$gte:5000}, n:{$lte:80}}");
+        collection.count({i:{$gte:5000}, n:{$lte:80}}, {}, function(count) {
+            JSUNIT.assertEquals(count, 5000);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("collection - {i:{$gte:5000}, n:{$lte:80}}");
+        collection.count({i:{$gte:5000}, n:{$lte:80}}, {}, function(count) {
+            JSUNIT.assertEquals(count, 5000);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("collection - {i:{$in:[1, 2, 3, 4, 5]}}");
+        collection.count({i:{$in:[1, 2, 3, 4, 5]}}, {}, function(count) {
+            JSUNIT.assertEquals(count, 5);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("collection - {i:{$in:[1, 2, 3, 4, 5]}}");
+        collection.count({i:{$in:[1, 2, 3, 4, 5]}}, {}, function(count) {
+            JSUNIT.assertEquals(count, 5);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("collection - {s:{$size:3}}");
+        collection.count({s:{$size:3}}, {}, function(count) {
+            JSUNIT.assertEquals(count, 2500);
+        });
+        timer.stopInterval();
+
+        collection.explain({s:{$size:3}}, {});
+
+        timer.startInterval("collection - {s:{$size:3}}");
+        collection.count({s:{$size:3}}, {}, function(count) {
+            JSUNIT.assertEquals(count, 2500);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("collection - {o:{$size:5}}");
+        collection.count({o:{$size:5}}, {}, function(count) {
+            JSUNIT.assertEquals(count, 9998);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("collection - {o:{$size:5}}");
+        collection.count({o:{$size:5}}, {}, function(count) {
+            JSUNIT.assertEquals(count, 9998);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("collection - {n:{$exists:false}}");
+        collection.count({n:{$exists:false}}, {}, function(count) {
+            JSUNIT.assertEquals(count, 9998);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("collection - {n:{$exists:false}}");
+        collection.count({n:{$exists:false}}, {}, function(count) {
+            JSUNIT.assertEquals(count, 9998);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("collection - {i:{$gte:70}}");
+        collection.count({i:{$gte:70}}, {}, function(count) {
+            JSUNIT.assertEquals(count, 9930);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("collection - {i:{$gte:70}}");
+        collection.count({i:{$gte:70}}, {}, function(count) {
+            JSUNIT.assertEquals(count, 9930);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("collection - {s:/^T/}");
+        collection.count({s:/^T/}, {}, function(count) {
+            JSUNIT.assertEquals(count, 2500);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("collection - {s:/^T/}");
+        collection.count({s:/^T/}, {}, function(count) {
+            JSUNIT.assertEquals(count, 2500);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("collection - {i:{$gt:50}, $or:{n:{$lt:40}}}");
+        collection.count({i:{$gt:50}, $or:{n:{$lt:40}}}, {}, function(count) {
+            JSUNIT.assertEquals(count, 9947);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("collection - {i:{$gt:50}, $or:{n:{$lt:40}}}");
+        collection.count({i:{$gt:50}, $or:{n:{$lt:40}}}, {}, function(count) {
+            JSUNIT.assertEquals(count, 9947);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("collection - {i:{$gt:50}, $or:{n:{$lt:40}}}, {$sort:{i:-1}, $limit:30}");
+        collection.count({i:{$gt:50}, $or:{n:{$lt:40}}}, {$sort:{i:-1}, $limit:30}, function(count) {
+            JSUNIT.assertEquals(count, 9947);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("collection - {i:{$gt:50}, $or:{n:{$lt:40}}}, {$sort:{i:-1}, $limit:30}");
+        collection.count({i:{$gt:50}, $or:{n:{$lt:40}}}, {$sort:{i:-1}, $limit:30}, function(count) {
+            JSUNIT.assertEquals(count, 9947);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("collection - {i:{$lte:90}}, {$set:{n:10, s:'Steve'}}");
+        collection.update({i:{$lte:90}}, {$set:{n:10, s:'Steve'}}, {}, false, function(count) {
+            JSUNIT.assertEquals(count.length, 91);
+        });
+        timer.stopInterval();
+
+        collection.find({i:{$lte:90}}, {}, function(o) {
+            o.forEach(function(document) {
+               JSUNIT.assertEquals(document.n, 10);
+               JSUNIT.assertEquals(document.s, 'Steve');
+            });
+        });
+
+        timer.startInterval("collection - {i:10}, {$push:{foo:'bar3'}}");
+        collection.update({i:10}, {$push:{foo:'bar3'}}, {}, true, function(count) {
+            JSUNIT.assertEquals(count.length, 1);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("collection - {i:10}, {$pushAll:{foo:['bar3', 'bar4']}}");
+        collection.update({i:10}, {$pushAll:{foo:['bar3', 'bar4']}}, {}, false, function(count) {
+            JSUNIT.assertEquals(count.length, 1);
+        });
+        timer.stopInterval();
+
+        console.log('');
+        timer.logToConsole();
+    };
+
+    (function() {
+        JSUNIT.resetTests();
+        JSUNIT.addTest(testQueries);
+        JSUNIT.runTests();
+    }());    
+    
 }());

@@ -1,6 +1,7 @@
 var sculedb = require('../lib/com.scule.db.parser');
 var db      = require('../lib/com.scule.db');
 var vm      = require('../lib/com.scule.db.vm');
+var build   = require('../lib/com.scule.db.builder');
 var inst    = require('../lib/com.scule.instrumentation');
 var jsunit  = require('../lib/com.scule.jsunit');
 
@@ -42,27 +43,27 @@ function testVirtualMachine() {
         [0x1A, []], // break point              5
         [0x27, []], // read                     6
         [0x1A, []], // break point              7
-        [0xC,  [{a:true}, 1]], // eq            8
+        [0xC,  ['a', 1]], // eq                 8
         [0x1A, []], // break point              9
-        [0xD,  [{e:true}, 7]], // ne            10
+        [0xD,  ['e', 7]], // ne                 10
         [0x1A, []], // break point              11
-        [0x07, [{b:true}, 1]], // gt            12
+        [0x07, ['b', 1]], // gt                 12
         [0x1A, []], // break point              13
-        [0x05, [{b:true}, 3]], // lt            14
+        [0x05, ['b', 3]], // lt                 14
         [0x1A, []], // break point              15
-        [0x08, [{c:true}, 1]], // gte           16
+        [0x08, ['c', 1]], // gte                16
         [0x1A, []], // break point              17
-        [0x06, [{c:true}, 4]], // lte           18
+        [0x06, ['c', 4]], // lte                18
         [0x1A, []], // break point              19
-        [0xA,  [{d:true}, table2]], // in       20
+        [0xA,  ['d', table2]], // in            20
         [0x1A, []], // break point              21
-        [0xB,  [{d:true}, table3]], // nin      22
+        [0xB,  ['d', table3]], // nin           22
         [0x1A, []], // break point              23
-        [0x09, [{tags:true}, table1]], // all   24
+        [0x09, ['tags', table1]], // all        24
         [0x1A, []], // break point              25
-        [0xE,  [{tags:true}, 4]], // size       26
+        [0xE,  ['tags', 4]], // size            26
         [0x1A, []], // break point              27
-        [0xF,  [{e:true}]], // exists           28
+        [0xF,  ['e']], // exists                28
         [0x1A, []], // break point              29
         [0x01, [11]], // and                    30
         [0x1A, []], // break point              31
@@ -186,7 +187,7 @@ function testVirtualMachineSimpleSelection() {
     var result;
     var program  = null;
     var machine  = vm.getVirtualMachine();
-    var compiler = vm.getQueryCompiler();
+    var compiler = build.getQueryCompiler();
     var timer    = inst.getTimer();
 
     compiler.explainQuery({a:3, b:4}, {$limit:100, $sort:{e:1}}, collection);
@@ -236,7 +237,7 @@ function testVirtualMachineSelection() {
     var program  = null;
     var result   = null;
     var machine  = vm.getVirtualMachine();
-    var compiler = vm.getQueryCompiler();
+    var compiler = build.getQueryCompiler();
     var timer    = inst.getTimer();
 
     timer.startInterval('ManualQuery');
@@ -284,8 +285,8 @@ function testVirtualMachineSelection() {
 
 (function() {
     jsunit.resetTests(__filename);
-//    jsunit.addTest(testVirtualMachine);
-//    jsunit.addTest(testVirtualMachineSelection);
+    jsunit.addTest(testVirtualMachine);
+    jsunit.addTest(testVirtualMachineSelection);
     jsunit.addTest(testVirtualMachineSimpleSelection);
     jsunit.runTests();
 }());

@@ -305,13 +305,9 @@ function testVirtualMachineEqInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0xC, [{
-        c:{
-            d:true
-        }
-    }, 3]]);
-jsunit.assertEquals(machine.ipointer, 1);
-jsunit.assertTrue(machine.stack.peek());
+    machine.executeInstruction([0xC, ['c.d', 3]]);
+    jsunit.assertEquals(machine.ipointer, 1);
+    jsunit.assertTrue(machine.stack.peek());
 };
 
 function testVirtualMachineNeInstruction() {
@@ -327,11 +323,7 @@ function testVirtualMachineNeInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0xD, [{
-        c:{
-            d:true
-        }
-    }, 3]]);
+    machine.executeInstruction([0xD, ['c.d', 3]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertFalse(machine.stack.peek());
 };
@@ -350,11 +342,7 @@ function testVirtualMachineGtInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0x07, [{
-        c:{
-            d:true
-        }
-    }, 2]]);
+    machine.executeInstruction([0x07, ['c.d', 2]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertTrue(machine.stack.peek());
 
@@ -369,11 +357,7 @@ function testVirtualMachineGtInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0x07, [{
-        c:{
-            d:true
-        }
-    }, 3]]);
+    machine.executeInstruction([0x07, ['c.d', 3]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertFalse(machine.stack.peek());    
 };
@@ -392,11 +376,7 @@ function testVirtualMachineGteInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0x08, [{
-        c:{
-            d:true
-        }
-    }, 2]]);
+    machine.executeInstruction([0x08, ['c.d', 2]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertTrue(machine.stack.peek());
 
@@ -411,11 +391,7 @@ function testVirtualMachineGteInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0x08, [{
-        c:{
-            d:true
-        }
-    }, 3]]);
+    machine.executeInstruction([0x08, ['c.d', 3]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertTrue(machine.stack.peek());    
 };
@@ -434,11 +410,7 @@ function testVirtualMachineLtInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0x05, [{
-        c:{
-            d:true
-        }
-    }, 4]]);
+    machine.executeInstruction([0x05, ['c.d', 4]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertTrue(machine.stack.peek());
 
@@ -453,11 +425,7 @@ function testVirtualMachineLtInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0x05, [{
-        c:{
-            d:true
-        }
-    }, 3]]);
+    machine.executeInstruction([0x05, ['c.d', 3]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertFalse(machine.stack.peek());    
 };
@@ -476,11 +444,7 @@ function testVirtualMachineLteInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0x06, [{
-        c:{
-            d:true
-        }
-    }, 4]]);
+    machine.executeInstruction([0x06, ['c.d', 4]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertTrue(machine.stack.peek());
 
@@ -495,11 +459,7 @@ function testVirtualMachineLteInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0x06, [{
-        c:{
-            d:true
-        }
-    }, 3]]);
+    machine.executeInstruction([0x06, ['c.d', 3]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertTrue(machine.stack.peek());    
 };
@@ -521,11 +481,7 @@ function testVirtualMachineInInstruction() {
     table.put(4, true);
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0xA, [{
-        c:{
-            d:true
-        }
-    }, table]]);
+    machine.executeInstruction([0xA, ['c.d', table]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertTrue(machine.stack.peek());
     machine.reset();
@@ -539,9 +495,7 @@ function testVirtualMachineInInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0xA, [{
-        c:true
-    }, table]]);
+    machine.executeInstruction([0xA, ['c', table]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertFalse(machine.stack.peek());    
 };
@@ -563,11 +517,7 @@ function testVirtualMachineNinInstruction() {
     table.put(4, true);
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0xB, [{
-        c:{
-            d:true
-        }
-    }, table]]);
+    machine.executeInstruction([0xB, ['c.d', table]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertFalse(machine.stack.peek());
     machine.reset();
@@ -581,9 +531,7 @@ function testVirtualMachineNinInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0xB, [{
-        c:true
-    }, table]]);
+    machine.executeInstruction([0xB, ['c', table]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertTrue(machine.stack.peek());    
 };
@@ -598,7 +546,7 @@ function testVirtualMachineSizeInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0xE, [{a:true}, 7]]);
+    machine.executeInstruction([0xE, ['a', 7]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertTrue(machine.stack.peek());
     
@@ -609,7 +557,7 @@ function testVirtualMachineSizeInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0xE, [{a:true}, 5]]);
+    machine.executeInstruction([0xE, ['a', 5]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertFalse(machine.stack.peek());    
 };
@@ -624,7 +572,7 @@ function testVirtualMachineExistsInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0xF, [{a:true}]]);
+    machine.executeInstruction([0xF, ['a']]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertTrue(machine.stack.peek());
     
@@ -635,7 +583,7 @@ function testVirtualMachineExistsInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0xF, [{c:true}]]);
+    machine.executeInstruction([0xF, ['c']]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertFalse(machine.stack.peek());    
 };
@@ -653,7 +601,7 @@ function testVirtualMachineAllInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0x09, [{a:true}, table]]);
+    machine.executeInstruction([0x09, ['a', table]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertTrue(machine.stack.peek());
     
@@ -665,7 +613,7 @@ function testVirtualMachineAllInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0x09, [{c:true}]]);
+    machine.executeInstruction([0x09, ['c']]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertFalse(machine.stack.peek());    
 };
@@ -693,10 +641,14 @@ function testVirtualMachineSetInstruction() {
     machine.running = true;
     machine.upsert  = false;
     jsunit.assertEquals(machine.ipointer, 0);
-    machine.executeInstruction([0x12, [{foo:true}, 'lol']]);
+    machine.executeInstruction([0x12, [{
+        foo:true
+    }, 'lol']]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertEquals(machine.registers[1].foo, 'lol');
-    machine.executeInstruction([0x12, [{bar:true}, 'foo']]);
+    machine.executeInstruction([0x12, [{
+        bar:true
+    }, 'foo']]);
     jsunit.assertEquals(machine.ipointer, 2);
     jsunit.assertFalse(('bar' in machine.registers[1]));
 
@@ -708,10 +660,14 @@ function testVirtualMachineSetInstruction() {
         foo:'bar'
     };    
     jsunit.assertEquals(machine.ipointer, 0);
-    machine.executeInstruction([0x12, [{foo:true}, 'lol']]);
+    machine.executeInstruction([0x12, [{
+        foo:true
+    }, 'lol']]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertEquals(machine.registers[1].foo, 'lol');
-    machine.executeInstruction([0x12, [{bar:true}, 'foo']]);
+    machine.executeInstruction([0x12, [{
+        bar:true
+    }, 'foo']]);
     jsunit.assertEquals(machine.ipointer, 2);
     jsunit.assertEquals(machine.registers[1].bar, 'foo');
 };
@@ -726,7 +682,9 @@ function testVirtualMachineUnsetInstruction() {
     machine.running = true;
     machine.upsert  = false;
     jsunit.assertEquals(machine.ipointer, 0);
-    machine.executeInstruction([0x13, [{foo:true}]]);
+    machine.executeInstruction([0x13, [{
+        foo:true
+    }]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertFalse('foo' in machine.registers[1]);
 };
@@ -743,10 +701,14 @@ function testVirtualMachineIncInstruction() {
     machine.running = true;
     machine.upsert  = false;
     jsunit.assertEquals(machine.ipointer, 0);
-    machine.executeInstruction([0x14, [{foo:true}, 2]]);
+    machine.executeInstruction([0x14, [{
+        foo:true
+    }, 2]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertEquals(machine.registers[1].foo, 'bar');
-    machine.executeInstruction([0x14, [{count:true}, 2]]);
+    machine.executeInstruction([0x14, [{
+        count:true
+    }, 2]]);
     jsunit.assertEquals(machine.ipointer, 2);
     jsunit.assertEquals(machine.registers[1].count, 2);
 
@@ -760,7 +722,9 @@ function testVirtualMachineIncInstruction() {
     machine.running = true;
     machine.upsert  = true;
     jsunit.assertEquals(machine.ipointer, 0);
-    machine.executeInstruction([0x14, [{count1:true}, 66]]);
+    machine.executeInstruction([0x14, [{
+        count1:true
+    }, 66]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertEquals(machine.registers[1].count1, 66);
     
@@ -775,7 +739,9 @@ function testVirtualMachineOPullInstruction() {
     };
     machine.running = true;
     jsunit.assertEquals(machine.ipointer, 0);
-    machine.executeInstruction([0x15, [{arr:true}, 'poo']]);
+    machine.executeInstruction([0x15, [{
+        arr:true
+    }, 'poo']]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar']));
 };
@@ -789,7 +755,9 @@ function testVirtualMachineOPullAllInstruction() {
     };
     machine.running = true;
     jsunit.assertEquals(machine.ipointer, 0);
-    machine.executeInstruction([0x16, [{arr:true}, ['poo', 'foo']]]);
+    machine.executeInstruction([0x16, [{
+        arr:true
+    }, ['poo', 'foo']]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['bar']));
 };
@@ -803,10 +771,14 @@ function testVirtualMachinePopInstruction() {
     };
     machine.running = true;
     jsunit.assertEquals(machine.ipointer, 0);
-    machine.executeInstruction([0x17, [{arr:true}]]);
+    machine.executeInstruction([0x17, [{
+        arr:true
+    }]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar']));
-    machine.executeInstruction([0x17, [{arr:true}]]);
+    machine.executeInstruction([0x17, [{
+        arr:true
+    }]]);
     jsunit.assertEquals(machine.ipointer, 2);
     jsunit.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo']));
 };
@@ -820,10 +792,14 @@ function testVirtualMachineOPushInstruction() {
     };
     machine.running = true;
     jsunit.assertEquals(machine.ipointer, 0);
-    machine.executeInstruction([0x18, [{arr:true}, 'poo']]);
+    machine.executeInstruction([0x18, [{
+        arr:true
+    }, 'poo']]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar', 'poo', 'poo']));
-    machine.executeInstruction([0x18, [{arr:true}, 'poo2']]);
+    machine.executeInstruction([0x18, [{
+        arr:true
+    }, 'poo2']]);
     jsunit.assertEquals(machine.ipointer, 2);
     jsunit.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar', 'poo', 'poo', 'poo2']));    
 };
@@ -837,7 +813,9 @@ function testVirtualMachineOPushAllInstruction() {
     };
     machine.running = true;
     jsunit.assertEquals(machine.ipointer, 0);
-    machine.executeInstruction([0x19, [{arr:true}, ['poo', 'foo']]]);
+    machine.executeInstruction([0x19, [{
+        arr:true
+    }, ['poo', 'foo']]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar', 'poo', 'poo', 'foo']));
 };

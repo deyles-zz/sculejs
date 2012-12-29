@@ -1,5 +1,5 @@
-var sculedb   = require('../lib/com.scule.datastructures');
-var jsunit = require('../lib/com.scule.jsunit');
+var sculedb = require('../lib/com.scule.datastructures');
+var jsunit  = require('../lib/com.scule.jsunit');
 
 function testBPlusTreeNode() {
     var node = sculedb.getBPlusTreeNode();
