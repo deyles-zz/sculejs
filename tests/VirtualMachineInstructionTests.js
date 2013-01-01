@@ -599,7 +599,7 @@ function testVirtualMachineExistsInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0xF, ['a']]);
+    machine.executeInstruction([0xF, ['a', true]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertTrue(machine.stack.peek());
     
@@ -610,7 +610,7 @@ function testVirtualMachineExistsInstruction() {
     };
     jsunit.assertEquals(machine.ipointer, 0);
     jsunit.assertTrue(machine.stack.isEmpty());
-    machine.executeInstruction([0xF, ['c']]);
+    machine.executeInstruction([0xF, ['c', true]]);
     jsunit.assertEquals(machine.ipointer, 1);
     jsunit.assertFalse(machine.stack.peek());    
 };

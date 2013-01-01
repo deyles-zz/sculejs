@@ -79,6 +79,14 @@ function testQueries() {
 
     timer.startInterval("collection - {i:{$gte:5000}, n:{$lte:80}}");
     collection.count({i:{$gte:5000}, n:{$lte:80}}, {}, function(count) {
+        var o = collection.findAll();
+        var c = 0;
+        o.forEach(function(d) {
+            if(d.i >= 5000 && d.n <= 80) {
+                c++;
+            }
+        });
+        jsunit.assertEquals(count, c);
         jsunit.assertEquals(count, 5000);
     });
     timer.stopInterval();
@@ -91,6 +99,14 @@ function testQueries() {
 
     timer.startInterval("collection - {i:{$in:[1, 2, 3, 4, 5]}}");
     collection.count({i:{$in:[1, 2, 3, 4, 5]}}, {}, function(count) {
+        var o = collection.findAll();
+        var c = 0;
+        o.forEach(function(d) {
+            if(d.i >= 1 && d.i <= 5) {
+                c++;
+            }
+        });
+        jsunit.assertEquals(count, c);        
         jsunit.assertEquals(count, 5);
     });
     timer.stopInterval();
@@ -103,6 +119,14 @@ function testQueries() {
 
     timer.startInterval("collection - {s:{$size:3}}");
     collection.count({s:{$size:3}}, {}, function(count) {
+        var o = collection.findAll();
+        var c = 0;
+        o.forEach(function(d) {
+            if(d.s.length == 3) {
+                c++;
+            }
+        });
+        jsunit.assertEquals(count, c);         
         jsunit.assertEquals(count, 2500);
     });
     timer.stopInterval();
@@ -115,30 +139,74 @@ function testQueries() {
 
     timer.startInterval("collection - {o:{$size:5}}");
     collection.count({o:{$size:5}}, {}, function(count) {
-        jsunit.assertEquals(count, 9998);
+        var o = collection.findAll();
+        var c = 0;
+        o.forEach(function(d) {
+            if(sculedb.Scule.$f.sizeOf(d.o) == 5) {
+                c++;
+            }
+        });
+        jsunit.assertEquals(count, c);        
+        jsunit.assertEquals(count, 10000);
     });
     timer.stopInterval();
 
     timer.startInterval("collection - {o:{$size:5}}");
     collection.count({o:{$size:5}}, {}, function(count) {
-        jsunit.assertEquals(count, 9998);
+        jsunit.assertEquals(count, 10000);
     });
     timer.stopInterval();
 
     timer.startInterval("collection - {n:{$exists:false}}");
     collection.count({n:{$exists:false}}, {}, function(count) {
-        jsunit.assertEquals(count, 9998);
+        var o = collection.findAll();
+        var c = 0;
+        o.forEach(function(d) {
+            if(!('n' in d)) {
+                c++;
+            }
+        });
+        jsunit.assertEquals(count, c);        
+        jsunit.assertEquals(count, 0);
     });
     timer.stopInterval();
 
     timer.startInterval("collection - {n:{$exists:false}}");
     collection.count({n:{$exists:false}}, {}, function(count) {
-        jsunit.assertEquals(count, 9998);
+        jsunit.assertEquals(count, 0);
+    });
+    timer.stopInterval();
+
+    timer.startInterval("collection - {n:{$exists:true}}");
+    collection.count({n:{$exists:true}}, {}, function(count) {
+        var o = collection.findAll();
+        var c = 0;
+        o.forEach(function(d) {
+            if('n' in d) {
+                c++;
+            }
+        });
+        jsunit.assertEquals(count, c);         
+        jsunit.assertEquals(count, 10000);
+    });
+    timer.stopInterval();
+
+    timer.startInterval("collection - {n:{$exists:true}}");
+    collection.count({n:{$exists:true}}, {}, function(count) {
+        jsunit.assertEquals(count, 10000);
     });
     timer.stopInterval();
 
     timer.startInterval("collection - {i:{$gte:70}}");
     collection.count({i:{$gte:70}}, {}, function(count) {
+        var o = collection.findAll();
+        var c = 0;
+        o.forEach(function(d) {
+            if(d.i >= 70) {
+                c++;
+            }
+        });
+        jsunit.assertEquals(count, c);         
         jsunit.assertEquals(count, 9930);
     });
     timer.stopInterval();
@@ -151,6 +219,14 @@ function testQueries() {
 
     timer.startInterval("collection - {s:/^T/}");
     collection.count({s:/^T/}, {}, function(count) {
+        var o = collection.findAll();
+        var c = 0;
+        o.forEach(function(d) {
+            if(/^T/.test(d.s)) {
+                c++;
+            }
+        });
+        jsunit.assertEquals(count, c);         
         jsunit.assertEquals(count, 2500);
     });
     timer.stopInterval();
@@ -161,38 +237,70 @@ function testQueries() {
     });
     timer.stopInterval();
 
-    timer.startInterval("collection - {i:{$gt:50}, $or:{n:{$lt:40}}}");
-    collection.count({i:{$gt:50}, $or:{n:{$lt:40}}}, {}, function(count) {
-        jsunit.assertEquals(count, 9947);
+    timer.startInterval("collection - {$or:[{n:{$lt:40}}, {i:{$gt:50}}]}");
+    collection.count({$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {}, function(count) {
+        var o = collection.findAll();
+        var c = 0;
+        o.forEach(function(d) {
+            if(d.i > 50 || d.n < 40) {
+                c++;
+            }
+        });
+        jsunit.assertEquals(count, c);        
+        jsunit.assertEquals(count, 10000);
     });
     timer.stopInterval();
 
-    timer.startInterval("collection - {i:{$gt:50}, $or:{n:{$lt:40}}}");
-    collection.count({i:{$gt:50}, $or:{n:{$lt:40}}}, {}, function(count) {
-        jsunit.assertEquals(count, 9947);
+    timer.startInterval("collection - {$or:[{n:{$lt:40}}, {i:{$gt:50}}]}");
+    collection.count({$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {}, function(count) {
+        jsunit.assertEquals(count, 10000);
     });
     timer.stopInterval();
 
-    timer.startInterval("collection - {i:{$gt:50}, $or:{n:{$lt:40}}}, {$sort:{i:-1}, $limit:30}");
-    collection.count({i:{$gt:50}, $or:{n:{$lt:40}}}, {$sort:{i:-1}, $limit:30}, function(count) {
-        jsunit.assertEquals(count, 9947);
+    timer.startInterval("collection - {$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}");
+    collection.count({$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}, function(count) {
+        var o = collection.findAll();
+        var c = 0;
+        o.forEach(function(d) {
+            if(d.i > 50 || d.n < 40) {
+                c++;
+            }
+        });
+        jsunit.assertEquals(count, c);        
+        jsunit.assertEquals(count, 10000);
     });
     timer.stopInterval();
 
-    timer.startInterval("collection - {i:{$gt:50}, $or:{n:{$lt:40}}}, {$sort:{i:-1}, $limit:30}");
-    collection.count({i:{$gt:50}, $or:{n:{$lt:40}}}, {$sort:{i:-1}, $limit:30}, function(count) {
-        jsunit.assertEquals(count, 9947);
+    timer.startInterval("collection - {$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}");
+    collection.count({$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}, function(count) {
+        jsunit.assertEquals(count, 10000);
     });
     timer.stopInterval();
 
     timer.startInterval("collection - {i:{$lte:90}}, {$set:{n:10, s:'Steve'}}");
     collection.update({i:{$lte:90}}, {$set:{n:10, s:'Steve'}}, {}, false, function(count) {
+        var o = collection.findAll();
+        var c = 0;
+        o.forEach(function(d) {
+            if(d.i <= 90) {
+                c++;
+            }
+        });
+        jsunit.assertEquals(count.length, c);        
         jsunit.assertEquals(count.length, 91);
     });
     timer.stopInterval();
 
     timer.startInterval("collection - {i:10}, {$push:{foo:'bar3'}}");
     collection.update({i:10}, {$push:{foo:'bar3'}}, {}, true, function(count) {
+        var o = collection.findAll();
+        var c = 0;
+        o.forEach(function(d) {
+            if(d.i == 10) {
+                c++;
+            }
+        });
+        jsunit.assertEquals(count.length, c);         
         jsunit.assertEquals(count.length, 1);
     });
     timer.stopInterval();

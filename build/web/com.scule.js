@@ -6112,10 +6112,10 @@
             this.children.forEach(function(block) {
                 code = code.concat(block.toByteCode());
             });  
-            code.push([0x25, [(Scule.builder.variables.line + 3)]]);  
-            Scule.builder.variables.line++;
             code.push([0x20, []]);
             Scule.builder.variables.line++;
+            code.push([0x25, [(Scule.builder.variables.line + 2)]]);  
+            Scule.builder.variables.line++;            
             code.push([0x26, [read]]);
             Scule.builder.variables.line++;
             return code;
@@ -6132,8 +6132,8 @@
             this.children.forEach(function(block) {
                 block.explain();
             });    
-            console.log((Scule.builder.variables.line++) + ' jump [' + (Scule.builder.variables.line + 2) + ']');        
             console.log((Scule.builder.variables.line++) + ' shift');
+            console.log((Scule.builder.variables.line++) + ' jump [' + (Scule.builder.variables.line + 1) + ']');                    
             console.log((Scule.builder.variables.line++) + ' goto [' + read + ']');
         };
 
@@ -6933,7 +6933,8 @@
          * read
          */
         this.registerInstruction(0x27, function(vm, instruction) {
-            vm.registers[1] = vm.registers[0][vm.dpointer++];
+            vm.registers[1] = vm.registers[0][vm.dpointer];
+            vm.dpointer++;
             vm.ipointer++;
         });
 
@@ -7014,7 +7015,7 @@
          * jump
          */
         this.registerInstruction(0x25, function(vm, instruction) {
-            if(vm.dpointer >= (vm.registers[0].length - 1)) {
+            if(vm.dpointer >= vm.registers[0].length) {
                 vm.ipointer = instruction[1][0];
                 return;
             }
@@ -7129,7 +7130,11 @@
         this.registerInstruction(0xF, function(vm, instruction) {
             var object = vm.registers[1];
             var value  = Scule.global.functions.traverse(instruction[1][0], object);
-            vm.stack.push(value !== undefined);
+            if(instruction[1][1]) {
+                vm.stack.push(value !== undefined);
+            } else {
+                vm.stack.push(value === undefined);
+            }
             vm.ipointer++;
         });
 

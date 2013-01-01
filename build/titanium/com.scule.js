@@ -5395,10 +5395,10 @@ module.exports.Scule.classes.ProgramLoopBlock = function () {
         this.children.forEach(function(block) {
             code = code.concat(block.toByteCode());
         });  
-        code.push([0x25, [(module.exports.Scule.variables.line + 3)]]);  
-        module.exports.Scule.variables.line++;
         code.push([0x20, []]);
         module.exports.Scule.variables.line++;
+        code.push([0x25, [(module.exports.Scule.variables.line + 2)]]);  
+        module.exports.Scule.variables.line++;        
         code.push([0x26, [read]]);
         module.exports.Scule.variables.line++;
         return code;
@@ -5415,8 +5415,8 @@ module.exports.Scule.classes.ProgramLoopBlock = function () {
         this.children.forEach(function(block) {
             block.explain();
         });    
-        Ti.API.info((module.exports.Scule.variables.line++) + ' jump [' + (module.exports.Scule.variables.line + 2) + ']');        
         Ti.API.info((module.exports.Scule.variables.line++) + ' shift');
+        Ti.API.info((module.exports.Scule.variables.line++) + ' jump [' + (module.exports.Scule.variables.line + 1) + ']');        
         Ti.API.info((module.exports.Scule.variables.line++) + ' goto [' + read + ']');
     };
 
@@ -6179,7 +6179,8 @@ module.exports.Scule.classes.VirtualMachine = function() {
      * read
      */
     this.registerInstruction(0x27, function(vm, instruction) {
-        vm.registers[1] = vm.registers[0][vm.dpointer++];
+        vm.registers[1] = vm.registers[0][vm.dpointer];
+        vm.dpointer++;
         vm.ipointer++;
     });
     
@@ -6260,7 +6261,7 @@ module.exports.Scule.classes.VirtualMachine = function() {
      * jump
      */
     this.registerInstruction(0x25, function(vm, instruction) {
-        if(vm.dpointer >= (vm.registers[0].length - 1)) {
+        if(vm.dpointer >= vm.registers[0].length) {
             vm.ipointer = instruction[1][0];
             return;
         }
@@ -6375,7 +6376,11 @@ module.exports.Scule.classes.VirtualMachine = function() {
     this.registerInstruction(0xF, function(vm, instruction) {
         var object = vm.registers[1];
         var value  = module.exports.Scule.functions.traverse(instruction[1][0], object);
-        vm.stack.push(value !== undefined);
+        if(instruction[1][1]) {
+            vm.stack.push(value !== undefined);
+        } else {
+            vm.stack.push(value === undefined);
+        }
         vm.ipointer++;
     });
 

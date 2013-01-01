@@ -90,7 +90,7 @@ function testVirtualMachine() {
         [0x1A, []], // break point              25
         [0xE,  ['tags', 4]], // size            26
         [0x1A, []], // break point              27
-        [0xF,  ['e']], // exists                28
+        [0xF,  ['e', true]], // exists          28
         [0x1A, []], // break point              29
         [0x01, [11]], // and                    30
         [0x1A, []], // break point              31
