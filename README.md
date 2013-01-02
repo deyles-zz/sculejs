@@ -1,5 +1,7 @@
 # SculeJS
 
+[![Build Status](https://travis-ci.org/dan-eyles/sculejs.png?branch=master)](https://travis-ci.org/dan-eyles/sculejs)
+
 ## What is SculeJS?
 
 *SculeJS* (from Minuscule - pronounced **skyul**) is a JavaScript library emulating the functionality of [MongoDB](http://www.mongodb.org/). It's also
