@@ -31,7 +31,7 @@ if (typeof Scule == 'undefined') {
     };
 }
 
-if (typeof Scule == 'undefined') {
+if (typeof console == 'undefined') {
     var console = {
         log: function(message) {
             // noop
