@@ -44,6 +44,11 @@ You should be able to generate JSDoc for _SculeJS_ using the following commands 
 
 If you have any specific questions about how to use _SculeJS_ then head on over to the [project wiki](https://github.com/dan-eyles/sculejs/wiki).
 
+## Do you use any coding standards?
+
+I run all core library code through [JSHint](http://jshint.com/) as part of my (currently manual) build process. Building code for other platforms such as web and Titanium
+takes a little bit of manual fiddling, so certain portions don't pass. It all runs though, and all test cases are verified by running JSUnit before any commits to TRUNK.
+
 ## How does it work?
 
 *SculeJS* stores collections of JavaScript objects in memory and uses a [Hybrid Virtual Machine](http://en.wikipedia.org/wiki/Virtual_machine "Virtual Machine") to process query expressions.

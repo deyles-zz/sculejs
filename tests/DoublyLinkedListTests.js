@@ -228,8 +228,8 @@ function testDoublyLinkedListArraySearch() {
     for(var i=0; i < 1000; i++) {
         list.add([i, (i*2), (i-1)]);
     }    
-    jsunit.assertTrue(list.search([500, 1000, 499], null, sculedb.Scule.$f.compareArray));
-    jsunit.assertFalse(list.search([500, 1000, 498], null, sculedb.Scule.$f.compareArray));
+    jsunit.assertTrue(list.search([500, 1000, 499], null, sculedb.Scule.$f.compareArray) !== null);
+    jsunit.assertTrue(list.search([500, 1000, 498], null, sculedb.Scule.$f.compareArray) === null);
 };
 
 (function() {

@@ -25,16 +25,26 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+if (typeof Scule == 'undefined') {
+    var Scule = {
+        namespaces: {}
+    };
+}
+
+if (typeof Scule == 'undefined') {
+    var console = {
+        log: function(message) {
+            // noop
+        }
+    };
+}
+
 /**
  * Global namespace definitions
  */
 (function() {
 
-    if(typeof Scule == 'undefined') {
-        Scule = {
-            namespaces:{}
-        }
-    }
+    "use strict";
 
     /**
      * Registers a namespace with the Scule module
@@ -43,7 +53,7 @@
      * @return void
      */
     Scule.registerNamespace = function(namespace, definition) {
-        if(namespace in Scule) {
+        if (namespace in Scule) {
             throw 'namespace ' + namespace + ' is already registered';
         }
         Scule[namespace] = definition;
@@ -60,7 +70,7 @@
      */
     Scule.registerComponent = function(namespace, type, name, component) {
         var ns = Scule.require(namespace);
-        if(!(type in ns)) {
+        if (!(type in ns)) {
             throw 'type ' + type + ' is not registered inside ' + namespace + ' namespace';
         }
         ns[type][name] = component;
@@ -72,7 +82,7 @@
      * @return Function
      */
     Scule.require = function(namespace) {
-        if(!(namespace in Scule)) {
+        if (!(namespace in Scule)) {
             throw 'namespace ' + namespace + ' has not been registered, require failed';
         }
         return Scule[namespace];
@@ -176,6 +186,8 @@
 
 (function() {
 
+    "use strict";
+
     /*
      * A JavaScript implementation of the Secure Hash Algorithm, SHA-1, as defined
      * in FIPS 180-1
@@ -227,11 +239,12 @@
 
         this.rstr_hmac_sha1 = function(key, data) {
             var bkey = this.rstr2binb(key);
-            if(bkey.length > 16) bkey = this.binb_sha1(bkey, key.length * 8);
+            if (bkey.length > 16) {
+                bkey = this.binb_sha1(bkey, key.length * 8);
+            }
 
-            var ipad = Array(16), opad = Array(16);
-            for(var i = 0; i < 16; i++)
-            {
+            var ipad = new Array(16), opad = new Array(16);
+            for (var i = 0; i < 16; i++) {
                 ipad[i] = bkey[i] ^ 0x36363636;
                 opad[i] = bkey[i] ^ 0x5C5C5C5C;
             }
@@ -241,41 +254,34 @@
         };
 
         this.rstr2hex = function(input) {
-            try {
-                this.hexcase
-            } catch(e) {
-                hexcase=0;
-            }
+            this.hexcase = 0;
             var hex_tab = this.hexcase ? "0123456789ABCDEF" : "0123456789abcdef";
             var output = "";
             var x;
-            for(var i = 0; i < input.length; i++)
-            {
+            for (var i = 0; i < input.length; i++) {
                 x = input.charCodeAt(i);
-                output += hex_tab.charAt((x >>> 4) & 0x0F)
-                +  hex_tab.charAt( x        & 0x0F);
+                output += hex_tab.charAt((x >>> 4) & 0x0F) + hex_tab.charAt(x & 0x0F);
             }
             return output;
         };
 
         this.rstr2b64 = function(input) {
-            try {
-                this.b64pad
-            } catch(e) {
-                this.b64pad='';
-            }
+            this.b64pad = '';
             var tab = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
             var output = "";
             var len = input.length;
-            for(var i = 0; i < len; i += 3)
+            for (var i = 0; i < len; i += 3)
             {
                 var triplet = (input.charCodeAt(i) << 16)
                 | (i + 1 < len ? input.charCodeAt(i+1) << 8 : 0)
                 | (i + 2 < len ? input.charCodeAt(i+2)      : 0);
-                for(var j = 0; j < 4; j++)
+                for (var j = 0; j < 4; j++)
                 {
-                    if(i * 8 + j * 6 > input.length * 8) output += b64pad;
-                    else output += tab.charAt((triplet >>> 6*(3-j)) & 0x3F);
+                    if (i * 8 + j * 6 > input.length * 8) {
+                        output += this.b64pad;
+                    } else {
+                        output += tab.charAt((triplet >>> 6*(3-j)) & 0x3F);
+                    }
                 }
             }
             return output;
@@ -283,27 +289,27 @@
 
         this.rstr2any = function(input, encoding) {
             var divisor = encoding.length;
-            var remainders = Array();
+            var remainders = [];
             var i, q, x, quotient;
 
             /* Convert to an array of 16-bit big-endian values, forming the dividend */
-            var dividend = Array(Math.ceil(input.length / 2));
-            for(i = 0; i < dividend.length; i++)
+            var dividend = new Array(Math.ceil(input.length / 2));
+            for (i = 0; i < dividend.length; i++)
             {
                 dividend[i] = (input.charCodeAt(i * 2) << 8) | input.charCodeAt(i * 2 + 1);
             }
 
-            while(dividend.length > 0)
+            while (dividend.length > 0)
             {
-                quotient = Array();
+                quotient = [];
                 x = 0;
-                for(i = 0; i < dividend.length; i++)
-                {
+                for (i = 0; i < dividend.length; i++) {
                     x = (x << 16) + dividend[i];
                     q = Math.floor(x / divisor);
                     x -= q * divisor;
-                    if(quotient.length > 0 || q > 0)
+                    if (quotient.length > 0 || q > 0) {
                         quotient[quotient.length] = q;
+                    }
                 }
                 remainders[remainders.length] = x;
                 dividend = quotient;
@@ -311,14 +317,15 @@
 
             /* Convert the remainders to the output string */
             var output = "";
-            for(i = remainders.length - 1; i >= 0; i--)
+            for (i = remainders.length - 1; i >= 0; i--) {
                 output += encoding.charAt(remainders[i]);
+            }
 
             /* Append leading zero equivalents */
-            var full_length = Math.ceil(input.length * 8 /
-                (Math.log(encoding.length) / Math.log(2)))
-            for(i = output.length; i < full_length; i++)
+            var full_length = Math.ceil(input.length * 8 / (Math.log(encoding.length) / Math.log(2)));
+            for (i = output.length; i < full_length; i++) {
                 output = encoding[0] + output;
+            }
 
             return output;
         };
@@ -328,65 +335,68 @@
             var i = -1;
             var x, y;
 
-            while(++i < input.length)
-            {
+            while (++i < input.length) {
                 /* Decode utf-16 surrogate pairs */
                 x = input.charCodeAt(i);
                 y = i + 1 < input.length ? input.charCodeAt(i + 1) : 0;
-                if(0xD800 <= x && x <= 0xDBFF && 0xDC00 <= y && y <= 0xDFFF)
-                {
+                if (0xD800 <= x && x <= 0xDBFF && 0xDC00 <= y && y <= 0xDFFF) {
                     x = 0x10000 + ((x & 0x03FF) << 10) + (y & 0x03FF);
                     i++;
                 }
 
                 /* Encode output as utf-8 */
-                if(x <= 0x7F)
+                if (x <= 0x7F) {
                     output += String.fromCharCode(x);
-                else if(x <= 0x7FF)
+                } else if (x <= 0x7FF) {
                     output += String.fromCharCode(0xC0 | ((x >>> 6 ) & 0x1F),
                         0x80 | ( x         & 0x3F));
-                else if(x <= 0xFFFF)
+                } else if (x <= 0xFFFF) {
                     output += String.fromCharCode(0xE0 | ((x >>> 12) & 0x0F),
                         0x80 | ((x >>> 6 ) & 0x3F),
                         0x80 | ( x         & 0x3F));
-                else if(x <= 0x1FFFFF)
+                } else if (x <= 0x1FFFFF) {
                     output += String.fromCharCode(0xF0 | ((x >>> 18) & 0x07),
                         0x80 | ((x >>> 12) & 0x3F),
                         0x80 | ((x >>> 6 ) & 0x3F),
                         0x80 | ( x         & 0x3F));
+                }
             }
             return output;
         };
 
         this.str2rstr_utf16le = function(input) {
             var output = "";
-            for(var i = 0; i < input.length; i++)
-                output += String.fromCharCode( input.charCodeAt(i) & 0xFF,
-                    (input.charCodeAt(i) >>> 8) & 0xFF);
+            for (var i = 0; i < input.length; i++) {
+                output += String.fromCharCode( input.charCodeAt(i) & 0xFF, (input.charCodeAt(i) >>> 8) & 0xFF);
+            }
             return output;
         };
 
         this.str2rstr_utf16be = function(input) {
             var output = "";
-            for(var i = 0; i < input.length; i++)
-                output += String.fromCharCode((input.charCodeAt(i) >>> 8) & 0xFF,
-                    input.charCodeAt(i) & 0xFF);
+            for (var i = 0; i < input.length; i++) {
+                output += String.fromCharCode((input.charCodeAt(i) >>> 8) & 0xFF, input.charCodeAt(i) & 0xFF);
+            }
             return output;
         };
 
         this.rstr2binb = function(input) {
-            var output = Array(input.length >> 2);
-            for(var i = 0; i < output.length; i++)
+            var output = new Array(input.length >> 2);
+            var i = null;
+            for (i = 0; i < output.length; i++) {
                 output[i] = 0;
-            for(var i = 0; i < input.length * 8; i += 8)
+            }
+            for (i = 0; i < input.length * 8; i += 8) {
                 output[i>>5] |= (input.charCodeAt(i / 8) & 0xFF) << (24 - i % 32);
+            }
             return output;
         };
 
         this.binb2rstr = function(input) {
             var output = "";
-            for(var i = 0; i < input.length * 32; i += 8)
+            for (var i = 0; i < input.length * 32; i += 8) {
                 output += String.fromCharCode((input[i>>5] >>> (24 - i % 32)) & 0xFF);
+            }
             return output;
         };
 
@@ -395,25 +405,26 @@
             x[len >> 5] |= 0x80 << (24 - len % 32);
             x[((len + 64 >> 9) << 4) + 15] = len;
 
-            var w = Array(80);
+            var w = new Array(80);
             var a =  1732584193;
             var b = -271733879;
             var c = -1732584194;
             var d =  271733878;
             var e = -1009589776;
 
-            for(var i = 0; i < x.length; i += 16)
-            {
+            for (var i = 0; i < x.length; i += 16) {
                 var olda = a;
                 var oldb = b;
                 var oldc = c;
                 var oldd = d;
                 var olde = e;
 
-                for(var j = 0; j < 80; j++)
-                {
-                    if(j < 16) w[j] = x[i + j];
-                    else w[j] = this.bit_rol(w[j-3] ^ w[j-8] ^ w[j-14] ^ w[j-16], 1);
+                for (var j = 0; j < 80; j++) {
+                    if (j < 16) {
+                        w[j] = x[i + j];
+                    } else {
+                        w[j] = this.bit_rol(w[j-3] ^ w[j-8] ^ w[j-14] ^ w[j-16], 1);
+                    }
                     var t = this.safe_add(this.safe_add(this.bit_rol(a, 5), this.sha1_ft(j, b, c, d)),
                         this.safe_add(this.safe_add(e, w[j]), this.sha1_kt(j)));
                     e = d;
@@ -429,20 +440,25 @@
                 d = this.safe_add(d, oldd);
                 e = this.safe_add(e, olde);
             }
-            return Array(a, b, c, d, e);
+            return new Array(a, b, c, d, e);
 
         };
 
         this.sha1_ft = function(t, b, c, d) {
-            if(t < 20) return (b & c) | ((~b) & d);
-            if(t < 40) return b ^ c ^ d;
-            if(t < 60) return (b & c) | (b & d) | (c & d);
+            if (t < 20) {
+                return (b & c) | ((~b) & d);
+            }
+            if (t < 40) {
+                return b ^ c ^ d;
+            }
+            if (t < 60) {
+                return (b & c) | (b & d) | (c & d);
+            }
             return b ^ c ^ d;
         };
 
         this.sha1_kt = function(t) {
-            return (t < 20) ?  1518500249 : (t < 40) ?  1859775393 :
-            (t < 60) ? -1894007588 : -899497514;
+            return (t < 20) ?  1518500249 : (t < 40) ?  1859775393 : (t < 60) ? -1894007588 : -899497514;
         };
 
         this.safe_add = function(x, y) {
@@ -466,6 +482,8 @@
 }());
 
 (function(){
+    
+    "use strict";
     
     /*!
      * Joseph Myer's md5() algorithm wrapped in a self-invoked function to prevent
@@ -583,7 +601,6 @@
             if (/[\x80-\xFF]/.test(s)) {
                 s = unescape(encodeURI(s));
             }
-            txt = '';
             var n = s.length,
             state = [1732584193, -271733879, -1732584194, 271733878], i;
             for (i=64; i<=s.length; i+=64) {
@@ -591,12 +608,15 @@
             }
             s = s.substring(i-64);
             var tail = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
-            for (i=0; i<s.length; i++)
+            for (i=0; i<s.length; i++) {
                 tail[i>>2] |= s.charCodeAt(i) << ((i%4) << 3);
+            }
             tail[i>>2] |= 0x80 << ((i%4) << 3);
             if (i > 55) {
                 this.md5cycle(state, tail);
-                for (i=0; i<16; i++) tail[i] = 0;
+                for (i=0; i<16; i++) {
+                    tail[i] = 0;
+                }
             }
             tail[14] = n*8;
             this.md5cycle(state, tail);
@@ -606,10 +626,7 @@
         this.md5blk = function(s) {
             var md5blks = [], i;
             for (i=0; i<64; i+=4) {
-                md5blks[i>>2] = s.charCodeAt(i)
-                + (s.charCodeAt(i+1) << 8)
-                + (s.charCodeAt(i+2) << 16)
-                + (s.charCodeAt(i+3) << 24);
+                md5blks[i>>2] = s.charCodeAt(i) + (s.charCodeAt(i+1) << 8) + (s.charCodeAt(i+2) << 16) + (s.charCodeAt(i+3) << 24);
             }
             return md5blks;
         };
@@ -618,15 +635,16 @@
 
         this.rhex = function(n) {
             var s='', j=0;
-            for(; j<4; j++)
-                s += this.hex_chr[(n >> (j * 8 + 4)) & 0x0F]
-                + this.hex_chr[(n >> (j * 8)) & 0x0F];
+            for (; j<4; j++) {
+                s += this.hex_chr[(n >> (j * 8 + 4)) & 0x0F] + this.hex_chr[(n >> (j * 8)) & 0x0F];
+            }
             return s;
         };
 
         this.hex = function(x) {
-            for (var i=0; i<x.length; i++)
+            for (var i=0; i<x.length; i++) {
                 x[i] = this.rhex(x[i]);
+            }
             return x.join('');
         };
 
@@ -649,7 +667,7 @@
             var lsw = (x & 0xFFFF) + (y & 0xFFFF),
             msw = (x >> 16) + (y >> 16) + (lsw >> 16);
             return (msw << 16) | (lsw & 0xFFFF);
-        }
+        };
     }    
     
     Scule.md5 = Scule.getMD5();
@@ -661,6 +679,8 @@
  */
 (function() {
 
+    "use strict";
+
     /**
      * Given a map, extracts all key => value pairs where the value is true
      * and the key is not prefixed with a $
@@ -669,12 +689,14 @@
      */
     Scule.global.functions.extractTrueValues = function(object) {
         var map = {};
-        for(var name in object) {
-            if(name.match(/^\$/)) {
-                continue;
-            }
-            if(object[name]) {
-                map[name] = true;
+        for (var name in object) {
+            if(object.hasOwnProperty(name)) {
+                if (name.match(/^\$/)) {
+                    continue;
+                }
+                if (object[name]) {
+                    map[name] = true;
+                }
             }
         }
         return map;
@@ -686,19 +708,19 @@
      * @param value mixed
      */
     Scule.global.functions.pushIfNotNull = function(array, value) {
-        if(value) {
+        if (value) {
             array.push(value);
         }
     };
 
     Scule.global.functions.pushIfExists = function(array, object, key) {
-        if(key in object) {
+        if (key in object) {
             array.push(object[key]);
         }
     };
 
     Scule.global.functions.getObjectAttribute = function(object, key, def) {
-        if(!(key in object)) {
+        if (!(key in object)) {
             return def;
         }
         return object[key];
@@ -711,7 +733,7 @@
      * @return ObjectId|String
      */
     Scule.global.functions.getObjectId = function(object, toString) {
-        if(toString === undefined) {
+        if (toString === undefined) {
             toString = false;
         }
         return (toString) ? object[Scule.global.constants.ID_FIELD].toString() : object[Scule.global.constants.ID_FIELD];
@@ -724,12 +746,12 @@
      */
     Scule.global.functions.cloneObject = function(o) {
         var c = {};
-        if(Scule.global.functions.isArray(o)) {
+        if (Scule.global.functions.isArray(o)) {
             c = [];
         }
-        for(var a in o) {
-            if(typeof(o[a]) == "object") {
-                if(o[a] instanceof RegExp) {
+        for (var a in o) {
+            if (typeof(o[a]) == "object") {
+                if (o[a] instanceof RegExp) {
                     c[a] = new RegExp(o[a].source);
                 } else {
                     c[a] = Scule.global.functions.cloneObject(o[a]);
@@ -753,31 +775,35 @@
         var depth = 0;
         var leaf  = null;
         var probe = function(attr) {
-            for(var k in attr) {
-                if(attr[k] === true) {
-                    leaf = k;
-                    break;
-                } else {
-                    depth++;
-                    probe(attr[k]);
+            for (var k in attr) {
+                if(attr.hasOwnProperty(k)) {
+                    if (attr[k] === true) {
+                        leaf = k;
+                        break;
+                    } else {
+                        depth++;
+                        probe(attr[k]);
+                    }
                 }
             }
-        }
+        };
         probe(attributes);
         var i = 0;
         var trvs = function(attr, o) {
-            if(i == depth) {
+            if (i == depth) {
                 return o;
             }
-            for(var k in attr) {
-                if(!(k in o)) {
-                    return null;
-                }
-                if(attr[k] === true) {
-                    return o;
-                } else {
-                    i++;
-                    return trvs(attr[k], o[k]);
+            for (var k in attr) {
+                if(attr.hasOwnProperty(k)) {
+                    if (!o.hasOwnProperty(k)) {
+                        return null;
+                    }
+                    if (attr[k] === true) {
+                        return o;
+                    } else {
+                        i++;
+                        return trvs(attr[k], o[k]);
+                    }
                 }
             }
         };
@@ -792,28 +818,30 @@
     Scule.global.functions.sortObjectKeys = function(object) {
         var o = {};
         var k = [];
-        for(var key in object) {
-            k.push(key);
+        for (var key in object) {
+            if(object.hasOwnProperty(key)) {
+                k.push(key);
+            }
         }
         k.sort(function(v1, v2){
             var v1o = false;
-            if(v1.match(/^\$/)) {
+            if (v1.match(/^\$/)) {
                 v1 = v1.substr(1);
                 v1o = true;
             }
             var v2o = false;
-            if(v2.match(/^\$/)) {
+            if (v2.match(/^\$/)) {
                 v2 = v2.substr(1);
                 v2o = true;
             }
-            if(v1o && !v2o) {
+            if (v1o && !v2o) {
                 return 1;
-            } else if(v2o && !v1o) {
+            } else if (v2o && !v1o) {
                 return -1;
             }
-            if(v2 > v1) {
+            if (v2 > v1) {
                 return -1;
-            } else if(v2 < v1) {
+            } else if (v2 < v1) {
                 return 1;
             } else {
                 return 0;
@@ -831,13 +859,15 @@
      * @return integer
      */
     Scule.global.functions.sizeOf = function(o) {
-        if(o instanceof Array || typeof(o) === 'string') {
+        if (o instanceof Array || typeof(o) === 'string') {
             return o.length;
         } else {
     
             var size = 0, key;
             for (key in o) {
-                if (o.hasOwnProperty(key)) size++;
+                if (o.hasOwnProperty(key)) {
+                    size++;
+                }
             }
             return size;
         }
@@ -851,11 +881,13 @@
      */
     Scule.global.functions.shuffle = function(c) {
         var tmp, current, top = c.length;
-        if(top) while(--top) {
-            current = Math.floor(Math.random() * (top + 1));
-            tmp = c[current];
-            c[current] = c[top];
-            c[top] = tmp;
+        if (top) {
+            while (--top) {
+                current = Math.floor(Math.random() * (top + 1));
+                tmp = c[current];
+                c[current] = c[top];
+                c[top] = tmp;
+            }
         }
     };
 
@@ -865,12 +897,14 @@
      */
     Scule.global.functions.unique = function(a) {
         var map = {};
-        for(var i=0; i < a.length; i++) {
+        for (var i=0; i < a.length; i++) {
             map[a[i]] = true;
         }
         var keys = [];
-        for(var key in map) {
-            keys.push(key);
+        for (var key in map) {
+            if(map.hasOwnProperty(key)) {
+                keys.push(key);
+            }
         }
         return keys;
     };
@@ -886,8 +920,8 @@
      */
     Scule.global.functions.stringify = function(o) {
         var clone = {};
-        for(var key in o) {
-            if(typeof(o[key]) == 'function') {
+        for (var key in o) {
+            if (typeof(o[key]) == 'function') {
                 clone[key] = o[key].toString();
             } else {
                 clone[key] = o[key];
@@ -911,7 +945,7 @@
      * @return boolean
      */
     Scule.global.functions.isInteger = function(o) {
-        return parseInt(o) == o;
+        return parseInt(o, 10) == o;
     };
 
     /**
@@ -929,7 +963,7 @@
      * @return boolean
      */
     Scule.global.functions.isScalar = function(o) {
-        return o != null && !(o instanceof Object);
+        return o !== null && !(o instanceof Object);
     };
 
     /**
@@ -948,7 +982,7 @@
      * @return boolean
      */
     Scule.global.functions.compare = function(a, b) {
-        if(a === b) {
+        if (a === b) {
             return 0;
         }
         return (a > b) ? 1 : -1;
@@ -981,37 +1015,37 @@
      * @return integer
      */
     Scule.global.functions.compareArray = function(a, b) {
-        if(!Scule.global.functions.isArray(a) && Scule.global.functions.isArray(b)) {
+        if (!Scule.global.functions.isArray(a) && Scule.global.functions.isArray(b)) {
             return 1;
         }
-        if(Scule.global.functions.isArray(a) && !Scule.global.functions.isArray(b)) {
+        if (Scule.global.functions.isArray(a) && !Scule.global.functions.isArray(b)) {
             return -1;
         }
-        if(a.length > b.length) {
+        if (a.length > b.length) {
             return 1;
         }
-        if(b.length > a.length) {
+        if (b.length > a.length) {
             return -1;
         }
         var same = true;
         var c = 0;
         var len = a.length;
-        for(var i=0; i < len; i++) {
-            if(Scule.global.functions.isArray(a[i])) {
+        for (var i = 0; i < len; i++) {
+            if (Scule.global.functions.isArray(a[i])) {
                 c += Scule.global.functions.compareArray(a[i], b[i]);
             } else {
                 c += Scule.global.functions.compare(a[i], b[i]);
             }
-            if(c != 0) {
+            if (c !== 0) {
                 same = false; 
             }
         }
-        if(c == 0 && !same) { // same elements in a different order
+        if (c === 0 && !same) { // same elements in a different order
             c = JSON.stringify(a[0]).localeCompare(JSON.stringify(b[0]));
         }
-        if(c > 0) {
+        if (c > 0) {
             c = 1;
-        } else if(c < 0) {
+        } else if (c < 0) {
             c = -1;
         }    
         return c;
@@ -1037,9 +1071,9 @@
 
             case 2: // alphabetically
                 collection.sort(function(v1, v2){ 
-                    if(v2[key] > v1[key]) {
+                    if (v2[key] > v1[key]) {
                         return -1;
-                    } else if(v2[key] < v1[key]) {
+                    } else if (v2[key] < v1[key]) {
                         return 1;
                     } else {
                         return 0;
@@ -1049,9 +1083,9 @@
 
             case 3: //  reverse
                 collection.sort(function(v1, v2){
-                    if(v2[key] < v1[key]) {
+                    if (v2[key] < v1[key]) {
                         return -1;
-                    } else if(v2[key] > v1[key]) {
+                    } else if (v2[key] > v1[key]) {
                         return 1;
                     } else {
                         return 0;
@@ -1069,7 +1103,7 @@
      * @return string
      */
     Scule.global.functions.trim = function(value) {
-        if(!String.prototype.trim) {
+        if (!String.prototype.trim) {
             return value.replace(/(?:(?:^|\n)\s+|\s+(?:$|\n))/g,'').replace(/\s+/g,' ');
         } else {
             return value.trim();
@@ -1081,14 +1115,10 @@
      * @return integer
      */
     Scule.global.functions.getMACAddress = function() {
-        if(typeof Titanium !== 'undefined') {
-            return Titanium.Platform.macaddress;
-        } else {
-            if(!('SimulatedMacAddress' in Scule.global.variables)) {
-                Scule.global.variables['SimulatedMacAddress'] = (new Date()).getTime().toString().substring(9, 11) + '' + Scule.global.functions.randomFromTo(100, 999);
-            }
-            return Scule.global.variables['SimulatedMacAddress'];
+        if (!Scule.global.variables.hasOwnProperty('SimulatedMacAddress')) {
+            Scule.global.variables.SimulatedMacAddress = (new Date()).getTime().toString().substring(9, 11) + '' + Scule.global.functions.randomFromTo(100, 999);
         }
+        return Scule.global.variables.SimulatedMacAddress;
     };
 
     /**
@@ -1098,12 +1128,12 @@
      * @return Object
      */
     Scule.global.functions.parseAttributes = function(attributes) {
-        if(!Scule.global.functions.isArray(attributes)) {
+        if (!Scule.global.functions.isArray(attributes)) {
             return Scule.global.functions.parseAttributes(attributes.split(','));
         }
         var build = function(struct, elements, count) {
             var element = Scule.global.functions.trim(elements[count]);
-            if(count == (elements.length - 1)) {
+            if (count == (elements.length - 1)) {
                 struct[element] = true;
             } else {
                 var o = {};
@@ -1126,20 +1156,20 @@
      */
     Scule.global.functions.searchObject = function(keys, o) {
         var srch = function(ks, o, composite) {
-            if(!o) {
+            if (!o) {
                 return;
             }            
-            for(var k in ks) {
-                if(ks[k] == true) {
-                    if(Scule.global.functions.isInteger(k) && Scule.global.functions.isArray(o)) {
+            for (var k in ks) {
+                if (ks[k] === true) {
+                    if (Scule.global.functions.isInteger(k) && Scule.global.functions.isArray(o)) {
                         composite.push(o[k]);
                     } else {
-                        if(k in o) {
+                        if (k in o) {
                             composite.push(o[k]);
                         }
                     }
                 } else {
-                    if((k in o) && !Scule.global.functions.isScalar(o[k])) {
+                    if ((k in o) && !Scule.global.functions.isScalar(o[k])) {
                         srch(ks[k], o[k], composite);
                     }
                 }
@@ -1159,10 +1189,10 @@
      */
     Scule.global.functions.traverse = function(path, object) {
         var t = function(p, o) {
-            if(o === undefined) {
+            if (o === undefined) {
                 return undefined;
             }
-            if(p.length == 1) {
+            if (p.length === 1) {
                 return o[p.pop()];
             } else {
                 var idx = p.shift();
@@ -1179,6 +1209,7 @@
  */
 (function() {
 
+    "use strict";
 
     /**
      * Represents a singly linked list. The list is terminated by a null pointer.
@@ -1214,7 +1245,7 @@
          */
         this.getHead = function() {
             return this.head;
-        }
+        };
 
         /**
          * Returns the tail element of the list
@@ -1240,7 +1271,7 @@
          * @returns {Boolean}
          */
         this.isEmpty = function() {
-            return this.length == 0;
+            return this.length === 0;
         };
 
         /**
@@ -1261,16 +1292,16 @@
          * @returns {Mixed|null}
          */
         this.get = function(idx) {
-            if(idx < 0 || idx > this.length) {
+            if (idx < 0 || idx > this.length) {
                 return null;
             }
-            if(idx == 0) {
+            if (idx === 0) {
                 return this.head;
             } else {
                 var curr = this.head;
                 var i = 0;
-                while(curr) {
-                    if(idx == i) {
+                while (curr) {
+                    if (idx == i) {
                         break;
                     }
                     i++;
@@ -1288,9 +1319,9 @@
          */
         this.add = function(value) {
             var temp = new Scule.datastructures.classes.LinkedListNode(null, value);
-            if(this.head == null) {
+            if (this.head === null) {
                 this.head = temp;
-            } else if(this.tail == null) {
+            } else if (this.tail === null) {
                 this.head.next = temp;
                 this.tail = temp;
             } else {
@@ -1312,17 +1343,17 @@
          * @returns {Mixed|null}
          */
         this.search = function(value, key, cmp) {
-            if(!cmp) {
+            if (!cmp) {
                 cmp = Scule.global.functions.compare;
             }        
             var curr = this.head;
-            while(curr) {
-                if(key) {
-                    if(cmp(curr.element[key], value) == 0) {
+            while (curr) {
+                if (key) {
+                    if (cmp(curr.element[key], value) === 0) {
                         break;
                     }
                 } else {
-                    if(cmp(curr.element, value) == 0) {
+                    if (cmp(curr.element, value) === 0) {
                         break;
                     }
                 }
@@ -1339,15 +1370,15 @@
          * @returns {Boolean}
          */
         this.contains = function(value, cmp) {
-            if(value == null) {
+            if (value === null) {
                 return false;
             }
-            if(!cmp) {
+            if (!cmp) {
                 cmp = Scule.global.functions.compare;
             }        
             var curr = this.head;
-            while(curr) {
-                if(cmp(curr.element, value) == 0) {
+            while (curr) {
+                if (cmp(curr.element, value) === 0) {
                     break;
                 }
                 curr = curr.next;
@@ -1363,14 +1394,14 @@
          */
         this.split = function(idx) {
             var node;
-            if(idx === undefined) {
+            if (idx === undefined) {
                 idx = Math.floor(this.length / 2);
                 node = this.middle();
-                if(!node) {
+                if (!node) {
                     return null;
                 }
             } else {
-                if(idx < 1 || idx > this.length) {
+                if (idx < 1 || idx > this.length) {
                     return null;
                 }
                 node = this.get(idx - 1);
@@ -1397,12 +1428,12 @@
          * @returns {LinkedListNode|null}
          */
         this.middle = function() {
-            if(!this.head) {
+            if (!this.head) {
                 return null;
             }
             var slow = this.head;
             var fast = this.head;
-            while(fast.next && fast.next.next) {
+            while (fast.next && fast.next.next) {
                 slow = slow.next;
                 fast = fast.next.next;
             }
@@ -1416,21 +1447,21 @@
          * @returns {LinkedListNode|null}
          */
         this.remove = function(idx) {
-            if(idx < 0 || idx > this.length) {
+            if (idx < 0 || idx > this.length) {
                 return null;
             }
             var curr;
-            if(this.length == 1) { // only one node in the list - just remove that instead
+            if (this.length === 1) { // only one node in the list - just remove that instead
                 curr = this.head;
                 this.clear();
             } else {
                 var prev = this.get(idx - 1);
-                if(prev.next == this.tail) { // we're just shifting the tail back one position
+                if (prev.next == this.tail) { // we're just shifting the tail back one position
                     curr = this.tail;
                     this.tail = prev;
                 } else { // otherwise we know it's a straight up deletion
                     curr = prev.next;
-                    prev.next = prev.next.next
+                    prev.next = prev.next.next;
                 }
                 this.length--;
             }
@@ -1446,7 +1477,7 @@
             var prev = null;
             var curr = this.head;
             var temp = null;
-            while(curr) {
+            while (curr) {
                 temp = curr.next;
                 curr.next = prev;
                 prev = curr;
@@ -1465,7 +1496,7 @@
         this.toArray = function() {
             var nodes = [];
             var curr  = this.head;
-            while(curr) {
+            while (curr) {
                 nodes.push(curr.element);
                 curr = curr.next;
             }
@@ -1480,7 +1511,7 @@
          */
         this.forEach = function(callback) {
             var curr = this.head;
-            while(curr) {
+            while (curr) {
                 callback(curr);
                 curr = curr.next;
             }
@@ -1496,21 +1527,21 @@
          */
         this.sort = function(cmp, key) {
 
-            if(this.length < 2) { // empty or 1 element lists are already sorted
+            if (this.length < 2) { // empty or 1 element lists are already sorted
                 return this;
             }
 
-            if(!cmp) {
+            if (!cmp) {
                 cmp = Scule.global.functions.compare;
             }
 
             var middle = function(node) {
-                if(!node) {
+                if (!node) {
                     return node;
                 }
                 var slow = node;
                 var fast = node;
-                while(fast.next && fast.next.next) {
+                while (fast.next && fast.next.next) {
                     slow = slow.next;
                     fast = fast.next.next;
                 }
@@ -1524,15 +1555,15 @@
                 var curr = head;
                 var a;
                 var b;
-                while(left && right) {
-                    if(key) {
+                while (left && right) {
+                    if (key) {
                         a = right.element[key];
                         b = left.element[key];
                     } else {
                         a = right.element;
                         b = left.element;
                     }                
-                    if(cmp(a, b) > -1) {
+                    if (cmp(a, b) > -1) {
                         curr.next = left;
                         left = left.next;
                     } else {
@@ -1546,7 +1577,7 @@
             };
 
             var merge_sort = function(node) {
-                if(!node || !node.next) {
+                if (!node || !node.next) {
                     return node;
                 }    
                 var m = middle(node);
@@ -1612,8 +1643,8 @@
          * @returns {Boolean}  
          */     
         this.isEmpty = function() {
-            return this.length == 0;
-        }
+            return this.length === 0;
+        };
 
         /**
          * Returns the number of elements in the list
@@ -1634,17 +1665,17 @@
          * @returns {Mixed}
          */
         this.search = function(value, key, cmp) {
-            if(!cmp) {
+            if (!cmp) {
                 cmp = Scule.global.functions.compare;
             }        
             var curr = this.head;
-            while(curr) {
-                if(key) {
-                    if(cmp(curr.element[key], value) == 0) {
+            while (curr) {
+                if (key) {
+                    if (cmp(curr.element[key], value) === 0) {
                         break;
                     }
                 } else {
-                    if(cmp(curr.element, value) == 0) {
+                    if (cmp(curr.element, value) === 0) {
                         break;
                     }
                 }
@@ -1661,15 +1692,15 @@
          * @returns {Boolean}
          */
         this.contains = function(value, cmp) {
-            if(value == null) {
+            if (value === null) {
                 return false;
             }
-            if(!cmp) {
+            if (!cmp) {
                 cmp = Scule.global.functions.compare;
             }        
             var curr = this.head;
-            while(curr) {
-                if(cmp(curr.element, value) == 0) {
+            while (curr) {
+                if (cmp(curr.element, value) === 0) {
                     break;
                 }
                 curr = curr.next;
@@ -1684,16 +1715,16 @@
          * @returns {Mixed|null}
          */
         this.get = function(idx) {
-            if(idx < 0 || idx > this.length) {
+            if (idx < 0 || idx > this.length) {
                 return null;
             }
-            if(idx == 0) {
+            if (idx === 0) {
                 return this.head;
             } else {
                 var curr = this.head;
                 var i = 0;
-                while(curr) {
-                    if(idx == i) {
+                while (curr) {
+                    if (idx == i) {
                         break;
                     }
                     i++;
@@ -1711,9 +1742,9 @@
          */
         this.add = function(value) {
             var node = new Scule.datastructures.classes.DoublyLinkedListNode(null, null, value);
-            if(this.isEmpty()) {
+            if (this.isEmpty()) {
                 this.head = node;
-            } else if(!this.tail) {
+            } else if (!this.tail) {
                 this.tail = node;
                 this.tail.prev = this.head;
                 this.head.next = node;
@@ -1734,31 +1765,31 @@
          * @returns {LinkedListNode|null}
          */
         this.remove = function(idx) {
-            if(idx < 0 || idx > this.length) {
+            if (idx < 0 || idx > this.length) {
                 return null;
             }
             var curr;
-            if(this.length == 1) { // only one node in the list - just remove that instead
+            if (this.length === 1) { // only one node in the list - just remove that instead
                 curr = this.head;
                 this.clear();
             } else {
                 var prev = this.get(idx - 1);
-                if(prev.next == this.tail) { // we're just shifting the tail back one position
+                if (prev.next == this.tail) { // we're just shifting the tail back one position
                     curr = this.tail;
                     this.tail = prev;
                     this.tail.prev = curr.prev;
                     this.tail.next = null;
                 } else { // otherwise we know it's a straight up deletion
                     curr = prev.next;
-                    prev.next = prev.next.next
-                    if(prev.next) {
+                    prev.next = prev.next.next;
+                    if (prev.next) {
                         prev.next.prev = prev;
                     }
                 }
                 this.length--;
             }
             // clean up pointers
-            if(curr) {
+            if (curr) {
                 curr.detach();
             }
             return curr;
@@ -1770,7 +1801,7 @@
          * @returns {DoublyLinkedListNode}
          */
         this.trim = function() {
-            if(this.isEmpty()) {
+            if (this.isEmpty()) {
                 return null;
             }
             return this.remove(this.length - 1);
@@ -1784,14 +1815,14 @@
          */
         this.split = function(idx) {
             var node;
-            if(idx === undefined) {
+            if (idx === undefined) {
                 idx = Math.floor(this.length / 2);
                 node = this.middle();
-                if(!node) {
+                if (!node) {
                     return null;
                 }
             } else {
-                if(idx < 1 || idx > this.length) {
+                if (idx < 1 || idx > this.length) {
                     return null;
                 }
                 node = this.get(idx - 1);
@@ -1813,12 +1844,12 @@
          * @returns {LinkedListNode|null}
          */
         this.middle = function() {
-            if(!this.head) {
+            if (!this.head) {
                 return null;
             }
             var slow = this.head;
             var fast = this.head;
-            while(fast.next && fast.next.next) {
+            while (fast.next && fast.next.next) {
                 slow = slow.next;
                 fast = fast.next.next;
             }
@@ -1834,21 +1865,21 @@
          */
         this.sort = function(cmp, key) {
 
-            if(this.length < 2) { // empty or 1 element lists are already sorted
+            if (this.length < 2) { // empty or 1 element lists are already sorted
                 return this;
             }
 
-            if(!cmp) {
+            if (!cmp) {
                 cmp = Scule.global.functions.compare;
             }
 
             var middle = function(node) {
-                if(!node) {
+                if (!node) {
                     return node;
                 }
                 var slow = node;
                 var fast = node;
-                while(fast.next && fast.next.next) {
+                while (fast.next && fast.next.next) {
                     slow = slow.next;
                     fast = fast.next.next;
                 }
@@ -1862,15 +1893,15 @@
                 var curr = head;
                 var a;
                 var b;
-                while(left && right) {
-                    if(key) {
+                while (left && right) {
+                    if (key) {
                         a = right.element[key];
                         b = left.element[key];
                     } else {
                         a = right.element;
                         b = left.element;
                     }
-                    if(cmp(a, b) > -1) {
+                    if (cmp(a, b) > -1) {
                         curr.next = left;
                         curr.prev = right;
                         left = left.next;
@@ -1886,7 +1917,7 @@
             };
 
             var merge_sort = function(node) {
-                if(!node || !node.next) {
+                if (!node || !node.next) {
                     return node;
                 }    
                 var m = middle(node);
@@ -1908,7 +1939,7 @@
         this.reverse = function() {
             var curr = this.head;
             var temp = null;
-            while(curr) {
+            while (curr) {
                 temp = curr.next;
                 curr.next = curr.prev;
                 curr.prev = temp;
@@ -1927,14 +1958,14 @@
          */
         this.prepend = function(value) {
             var node = new Scule.datastructures.classes.DoublyLinkedListNode(null, null, value);
-            if(this.isEmpty()) {
+            if (this.isEmpty()) {
                 this.head = node;
             } else {
                 var curr = this.head;
                 this.head = node;
                 curr.prev = this.head;
                 this.head.next = curr;
-                if(!this.tail) {
+                if (!this.tail) {
                     this.tail = curr;
                 }
             }
@@ -1961,7 +1992,7 @@
         this.toArray = function() {
             var nodes = [];
             var curr  = this.head;
-            while(curr) {
+            while (curr) {
                 nodes.push(curr.element);
                 curr = curr.next;
             }
@@ -1976,7 +2007,7 @@
          */
         this.forEach = function(callback) {
             var curr = this.head;
-            while(curr) {
+            while (curr) {
                 callback(curr);
                 curr = curr.next;
             }
@@ -2000,11 +2031,11 @@
      */
     Scule.datastructures.classes.CachingLinkedList = function(threshold, cacheKey, list) {
 
-        if(!cacheKey) {
+        if (!cacheKey) {
             throw 'A valid cache key is required to use a CachingLinkedList';
         }
 
-        if(!threshold) {
+        if (!threshold) {
             threshold = 100;
         }
 
@@ -2026,7 +2057,7 @@
          */
         this.cache = new Scule.datastructures.classes.LRUCache(threshold);
 
-        if(!list) {
+        if (!list) {
             list = new Scule.datastructures.classes.LinkedList();
         }
 
@@ -2054,7 +2085,7 @@
          */
         this.remove = function(idx) {  
             var node = this.list.remove(idx);
-            if(node) {
+            if (node) {
                 this.cache.remove(node.element[this.cacheKey]);
             }
             return node;
@@ -2076,7 +2107,7 @@
          */    
         this.split = function() {
             this.cache.clear();
-            return this.list.split()
+            return this.list.split();
         };
 
         /**
@@ -2099,11 +2130,11 @@
          * @returns {Mixed|null}
          */    
         this.search = function(value) {
-            if(this.cache.contains(value)) {
+            if (this.cache.contains(value)) {
                 return this.cache.get(value); 
             }
             var node = this.list.search(value, this.cacheKey);
-            if(node) {
+            if (node) {
                 this.cache.put(node.element[this.cacheKey], node);
             }
             return node;
@@ -2254,7 +2285,7 @@
          */
         this.getElement = function() {
             return this.element;
-        }
+        };
 
         /**
          * Sets the element value for the list node
@@ -2264,7 +2295,7 @@
          */
         this.setElement = function(element) {
             this.element = element;
-        }
+        };
 
     };
 
@@ -2366,7 +2397,7 @@
          * @returns {Null|boolean}
          */
         this.remove = function(key) {
-            if(!this.cache.contains(key)) {
+            if (!this.cache.contains(key)) {
                 return null;
             }   
             var entry = this.cache.get(key);
@@ -2374,10 +2405,10 @@
 
             var prev = entry.node.prev;
             var next = entry.node.next;
-            if(prev) {
+            if (prev) {
                 prev.next = next;
             }
-            if(next) {
+            if (next) {
                 next.prev = prev;
             }
             entry.node.detach();
@@ -2392,7 +2423,7 @@
          *  @returns {Mixed|null}
          */
         this.get = function(key) {
-            if(!this.cache.contains(key)) {
+            if (!this.cache.contains(key)) {
                 return null;
             }
             var entry = this.cache.get(key);
@@ -2409,7 +2440,7 @@
          */
         this.put = function(key, value) {
             var entry;
-            if(this.cache.contains(key)) {
+            if (this.cache.contains(key)) {
                 // if the entry exists in the cache update it and move it to the head of the priority queue
                 entry = this.cache.get(key);
                 entry.value = value;
@@ -2427,9 +2458,9 @@
                 this.cache.put(key, entry);
             }
             // trim stale cache entries if we've reached our threshold
-            if(this.queue.length > this.threshold) {
+            if (this.queue.length > this.threshold) {
                 var o = this.queue.trim();
-                if(!this.cache.remove(o.getElement().key)) {
+                if (!this.cache.remove(o.getElement().key)) {
                     throw 'LRU cache is corrupt';
                 }
                 o = null;
@@ -2504,7 +2535,7 @@
          */
         this.getValue = function() {
             return this.value;
-        }
+        };
 
         /**
          * Return the linked list node for the entry
@@ -2522,14 +2553,14 @@
          * @returns {Void}
          */
         this.requeue = function(queue) {
-            if(!this.node.prev) { // already at the head of the queue
+            if (!this.node.prev) { // already at the head of the queue
                 return;
             }
             // no some magic pointer switching
             var prev = this.node.prev;
             var next = this.node.next;
             prev.next = next;
-            if(next) {
+            if (next) {
                 next.prev = prev;
             }
             // clean up the pointers for the current node
@@ -2574,7 +2605,7 @@
          * @returns {Mixed|null}
          */
         this.pop = function() {
-            if(this.isEmpty()) {
+            if (this.isEmpty()) {
                 return null;
             }        
             var curr = this.head;
@@ -2590,13 +2621,13 @@
          * @returns {Mixed|null}
          */
         this.peek = function() {
-            if(this.isEmpty()) {
+            if (this.isEmpty()) {
                 return null;
             }
             return this.head.getElement();   
         };
 
-    }
+    };
 
     /**
      * Represents a FIFO stack
@@ -2624,7 +2655,7 @@
          * @returns {Mixed|null}
          */
         this.pop = function() {
-            if(this.isEmpty()) {
+            if (this.isEmpty()) {
                 return null;
             }
             var curr = this.head;
@@ -2714,10 +2745,10 @@
             var hash = 5381;
             var len  = key.length;
             var i    = 0;
-            for(; i < len; i++) {
+            for (; i < len; i++) {
                 hash = ((hash << 5) + hash) + key.charCodeAt(i);
             }
-            if(hash < 0) {
+            if (hash < 0) {
                 hash = hash * -1;
             }
             return hash%this.size;            
@@ -2742,7 +2773,7 @@
             hash += (hash << 3);
             hash ^= (hash >> 11);
             hash += (hash << 15);
-            if(hash < 0) {
+            if (hash < 0) {
                 hash = hash * -1;
             }
             return hash%this.size;        
@@ -2757,13 +2788,13 @@
          */
         this.retable = function() {
             var factor = this.length/this.size;
-            if(this.length >= this.buckets && factor < 0.7) {
+            if (this.length >= this.buckets && factor < 0.7) {
                 return;
             }
             var elements = this.toArray();
             this.clear();
             this.size = this.size * 2;
-            for(var i=0; i < elements.length; i++) {
+            for (var i=0; i < elements.length; i++) {
                 this.put(elements[i][0], elements[i][1]);
             }
         };
@@ -2776,7 +2807,7 @@
          * @returns {BinarySearchTree}
          */
         this.bucket = function(key) {
-            if(!this.table[key]) {
+            if (!this.table[key]) {
                 this.buckets++;
                 this.table[key] = new Scule.datastructures.classes.BinarySearchTree();
             }
@@ -2794,9 +2825,9 @@
             var k = this.hash(key);
             var b = this.bucket(k);
             var r = b.insert(key, value);
-            if(r) {
+            if (r) {
                 this.length++;
-                if(b.getLength()%10 == 0) {
+                if (b.getLength()%10 === 0) {
                     b.balance();
                 }            
             }
@@ -2827,7 +2858,7 @@
             var k = this.hash(key);
             var b = this.bucket(k);
             var v = b.search(key);
-            if(v === null) {
+            if (v === null) {
                 return null;
             }   
             return v.getData();
@@ -2852,7 +2883,7 @@
         this.remove = function(key) {
             var k = this.hash(key);
             var b = this.bucket(k);
-            if(b.remove(key)) {
+            if (b.remove(key)) {
                 this.length--;
                 this.retable();
                 return true;
@@ -2889,7 +2920,7 @@
         this.getKeys = function() {
             var keys = [];
             var getKeys = function(node) {
-                if(node === null) {
+                if (node === null) {
                     return;
                 }
                 keys.push(node.getKey());
@@ -2897,7 +2928,7 @@
                 getKeys(node.getRight());
             };
             this.table.forEach(function(bucket) {
-                if(!bucket) {
+                if (!bucket) {
                     return;
                 }
                 getKeys(bucket.getRoot());
@@ -2913,7 +2944,7 @@
         this.getValues = function() {
             var values = [];
             var getValues = function(node) {
-                if(node === null) {
+                if (node === null) {
                     return;
                 }
                 values.push(node.getData());
@@ -2921,7 +2952,7 @@
                 getValues(node.getRight());
             };
             this.table.forEach(function(bucket) {
-                if(!bucket) {
+                if (!bucket) {
                     return;
                 }
                 getValues(bucket.getRoot());
@@ -2937,7 +2968,7 @@
         this.toArray = function() {
             var array = [];
             this.table.forEach(function(bucket) {
-                if(!bucket) {
+                if (!bucket) {
                     return;
                 }
                 array = array.concat(bucket.toArray());
@@ -2977,7 +3008,7 @@
          * @returns {Void}
          */
         this.put = function(key, value) {
-            if(!this.contains(key)) {
+            if (!this.contains(key)) {
                 this.length++;
             }
             this.table[key] = value;
@@ -2990,7 +3021,7 @@
          * @returns {Mixed|null}
          */
         this.get = function(key) {
-            if(this.contains(key)) {
+            if (this.contains(key)) {
                 return this.table[key];
             }
             return null;
@@ -3005,7 +3036,7 @@
          */
         this.search = function(key) {
             return this.get(key);
-        }
+        };
 
         /**
          * Removes a key, value mapping from the table, returns a boolean signfiying success or failure
@@ -3014,7 +3045,7 @@
          * @returns {Boolean}
          */
         this.remove = function(key) {
-            if(this.contains(key)) {
+            if (this.contains(key)) {
                 delete this.table[key];
                 this.length--;
                 return true;
@@ -3058,8 +3089,10 @@
          */
         this.getKeys = function() {
             var keys = [];
-            for(var ky in this.table) {
-                keys.push(ky);
+            for (var ky in this.table) {
+                if(this.table.hasOwnProperty(ky)) {
+                    keys.push(ky);
+                }
             }
             return keys;
         };
@@ -3071,8 +3104,10 @@
          */
         this.getValues = function() {
             var values = [];
-            for(var ky in this.table) {
-                values.push(this.table[ky]);
+            for (var ky in this.table) {
+                if(this.table.hasOwnProperty(ky)) {
+                    values.push(this.table[ky]);
+                }
             }
             return values;
         };
@@ -3083,8 +3118,10 @@
          */
         this.toArray = function() {
             var a = [];
-            for(var ky in this.table) {
-                a[ky] = this.table[ky];
+            for (var ky in this.table) {
+                if(this.table.hasOwnProperty(ky)) {
+                    a[ky] = this.table[ky];
+                }
             }        
             return a;
         };
@@ -3096,11 +3133,9 @@
      * @public
      * @constructor
      * @class {BPlusTreeNode}
-     * @param {Null|BPlusTreeNode} left the left sibling for the node
-     * @param {Null|BPlusTreeNode} right the right sibling for the node
      * @returns {Void}
      */
-    Scule.datastructures.classes.BPlusTreeNode = function(left, right) {
+    Scule.datastructures.classes.BPlusTreeNode = function() {
 
         /**
          * @private
@@ -3213,7 +3248,7 @@
          */
         this.getRight = function() {
             return this.right;
-        }
+        };
 
         /**
          * Sets the right sibling for the node
@@ -3223,7 +3258,7 @@
          */
         this.setRight = function(right) {
             this.right = right;
-        }
+        };
 
         /**
          * Returns the left sibling for the node
@@ -3232,7 +3267,7 @@
          */
         this.getLeft = function() {
             return this.left;
-        }
+        };
 
         /**
          * Sets the left sibling for the node
@@ -3242,7 +3277,7 @@
          */
         this.setLeft = function(left) {
             this.left = left;
-        }
+        };
 
         /**
          * Use for lookups to avoid a sequential search
@@ -3259,9 +3294,9 @@
          */
         this.search = function(key) {
             var element = this.lookup.get(key);
-            if(!element) {
+            if (!element) {
                 element = this.sequentialSearch(key);
-                if(element) {
+                if (element) {
                     this.lookup.put(element.key, element);
                 } else {
                     return null;
@@ -3279,7 +3314,7 @@
         this.sequentialSearch = function(key) {
             var index = this.indexSearch(key);
             var element = this.data[index];
-            if(index < this.data.length && element.key == key) {
+            if (index < this.data.length && element.key == key) {
                 return element;
             }
             return null;
@@ -3293,7 +3328,7 @@
          */
         this.indexSearch = function(key) {
             var data   = this.data;
-            if(data.length == 0) {
+            if (data.length === 0) {
                 return 0;
             }
             var left   = 0;
@@ -3302,15 +3337,15 @@
             var found  = false;    
             do {
                 middle = left + Math.floor((right - left) / 2);
-                if(data[middle].key < key) {
+                if (data[middle].key < key) {
                     left = middle + 1;
-                } else if(data[middle].key > key) {
+                } else if (data[middle].key > key) {
                     right = middle;
                 } else {
                     found = true;
                 }
-            } while(left < right && !found);
-            if(found) {
+            } while (left < right && !found);
+            if (found) {
                 return middle;
             } else {
                 return right;
@@ -3333,22 +3368,22 @@
             var right = this.getRight();
             var left  = this.getLeft();
             var i=0;
-            for(; i < parent.data.length; i = i+2) {
+            for (; i < parent.data.length; i = i+2) {
                 var node = parent.data[i];
-                if(node == right) {
+                if (node == right) {
                     siblings.right = right;
                     siblings.index = i-2;
                     siblings.right_key = parent.data[i-1];
                     siblings.right_key_index = i-1;
                 }
-                if(node == left) {
+                if (node == left) {
                     siblings.left = left;
                     siblings.index = i+2;
                     siblings.left_key = parent.data[i+1];
                     siblings.left_key_index = i+1;
                 }
             }
-            if(siblings.index == null) {
+            if (siblings.index === null) {
                 siblings.index = (i >= 2) ? i-2 : 0;
             }
             return siblings;
@@ -3376,16 +3411,16 @@
          */
         this.insert = function(key, value) {
             var index = this.indexSearch(key);
-            if(index == this.data.length) {
+            if (index == this.data.length) {
                 this.data.push({
                     key:key, 
                     value:value
                 });
             } else {
                 var element = this.data[index];
-                if(element.key == key) {
+                if (element.key == key) {
                     element.value = value;
-                } else if(element.key < key) {
+                } else if (element.key < key) {
                     this.data.splice(index + 1, 0, {
                         key:key, 
                         value:value
@@ -3415,10 +3450,10 @@
         this.remove = function(key, parent) {
             var index   = this.indexSearch(key);
             var element = this.data[index];        
-            if(index < this.data.length && element.key == key) {
+            if (index < this.data.length && element.key == key) {
                 this.data.splice(index, 1);
                 this.lookup.remove(key);
-                if(!parent) {
+                if (!parent) {
                     return null;
                 }
                 return this.redistribute(key, parent);
@@ -3436,7 +3471,7 @@
          * @returns {Object}
          */
         this.redistribute = function(oldkey, parent) {
-            if(this.data.length > this.threshold) {
+            if (this.data.length > this.threshold) {
                 return {
                     operation:2,
                     oldkey:oldkey,
@@ -3447,11 +3482,11 @@
             var deficit = this.threshold - this.data.length;
             var sibling, key;
             var left = false; 
-            if(siblings.left) {
+            if (siblings.left) {
                 sibling = siblings.left;
                 key = siblings.left_key;
                 left = true;
-                if(sibling.data.length - deficit >= this.threshold) {
+                if (sibling.data.length - deficit >= this.threshold) {
                     this.data = sibling.data.splice(deficit * -1, deficit).concat(this.data);
                     this.lookup.clear();
                     return {
@@ -3462,11 +3497,11 @@
                     };
                 }          
             }        
-            if(siblings.right) {
+            if (siblings.right) {
                 sibling = siblings.right;
                 key = siblings.right_key;
                 left = false;
-                if(sibling.data.length - deficit >= this.threshold) {           
+                if (sibling.data.length - deficit >= this.threshold) {           
                     this.data = this.data.concat(sibling.data.splice(0, deficit));
                     this.lookup.clear();
                     return {
@@ -3490,16 +3525,16 @@
          * @returns {Mixed}
          */
         this.merge = function(sibling, index, oldkey, isleft)  {
-            if(this.data.length > this.threshold) {
+            if (this.data.length > this.threshold) {
                 return null;
             }  
-            if(!sibling) { // PANIC! this condition should never be met
+            if (!sibling) { // PANIC! this condition should never be met
                 throw 'Unable to merge - no siblings';
             }        
-            if(isleft) {
+            if (isleft) {
                 sibling.data = sibling.data.concat(this.data.splice(0, this.data.length));
                 sibling.setRight(this.getRight());
-                if(sibling.getRight()) {
+                if (sibling.getRight()) {
                     sibling.getRight().setLeft(sibling);
                 }
                 sibling.lookup.clear();
@@ -3517,7 +3552,7 @@
                 var d = this.data.splice(0, this.data.length);
                 sibling.data = d.concat(sibling.data.splice(0, sibling.data.length));
                 sibling.setLeft(this.getLeft());
-                if(sibling.getLeft()) {
+                if (sibling.getLeft()) {
                     sibling.getLeft().setRight(sibling);
                 }
                 sibling.lookup.clear();
@@ -3544,49 +3579,49 @@
          * @returns {Array}
          */
         this.range = function(min, max, includeMin, includeMax) {
-            if(includeMax === undefined) {
+            if (includeMax === undefined) {
                 includeMax = false;
             }
-            if(includeMin === undefined) {
+            if (includeMin === undefined) {
                 includeMin = false;
             }
-            if(min === undefined) {
+            if (min === undefined) {
                 min = null;
             }
-            if(max === undefined) {
+            if (max === undefined) {
                 max = null;
             }            
             var curr  = this;
             var rng   = null;
-            if(includeMin && includeMax) {
+            if (includeMin && includeMax) {
                 rng = function(min, max, key, range, value) {
-                    if(min === null) {
-                        if(key <= max) {
+                    if (min === null) {
+                        if (key <= max) {
                             range = range.concat(value);
                         }
-                    } else if(max === null) {
-                        if(key >= min) {
+                    } else if (max === null) {
+                        if (key >= min) {
                             range = range.concat(value);
                         }
                     } else {
-                        if(key >= min && key <= max) {
+                        if (key >= min && key <= max) {
                             range = range.concat(value);
                         }
                     }
                     return range;
                 };
-            } else if(includeMin) {
+            } else if (includeMin) {
                 rng = function(min, max, key, range, value) {
-                    if(min === null) {
-                        if(key < max) {
+                    if (min === null) {
+                        if (key < max) {
                             range = range.concat(value);
                         }
-                    } else if(max === null) {
-                        if(key >= min) {
+                    } else if (max === null) {
+                        if (key >= min) {
                             range = range.concat(value);
                         }
                     } else {
-                        if(key >= min && key < max) {
+                        if (key >= min && key < max) {
                             range = range.concat(value);
                         }
                     }
@@ -3594,16 +3629,16 @@
                 };
             } else { // includeMax
                 rng = function(min, max, key, range, value) {
-                    if(min === null) {
-                        if(key <= max) {
+                    if (min === null) {
+                        if (key <= max) {
                             range = range.concat(value);
                         }
-                    } else if(max === null) {
-                        if(key > min) {
+                    } else if (max === null) {
+                        if (key > min) {
                             range = range.concat(value);
                         }
                     } else {
-                        if(key > min && key <= max) {
+                        if (key > min && key <= max) {
                             range = range.concat(value);
                         }
                     }
@@ -3612,16 +3647,16 @@
             }
             var range = [];
                 outer:
-                while(curr) {
+                while (curr) {
                     var data  = curr.data;
                     var left  = curr.indexSearch(min);
                     var right = (max === null || max === undefined) ? (data.length - 1) : curr.indexSearch(max);
-                    if(right >= data.length) {
+                    if (right >= data.length) {
                         right = data.length - 1;
                     }
-                    if(left <= data.length) {
-                        for(var i=left; i <= right; i++) {
-                            if(max !== null && data[i].key > max) {
+                    if (left <= data.length) {
+                        for (var i=left; i <= right; i++) {
+                            if (max !== null && data[i].key > max) {
                                 break outer;
                             }
                             range = rng(min, max, data[i].key, range, data[i].value);
@@ -3639,7 +3674,7 @@
          * @returns {Null|object}
          */
         this.split = function() {
-            if(this.data.length <= this.order) {
+            if (this.data.length <= this.order) {
                 return null;
             }
             var middle = Math.floor(this.data.length / 2);
@@ -3655,12 +3690,12 @@
             right.data = this.data.splice(0, middle + 1);
 
             left.setRight(right);
-            if(this.getLeft()) {
+            if (this.getLeft()) {
                 this.getLeft().setRight(left);
             }
 
             right.setLeft(left);
-            if(this.getRight()) {
+            if (this.getRight()) {
                 this.getRight().setLeft(right);
             }
 
@@ -3689,7 +3724,7 @@
             var o = {
                 type:'leaf'
             };
-            for(var i=0; i < this.data.length; i++) {
+            for (var i=0; i < this.data.length; i++) {
                 o[i + ':' + this.data[i].key] = this.data[i];
             }
             return o;
@@ -3716,11 +3751,11 @@
          */
         this.nodeSearch = function(key) {
             var len = this.data.length;
-            for(var i=1; i < len; i = i + 2) {
+            for (var i=1; i < len; i = i + 2) {
                 var ky = this.data[i];
-                if(ky == key) {
+                if (ky == key) {
                     return i + 1;
-                } else if(ky >= key) {
+                } else if (ky >= key) {
                     return i - 1;
                 }
             }
@@ -3735,11 +3770,11 @@
          */
         this.indexSearch = function(key) {
             var len = this.data.length;
-            for(var i=1; i < len; i = i + 2) {
+            for (var i=1; i < len; i = i + 2) {
                 var ky = this.data[i];
-                if(ky == key) {
+                if (ky == key) {
                     return i;
-                } else if(ky >= key) {
+                } else if (ky >= key) {
                     return i;
                 }
             }
@@ -3753,7 +3788,7 @@
          * @returns {BPlusTreeNode}
          */
         this.childSearch = function(key) {
-            if(this.data.length == 0) {
+            if (this.data.length === 0) {
                 return null;
             }
             return this.data[this.nodeSearch(key)];
@@ -3791,14 +3826,14 @@
          */    
         this.insert = function(key, value) {
             var index = this.indexSearch(key);
-            if(this.data[index] > key) {
+            if (this.data[index] > key) {
                 index--;
             } else {
                 index++;
             }
             var node  = this.data[index];
             var split = node.insert(key, value);
-            if(split) {
+            if (split) {
                 this.data.splice(index, 1, split.left, split.key, split.right);
             }
             return this.split();
@@ -3812,7 +3847,7 @@
          */    
         this.split = function() {
             var len = Math.floor((this.data.length - 1) / 2);
-            if(len < this.order) {
+            if (len < this.order) {
                 return null;
             }
 
@@ -3846,7 +3881,7 @@
             var index = this.indexSearch(key);
             var eindex = index;
 
-            if(this.data[index] > key) {
+            if (this.data[index] > key) {
                 eindex = index - 1;
             } else {
                 eindex = index + 1;
@@ -3854,7 +3889,7 @@
 
             var node  = this.data[eindex];        
             var result = node.remove(key, this);
-            if(!result) {
+            if (!result) {
                 return null;
             }
             switch(result.operation) {
@@ -3862,11 +3897,11 @@
                     break;
 
                 case 1: // merge
-                    if(this.data.length == 3) {
+                    if (this.data.length == 3) {
                         return result.node;
                     }
                     var collapseIndex = result.index;
-                    if(result.left) {
+                    if (result.left) {
                         collapseIndex = result.index - 2;
                     }
                     this.data.splice(collapseIndex, 3, result.node);
@@ -3874,14 +3909,14 @@
 
                 case 2: // bubbling a new key up the tree to replace the removed one
                     var replaced = false;
-                    for(var i=1; i < this.data.length; i=i+2) {
-                        if(this.data[i] == result.oldkey) {
+                    for (var i=1; i < this.data.length; i=i+2) {
+                        if (this.data[i] == result.oldkey) {
                             this.data[i] = result.key;
                             replaced = true;
                         }
                     }
-                    if(!replaced) {
-                        if(!parent) {
+                    if (!replaced) {
+                        if (!parent) {
                             return null;
                         }
                         return result;
@@ -3898,8 +3933,8 @@
          * @returns {Void}
          */
         this.reassignKeys = function() {
-            for(var i=2; i < this.data.length; i=i+2) {
-                if(this.data[i].isLeaf()) {
+            for (var i=2; i < this.data.length; i=i+2) {
+                if (this.data[i].isLeaf()) {
                     this.data[i-1] = this.data[i].data[0].key;
                 }
             }
@@ -3915,11 +3950,11 @@
          * @returns {Mixed}
          */
         this.merge = function(parent, key, oldkey) {
-            if(!parent) {
+            if (!parent) {
                 return null;
             }
             var len = Math.floor((this.data.length - 1) / 2);
-            if(len >= (this.threshold - 1)) {
+            if (len >= (this.threshold - 1)) {
                 return {
                     key: key,
                     oldkey: oldkey,
@@ -3929,9 +3964,9 @@
             var index, pkey, sibling;
             var left = false;
             var i = 0;
-            for(; i < parent.data.length; i = i+2) {
-                if(parent.data[i] == this) {
-                    if(i == 0 || i < parent.data.length - 1) {
+            for (; i < parent.data.length; i = i+2) {
+                if (parent.data[i] == this) {
+                    if (i === 0 || i < parent.data.length - 1) {
                         sibling = parent.data[i+2];
                         index = i+1;
                     } else {
@@ -3948,7 +3983,7 @@
             node.setOrder(this.getOrder());
             node.setMergeThreshold(this.getMergeThreshold());
 
-            if(left) {
+            if (left) {
                 node.data = sibling.data.splice(0, sibling.data.length);
                 node.data = node.data.concat(pkey);
                 node.data = node.data.concat(this.data.splice(0, this.data.length));
@@ -3989,7 +4024,7 @@
             };
             var i=0;
             var j=1;
-            while(j < this.data.length) {
+            while (j < this.data.length) {
                 o[j + ':' + this.data[j]] = {
                     left: this.data[i].toArray(),
                     right: this.data[i+2].toArray()
@@ -4012,11 +4047,11 @@
      */
     Scule.datastructures.classes.BPlusTree = function(order, threshold) {
 
-        if(!order) {
+        if (!order) {
             order = 100;  
         }
 
-        if(!threshold) {
+        if (!threshold) {
             threshold = Math.ceil(order/2);
         }
 
@@ -4049,7 +4084,7 @@
          */
         this.insert = function(key, value) {
             var split = this.root.insert(key, value);
-            if(split) {
+            if (split) {
                 this.root = new Scule.datastructures.classes.BPlusTreeInteriorNode();
                 this.root.setOrder(this.order);
                 this.root.setMergeThreshold(this.threshold);
@@ -4068,7 +4103,7 @@
          */
         this.search = function(key) {
             return this.root.search(key);
-        }
+        };
 
         /**
          * Returns a range of values from the tree, bounding values inclusive
@@ -4081,7 +4116,7 @@
          */
         this.range = function(min, max, includeMin, includeMax) {
             return this.root.range(min, max, includeMin, includeMax);
-        }
+        };
 
         /**
          * Removes a key (and all associated values) from the tree
@@ -4091,7 +4126,7 @@
          */
         this.remove = function(key) {
             var node = this.root.remove(key);
-            if(node) {
+            if (node) {
                 this.root = node;
             }
             return true;
@@ -4114,7 +4149,7 @@
          * @returns {String}
          */
         this.toString = function() {
-            return this.root.toString()
+            return this.root.toString();
         };
 
         /**
@@ -4195,7 +4230,7 @@
          * @returns {Void}
          */
         this.setLeft = function(left) {
-            if(!left) {
+            if (!left) {
                 return;
             }
             this.left = left;
@@ -4218,7 +4253,7 @@
          * @returns {Void}
          */
         this.setRight = function(right) {
-            if(!right) {
+            if (!right) {
                 return;
             }
             this.right = right;
@@ -4278,17 +4313,17 @@
          * @returns {Boolean}
          */
         this.remove = function(child) {
-            if(!child) {
+            if (!child) {
                 return false;
             }
-            if(child == this.right) {
+            if (child == this.right) {
                 this.setRight(child.getRight());
                 this.getRight().setLeft(child.getLeft());
                 child.parent = null;
                 child.left   = null;
                 child.right  = null;
                 return true;
-            } else if(child == this.left) {
+            } else if (child == this.left) {
                 this.setLeft(child.getRight());
                 this.getLeft().setLeft(child.getLeft());
                 child.parent = null;
@@ -4332,25 +4367,25 @@
         this.insert = function(key, data) {
             var self = this;
             var node = new Scule.datastructures.classes.BinarySearchTreeNode(key, data);
-            if(this.root == null) {
+            if (this.root === null) {
                 this.length++;
                 this.root = node;
                 return true;
             }
             var insrt = function(node, parent) {
-                if(node.getKey() == parent.getKey()) {
+                if (node.getKey() == parent.getKey()) {
                     parent.setData(node.getData());
                     return false;
                 }
-                if(node.getKey() <= parent.getKey()) {
-                    if(!parent.getLeft()) {
+                if (node.getKey() <= parent.getKey()) {
+                    if (!parent.getLeft()) {
                         self.length++;
                         parent.setLeft(node);
                     } else {
                         insrt(node, parent.getLeft());
                     }
                 } else {
-                    if(!parent.getRight()) {
+                    if (!parent.getRight()) {
                         self.length++;
                         parent.setRight(node);
                     } else {
@@ -4358,7 +4393,7 @@
                     }
                 }
                 return true;
-            }
+            };
             return insrt(node, this.root);
         };
 
@@ -4370,17 +4405,17 @@
          */
         this.search = function(key) {
             var srch = function(key, node) {
-                if(!node) {
+                if (!node) {
                     return null;
                 }
-                if(node.getKey() == key) {
+                if (node.getKey() == key) {
                     return node;
-                } else if(node.getKey() > key) {
+                } else if (node.getKey() > key) {
                     return srch(key, node.getLeft());
                 } else {
                     return srch(key, node.getRight());
                 }           
-            }
+            };
             return srch(key, this.root);
         };
 
@@ -4392,14 +4427,14 @@
          */
         this.remove = function(key) {
             var node = this.search(key);
-            if(!node) {
+            if (!node) {
                 return false;
             }
-            if(!node.getParent()) {
-                if(node.getRight()) {
+            if (!node.getParent()) {
+                if (node.getRight()) {
                     this.root = node.getRight();
                     this.root.setLeft(node.getLeft());
-                } else if(node.getLeft()) {
+                } else if (node.getLeft()) {
                     this.root = node.getRight();
                     this.root.setLeft(node.getLeft());
                 } else {
@@ -4409,7 +4444,7 @@
                 return true;
             }
             var r = node.getParent().remove(node);
-            if(r) {
+            if (r) {
                 this.length--;
             }
             return r;
@@ -4428,10 +4463,10 @@
                 var right  = list.splice(Math.ceil(list.length/2), list.length);
                 var middle = left.pop();
                 self.insert(middle[0], middle[1]);
-                if(left.length > 0) {
+                if (left.length > 0) {
                     rebuild(left);
                 }
-                if(right.length > 0) {
+                if (right.length > 0) {
                     rebuild(right);
                 }
             };
@@ -4456,7 +4491,7 @@
          */
         this.toArray = function() {
             var flatten = function(node) {
-                if(!node) {
+                if (!node) {
                     return [];
                 }
                 return flatten(node.getLeft()).concat([[node.getKey(), node.getData()]]).concat(flatten(node.getRight()));
@@ -4613,6 +4648,8 @@
  */
 (function() {
 
+    "use strict";
+
     /**
      * A simple timer for instrumenting intervals during program execution
      * @public
@@ -4659,7 +4696,7 @@
          */
         this.startInterval = function(tag) {
             this.intervalCounter++;
-            if(tag == undefined) {
+            if (tag === undefined) {
                 tag = this.intervalCounter;
             }
             this.intervals.push(new Scule.instrumentation.classes.TimerInterval(tag));
@@ -4672,7 +4709,7 @@
          * @returns {Void}
          */
         this.stopInterval = function() {
-            if(this.intervals.isEmpty()) {
+            if (this.intervals.isEmpty()) {
                 return false;
             }
             this.intervals.peek().stop();
@@ -4685,7 +4722,7 @@
          * @returns {Void}
          */
         this.stopAllIntervals = function() {
-            while(!this.intervals.isEmpty()) {
+            while (!this.intervals.isEmpty()) {
                 this.intervals.pop().stop();
             }
         };
@@ -4745,7 +4782,7 @@
          * @returns {Number}
          */
         this.getDifference = function() {
-            if(this.endTimestamp == null) {
+            if (this.endTimestamp === null) {
                 return false;
             }
             return this.endTimestamp - this.startTimestamp;
@@ -4758,7 +4795,7 @@
          */
         this.logToConsole = function() {
             var diff = this.getDifference();
-            if(diff === false) {
+            if (diff === false) {
                 console.log('interval ' + this.tag + ' is still in progress');
             }
             console.log('interval ' + this.tag + ' lasted ' + diff + 'ms');
@@ -4780,6 +4817,8 @@
  * Query parser
  */
 (function() {
+    
+    "use strict";
     
     /**
      * All valid symbols for Scule queries
@@ -4865,7 +4904,7 @@
          * @returns {Void}
          */
         this.setOrs = function(ors) {
-            if(ors.length == 0) {
+            if (ors.length === 0) {
                 return false;
             }
             var token = new Scule.parser.classes.QueryOperand('$and', Scule.parser.arities.selective);
@@ -4968,7 +5007,7 @@
             var c = 0;
             var count = function(symbol) {
                 symbol.children.forEach(function(child) {
-                    if(child.getType() == Scule.parser.arities.operand) {
+                    if (child.getType() == Scule.parser.arities.operand) {
                         c++;
                     } else {
                         count(child);
@@ -4986,7 +5025,7 @@
          * @return {QueryParseNode|Null}
          */
         this.getChild = function(index) {
-            if(index > this.children.length || !this.children[index]) {
+            if (index > this.children.length || !this.children[index]) {
                 return null;
             }
             return this.children[index];
@@ -5018,18 +5057,18 @@
         this.normalize = function() {
             var child  = null;
             var i      = 0;
-            for(; i < this.children.length; i++) {
-                if(this.children.length == 0) {
+            for (; i < this.children.length; i++) {
+                if (this.children.length === 0) {
                     break;
                 }
                 child = this.children[i];
-                if(child.getType() == Scule.parser.arities.selective) {
-                    if(!child.hasChildren()) {
+                if (child.getType() == Scule.parser.arities.selective) {
+                    if (!child.hasChildren()) {
                         this.children.splice(i, 1);
                         i--;                    
                     } else {
                         child.normalize();
-                        if(!child.hasChildren()) {
+                        if (!child.hasChildren()) {
                             this.children.splice(i, 1);
                             i--;
                         }
@@ -5164,8 +5203,8 @@
                 /**
                  * Handle a scalar value - this is for implicit AND-s
                  */
-                if(Scule.global.functions.isScalar(query) || query instanceof RegExp) {
-                    if(type == Scule.parser.arities.variable || type == Scule.parser.arities.selective) {
+                if (Scule.global.functions.isScalar(query) || query instanceof RegExp) {
+                    if (type == Scule.parser.arities.variable || type == Scule.parser.arities.selective) {
                         token = new Scule.parser.classes.QueryOperator('$eq', Scule.parser.arities.binary);
                         scope.peek().addChild(token);
                         token.addChild(new Scule.parser.classes.QueryOperand(query, Scule.parser.arities.operand));
@@ -5177,16 +5216,16 @@
                 /**
                  * Handle an array of clauses - this is for literal AND-s and OR-s
                  */
-                if(Scule.global.functions.isArray(query)) {
-                    if(scope.peek().getType() == Scule.parser.arities.selective) {
+                if (Scule.global.functions.isArray(query)) {
+                    if (scope.peek().getType() == Scule.parser.arities.selective) {
                         var len = query.length;
-                        if(query.length < 2) {
+                        if (query.length < 2) {
                             throw 'operator ' + scope.peek().getSymbol() + ' requires two or more sub-expression';
                         }
                         var i = 0;
                         var s = scope.peek().getSymbol();
-                        for(; i < len; i++) {
-                            if(s in query[i]) {
+                        for (; i < len; i++) {
+                            if (s in query[i]) {
                                 throw 'operator ' + scope.peek().getSymbol() + ' cannot be nested';
                             }
                             parse(query[i], level++);
@@ -5201,8 +5240,8 @@
                     return;
                 } else {
                     var operator = scope.peek().getSymbol();
-                    if(operator == '$near' || operator == '$within') {
-                        if(!('lat' in query) || !('lon' in query) || !('distance' in query)) {
+                    if (operator == '$near' || operator == '$within') {
+                        if (!('lat' in query) || !('lon' in query) || !('distance' in query)) {
                             throw operator + ' operator requires lat, lon, and distance attributes - e.g. {lat:30, lon:-30, distance:10}';
                         }
                         scope.peek().addChild(new Scule.parser.classes.QueryOperand(query, Scule.parser.arities.operand));
@@ -5212,15 +5251,15 @@
                 /**
                  * Handle a general case query clause Object
                  */
-                if(!scope.isEmpty() && scope.peek().getSymbol() !== '$and') {
+                if (!scope.isEmpty() && scope.peek().getSymbol() !== '$and') {
                     token = new Scule.parser.classes.QueryOperand('$and', Scule.parser.arities.selective);
                     scope.peek().addChild(token);
                     scope.push(token);
                 }
-                for(var t in query) {
-                    if(t in Scule.parser.symbols.table) {
+                for (var t in query) {
+                    if (t in Scule.parser.symbols.table) {
                         token = new Scule.parser.classes.QueryOperator(t, Scule.parser.symbols.table[t]);
-                        if(t == '$or') {
+                        if (t == '$or') {
                             inOr = true;
                             ors.push(token);
                         } else {
@@ -5228,7 +5267,7 @@
                         }
                         scope.push(token);
                         parse(query[t], level++);
-                        if(!scope.isEmpty() && scope.pop().getSymbol() == '$or') {
+                        if (!scope.isEmpty() && scope.pop().getSymbol() == '$or') {
                             inOr = false;
                         }
                     } else {
@@ -5236,11 +5275,11 @@
                         /**
                          * Un-nesting ANDs
                          */
-                        if(!inOr) {
-                            if(ands.contains(t)) {
+                        if (!inOr) {
+                            if (ands.contains(t)) {
                                 var top = ands.get(t);
-                                if(top.getType() !== Scule.parser.arities.selective) {
-                                    if(top.getFirstChild().getType() !== Scule.parser.arities.selective) {
+                                if (top.getType() !== Scule.parser.arities.selective) {
+                                    if (top.getFirstChild().getType() !== Scule.parser.arities.selective) {
                                         var and = new Scule.parser.classes.QueryOperand('$and', Scule.parser.arities.selective);
                                         and.addChild(top.getFirstChild());
                                         top.children[0] = and;
@@ -5264,7 +5303,7 @@
                     }
                 }
                 scope.pop();
-            }
+            };
             parse(query, 0);        
             tree.setOrs(ors);
             tree.normalize();
@@ -5304,7 +5343,9 @@
 }());
 
 (function() {
-    
+  
+    "use strict";
+  
     /**
      * @private
      * @type {Object}
@@ -5515,21 +5556,21 @@
             range = range.getKeys().sort();
             exact = exact.getKeys().sort();
 
-            if(range.length == 0 && exact.length == 0) {
+            if (range.length === 0 && exact.length === 0) {
                 return;
             }
 
             var matches  = null;
             var indices  = this.collection.indices;
 
-            for(var i=0; i < indices.length; i++) {
+            for (var i=0; i < indices.length; i++) {
                 var index = indices[i];
                 matches = index.applies(exact, false);
-                if(matches) {
+                if (matches) {
                     self.selectExactIndexes(node, matches);
                 }
                 matches = index.applies(range, true);
-                if(matches) {
+                if (matches) {
                     self.selectRangeIndexes(node, matches);
                 }
             }
@@ -5543,7 +5584,7 @@
             node.children.forEach(function(child) {
                 switch(child.getType()) {
                     case Scule.parser.arities.variable:
-                        if(child.getFirstChild().getType() == Scule.parser.arities.selective) {
+                        if (child.getFirstChild().getType() == Scule.parser.arities.selective) {
                             child.children.forEach(function(clause) {
                                 self.processClauses(child.getSymbol(), clause, range, exact);
                             });                        
@@ -5588,17 +5629,16 @@
 
             var values    = [];
             var backtrack = [];
-            for(var i=0; i < node.children.length; i++) {
+            for (var i=0; i < node.children.length; i++) {
                 var child  = node.children[i];
                 var symbol = child.getSymbol();
-                if(symbol in matches.$attr && matches.$attr[symbol]) {
+                if (symbol in matches.$attr && matches.$attr[symbol]) {
                     var clauses = child.children;
-                    if(child.getFirstChild().getType() == Scule.parser.arities.selective) {
+                    if (child.getFirstChild().getType() == Scule.parser.arities.selective) {
                         clauses = child.getFirstChild().children;
-                    } else {
                     }
-                    for(var j=0; j < clauses.length; j++) {
-                        if(clauses[j].getSymbol() == '$eq') {
+                    for (var j=0; j < clauses.length; j++) {
+                        if (clauses[j].getSymbol() == '$eq') {
                             values.push(clauses[j].getFirstChild().getSymbol());
                             backtrack.push({
                                 i_index: i,
@@ -5612,13 +5652,13 @@
                 }
             }
 
-            if(backtrack.length !== matches.$index.astrings.length) {
+            if (backtrack.length !== matches.$index.astrings.length) {
                 return;
             } else {
                 backtrack = backtrack.reverse();
                 backtrack.forEach(function(tuple) {
                     tuple.carray.splice(tuple.j_index, 1);
-                    if(tuple.carray.length == 0) {
+                    if (tuple.carray.length === 0) {
                         tuple.parray.splice(tuple.i_index, 1);
                     }
                 });
@@ -5633,7 +5673,7 @@
          */
         this.selectRangeIndexes = function(node, matches) {
 
-            if(matches.$index.astrings.length > 1) {
+            if (matches.$index.astrings.length > 1) {
                 return;
             }
 
@@ -5645,16 +5685,16 @@
             var count = 0;
             var values = [null, null];
             var flags  = [null, null];
-            for(var i=0; i < node.children.length; i++) {
+            for (var i=0; i < node.children.length; i++) {
                 var child  = node.children[i];
                 var symbol = child.getSymbol();
-                if(symbol in matches.$attr && matches.$attr[symbol]) {  
-                    if(!child.getFirstChild()) {
+                if (symbol in matches.$attr && matches.$attr[symbol]) {  
+                    if (!child.getFirstChild()) {
                         continue;
                     }
                     count++;
                     var clauses = child.getFirstChild().children;
-                    for(var j=0; j < clauses.length; j++) {
+                    for (var j=0; j < clauses.length; j++) {
                         var clause = clauses[j];
                         var match  = false;
                         switch(clause.getSymbol()) {
@@ -5682,7 +5722,7 @@
                                 flags[1]  = true;                            
                                 break;
                         }
-                        if(match) {
+                        if (match) {
                             backtrack.push({
                                 i_index: i,
                                 j_index: j,
@@ -5690,17 +5730,17 @@
                                 parray:  node.children                    
                             });                        
                         }
-                    };
+                    }
                 }
             }
 
-            if(backtrack.length == 0 || count < matches.$index.astrings.length) {
+            if (backtrack.length === 0 || count < matches.$index.astrings.length) {
                 return;
             } else {
                 backtrack = backtrack.reverse();
                 backtrack.forEach(function(tuple) {
                     tuple.carray.splice(tuple.j_index, 1);
-                    if(tuple.carray.length == 0) {
+                    if (tuple.carray.length === 0) {
                         tuple.parray.splice(tuple.i_index, 1);
                     }
                 });
@@ -5753,13 +5793,13 @@
         this.explain = function() {
             var a = [];
             this.args.forEach(function(arg) {
-                if(!arg) {
+                if (!arg) {
                     return;
                 }
-                if(Scule.global.functions.isScalar(arg)) {
+                if (Scule.global.functions.isScalar(arg)) {
                     a.push(arg);
                 } else {
-                    if('getName' in arg) {
+                    if ('getName' in arg) {
                         a.push(arg.getName()); 
                     } else {
                         a.push(arg); 
@@ -5767,7 +5807,7 @@
                 }
             });
             var encoded = '';
-            if(a.length > 0) {
+            if (a.length > 0) {
                 try {
                     encoded = JSON.stringify(a);
                 } catch (e) {
@@ -5954,7 +5994,7 @@
          */
         this.toByteCode = function() {
             var code = [];
-            if(this.children.length > 0) {
+            if (this.children.length > 0) {
                 this.children.forEach(function(block) {
                     code = code.concat(block.toByteCode());
                 });
@@ -5972,7 +6012,7 @@
          * @returns {Void}
          */
         this.explain = function() {
-            if(this.children.length > 0) {
+            if (this.children.length > 0) {
                 this.children.forEach(function(block) {
                     block.explain();
                 });
@@ -6007,7 +6047,7 @@
             this.children.forEach(function(block) {
                 code = code.concat(block.toByteCode());
             });
-            if(this.children.length > 1) {
+            if (this.children.length > 1) {
                 code.push([0x02, [this.children.length]]);
                 Scule.builder.variables.line++;
             }
@@ -6023,7 +6063,7 @@
             this.children.forEach(function(block) {
                 block.explain();
             });
-            if(this.children.length > 1) {
+            if (this.children.length > 1) {
                 console.log((Scule.builder.variables.line++) + ' or [' + this.children.length + ']');
             }
         };
@@ -6058,7 +6098,7 @@
                 code = code.concat(block.toByteCode());
                 count++;
             });
-            if(count > 1) {
+            if (count > 1) {
                 code.push([0x01, [count]]);
                 Scule.builder.variables.line++;
             }
@@ -6080,7 +6120,7 @@
                 block.explain();
                 count++;
             });        
-            if(count > 1) {
+            if (count > 1) {
                 console.log((Scule.builder.variables.line++) + ' and [' + count + ']');       
             }
         };
@@ -6198,9 +6238,9 @@
         this.buildHead = function() {
             var children = this.program.getChildren();
             var block;
-            for(var i=0; i < children.length; i++) {
+            for (var i=0; i < children.length; i++) {
                 block = children[i];
-                if(block.getOperand() == 'head') {
+                if (block.getOperand() == 'head') {
                     this.program.bytecode = this.program.bytecode.concat(block.toByteCode());
                     break;
                 }
@@ -6219,9 +6259,9 @@
         this.explainHead = function() {
             var children = this.program.getChildren();
             var block;
-            for(var i=0; i < children.length; i++) {
+            for (var i=0; i < children.length; i++) {
                 block = children[i];
-                if(block.getOperand() == 'head') {
+                if (block.getOperand() == 'head') {
                     block.explain();
                     break;
                 }
@@ -6239,14 +6279,14 @@
             var children = this.program.getChildren();
             var count    = 0;
             var block;
-            for(var i=0; i < children.length; i++) {
+            for (var i=0; i < children.length; i++) {
                 block = children[i];
-                if(block.getOperand() != 'head') {
+                if (block.getOperand() != 'head') {
                     count++;
                     this.program.bytecode = this.program.bytecode.concat(block.toByteCode());
                 }
             }
-            if(count == 0) {
+            if (count === 0) {
                 this.program.bytecode.push([0x28, []]);
                 Scule.builder.variables.line++;
             }
@@ -6261,14 +6301,14 @@
             var children = this.program.getChildren();
             var count    = 0;
             var block;
-            for(var i=0; i < children.length; i++) {
+            for (var i=0; i < children.length; i++) {
                 block = children[i];
-                if(block.getOperand() != 'head') {
+                if (block.getOperand() != 'head') {
                     count++;
                     block.explain();
                 }
             }  
-            if(count == 0) {
+            if (count === 0) {
                 console.log((Scule.builder.variables.line++) + ' transpose');
             }
         };
@@ -6362,7 +6402,7 @@
          */
         this.getProgram = function() {
             return this.builder.getProgram();
-        }
+        };
 
         /**
          * Builds the program
@@ -6404,7 +6444,7 @@
          */
         this.compile = function(tree, conditions, collection, explain) {
 
-            if(!conditions) {
+            if (!conditions) {
                 conditions = {};
             }
 
@@ -6417,18 +6457,18 @@
             var program  = director.getProgram();
 
             program.startHeadBlock();
-            if(!node.hasChildren() || node.getFirstChild().getType() !== Scule.parser.arities.index) {
+            if (!node.hasChildren() || node.getFirstChild().getType() !== Scule.parser.arities.index) {
                 program.addInstruction('scan', [collection]);
                 program.stopBlock();
                 loop = (node.children.length > 0);
             } else {
                 var i=0;
-                for(; i < node.children.length; i++) {
+                for (; i < node.children.length; i++) {
                     var child = node.children[i];
-                    if(child.getType() !== Scule.parser.arities.index) {
+                    if (child.getType() !== Scule.parser.arities.index) {
                         break;
                     } else {
-                        if(child.range) {
+                        if (child.range) {
                             program.startRangeBlock(child.index, child.args);
                         } else {
                             program.startFindBlock(child.index, child.args);
@@ -6468,7 +6508,7 @@
                 node.children.forEach(function(child) {
                     switch(child.getType()) {
                         case Scule.parser.arities.selective:
-                            if(child.getSymbol() == '$or') {
+                            if (child.getSymbol() == '$or') {
                                 program.startOrBlock();
                             } else {
                                 program.startAndBlock();
@@ -6490,7 +6530,7 @@
                 });
             };
 
-            if(loop) {
+            if (loop) {
                 program.startLoopBlock();
             }
 
@@ -6498,29 +6538,31 @@
             compile(node);
             program.stopBlock();
 
-            if(loop) {
+            if (loop) {
                 program.stopBlock();
             }
 
             program.startBlock();
-            if('$sort' in conditions) {
-                for(var k in conditions.$sort) {
-                    program.addInstruction('sort', [k, conditions.$sort[k]]);
-                    break;
+            if ('$sort' in conditions) {
+                for (var k in conditions.$sort) {
+                    if(conditions.$sort.hasOwnProperty(k)) {
+                        program.addInstruction('sort', [k, conditions.$sort[k]]);
+                        break;
+                    }
                 }
             }
-            if('$limit' in conditions) {
+            if ('$limit' in conditions) {
                 program.addInstruction('limit', [conditions.$limit]);
             }
             program.stopBlock();
 
-            if(!loop) {
+            if (!loop) {
                 program.startBlock();
                 program.addInstruction('transpose', []);
                 program.stopBlock();
             }
 
-            if(explain) {
+            if (explain) {
                 director.explainProgram();
             }
 
@@ -6574,17 +6616,21 @@
         this.compileMutate = function(query, collection) {
             var instructions = [];
 
-            instructions.push([Scule.builder.instructions.table['rread'], []]);
-            for(var operator in query) {
-                if(!(Scule.builder.instructions.mapping[operator] in Scule.builder.instructions.table)) {
-                    throw operator + ' is an unrecognized operator';
-                }            
-                for(var variable in query[operator]) {
-                    var opcode  = Scule.builder.instructions.table[Scule.builder.instructions.mapping[operator]];
-                    instructions.push([opcode, [Scule.global.functions.parseAttributes(variable), query[operator][variable]]]);
+            instructions.push([Scule.builder.instructions.table.rread, []]);
+            for (var operator in query) {
+                if(query.hasOwnProperty(operator)) {
+                    if (!(Scule.builder.instructions.mapping[operator] in Scule.builder.instructions.table)) {
+                        throw operator + ' is an unrecognized operator';
+                    }            
+                    for (var variable in query[operator]) {
+                        if(query[operator].hasOwnProperty(variable)) {
+                            var opcode  = Scule.builder.instructions.table[Scule.builder.instructions.mapping[operator]];
+                            instructions.push([opcode, [Scule.global.functions.parseAttributes(variable), query[operator][variable]]]);
+                        }
+                    }
                 }
             }
-            instructions.push([Scule.builder.instructions.table['rindex'], [collection]]);
+            instructions.push([Scule.builder.instructions.table.rindex, [collection]]);
             instructions.push([Scule.builder.instructions.table['goto'], [0]]);
 
             return instructions;
@@ -6603,12 +6649,16 @@
             var line = 0;
 
             console.log((line++) + ' rread');
-            for(var operator in query) {
-                if(!(Scule.builder.instructions.mapping[operator] in Scule.builder.instructions.table)) {
-                    throw operator + ' is an unrecognized operator';
-                }             
-                for(var variable in query[operator]) {
-                    console.log((line++) + ' ' + Scule.builder.instructions.mapping[operator] + ' ' + variable + ', ' + JSON.stringify(query[operator][variable]));
+            for (var operator in query) {
+                if(query.hasOwnProperty(operator)) {
+                    if (!(Scule.builder.instructions.mapping[operator] in Scule.builder.instructions.table)) {
+                        throw operator + ' is an unrecognized operator';
+                    }             
+                    for (var variable in query[operator]) {
+                        if  (query[operator].hasOwnProperty(variable)) {
+                            console.log((line++) + ' ' + Scule.builder.instructions.mapping[operator] + ' ' + variable + ', ' + JSON.stringify(query[operator][variable]));
+                        }
+                    }
                 }
             }
             console.log((line++) + ' rindex ' + collection.getName());
@@ -6627,7 +6677,7 @@
         this.compileQuery = function(query, conditions, collection) {
 
             var hash = Scule.md5.hash(JSON.stringify(query));
-            if(this.cache.contains(hash)) {
+            if (this.cache.contains(hash)) {
                 return this.cache.get(hash).toByteCode();
             }
 
@@ -6716,6 +6766,8 @@
  * Virtual Machine
  */
 (function() {
+
+    "use strict";
 
     /**
      * A hybrid (stack + registers) virtual machine that executes programs 
@@ -6824,24 +6876,24 @@
          * @returns {Array}
          */
         this.execute = function(program, mutate, upsert) {
-            if(!program) {
+            if (!program) {
                 program = this.registers[3];
             } else {
                 this.registers[3] = program;
             }
 
             this.running = true;
-            while(this.running) {
+            while (this.running) {
                 this.executeInstruction(program[this.ipointer]);
             }
             this.running = false;
 
-            if(mutate) {
+            if (mutate) {
                 this.dpointer = 0;
                 this.ipointer = 0;
                 this.running  = true;
                 this.upsert   = upsert;
-                while(this.running) {
+                while (this.running) {
                     this.executeInstruction(mutate[this.ipointer]);
                 }
             }
@@ -6889,7 +6941,7 @@
          */
         this.registerInstruction(0x1C, function(vm, instruction) {
             var o = instruction[1][0].findAll();
-            if(o.length == 0) {
+            if (o.length === 0) {
                 vm.running = false;
             }
             vm.stack.push(o);
@@ -6942,7 +6994,7 @@
          * shift
          */
         this.registerInstruction(0x20, function(vm, instruction) {
-            if(vm.stack.pop() === true) {
+            if (vm.stack.pop() === true) {
                 vm.result.push(vm.registers[1]);
             }
             vm.ipointer++;
@@ -6952,16 +7004,16 @@
          * intersect
          */
         this.registerInstruction(0x23, function(vm, instruction) {
-            if(vm.stack.getLength() == 1) {
+            if (vm.stack.getLength() === 1) {
                 vm.ipointer++;
                 return;
             }
             var arrays = [];
-            while(!vm.stack.isEmpty()) {
+            while (!vm.stack.isEmpty()) {
                 arrays.push(vm.stack.pop());
             }
             var result = Scule.vm.functions.intersection(arrays);
-            if(result.length == 0) {
+            if (result.length === 0) {
                 vm.running = false;
             }
             vm.stack.push(result);
@@ -6975,13 +7027,13 @@
             var count = instruction[1][0];
             var and   = null;
             do {
-                if(and == null) {
+                if (and === null) {
                     and = vm.stack.pop();
                 } else {
                     and = and && vm.stack.pop();
                 }
                 count--;
-            } while(count > 0);
+            } while (count > 0);
             vm.stack.push(and);
             vm.ipointer++;
         });    
@@ -6993,13 +7045,13 @@
             var count = instruction[1][0];
             var or    = null;
             do {
-                if(or == null) {
+                if (or === null) {
                     or = vm.stack.pop();
                 } else {
                     or = or || vm.stack.pop();
                 }
                 count--;
-            } while(count > 0);
+            } while (count > 0);
             vm.stack.push(or);
             vm.ipointer++;
         });
@@ -7015,7 +7067,7 @@
          * jump
          */
         this.registerInstruction(0x25, function(vm, instruction) {
-            if(vm.dpointer >= vm.registers[0].length) {
+            if (vm.dpointer >= vm.registers[0].length) {
                 vm.ipointer = instruction[1][0];
                 return;
             }
@@ -7028,7 +7080,7 @@
         this.registerInstruction(0xC, function(vm, instruction) {
             var object = vm.registers[1];
             var value  = Scule.global.functions.traverse(instruction[1][0], object);
-            if(instruction[1][1] instanceof RegExp) {
+            if (instruction[1][1] instanceof RegExp) {
                 vm.stack.push(instruction[1][1].test(value));
             } else {
                 vm.stack.push(value == instruction[1][1]);
@@ -7092,7 +7144,7 @@
         this.registerInstruction(0xA, function(vm, instruction) {
             var object = vm.registers[1];
             var value  = Scule.global.functions.traverse(instruction[1][0], object);
-            if(value === undefined) {
+            if (value === undefined) {
                 vm.stack.push(false);
             } else {
                 vm.stack.push(instruction[1][1].contains(value));
@@ -7106,7 +7158,7 @@
         this.registerInstruction(0xB, function(vm, instruction) {
             var object = vm.registers[1];
             var value  = Scule.global.functions.traverse(instruction[1][0], object);
-            if(value === undefined) {
+            if (value === undefined) {
                 vm.stack.push(true);
             } else {
                 vm.stack.push(!instruction[1][1].contains(value));
@@ -7130,7 +7182,7 @@
         this.registerInstruction(0xF, function(vm, instruction) {
             var object = vm.registers[1];
             var value  = Scule.global.functions.traverse(instruction[1][0], object);
-            if(instruction[1][1]) {
+            if (instruction[1][1]) {
                 vm.stack.push(value !== undefined);
             } else {
                 vm.stack.push(value === undefined);
@@ -7144,11 +7196,11 @@
         this.registerInstruction(0x09, function(vm, instruction) {
             var object = vm.registers[1];
             var value  = Scule.global.functions.traverse(instruction[1][0], object);
-            if(!Scule.global.functions.isArray(value)) {
+            if (!Scule.global.functions.isArray(value)) {
                 vm.stack.push(false);
             } else {
                 var table = instruction[1][1];
-                if(value.length < table.getLength()) {
+                if (value.length < table.getLength()) {
                     vm.stack.push(false);
                 } else {
                     var tmp  = Scule.getHashTable();
@@ -7156,12 +7208,12 @@
                     keys.forEach(function(key) {
                         tmp.put(key, false);
                     });
-                    for(var i=0; i < value.length; i++) {
-                        if(tmp.contains(value[i])) {
+                    for (var i=0; i < value.length; i++) {
+                        if (tmp.contains(value[i])) {
                             tmp.remove(value[i]);
                         }
                     }
-                    vm.stack.push(tmp.getLength() == 0);
+                    vm.stack.push(tmp.getLength() === 0);
                 }
             }
             vm.ipointer++;
@@ -7171,7 +7223,7 @@
          * limit
          */
         this.registerInstruction(0x29, function(vm, instruction) {
-            if(instruction[1][0] < vm.result.length) {
+            if (instruction[1][0] < vm.result.length) {
                 vm.result = vm.result.splice(0, instruction[1][0]);
             }
             vm.ipointer++;
@@ -7189,7 +7241,7 @@
          * rread
          */
         this.registerInstruction(0x2B, function(vm, instruction) {
-            if(vm.dpointer >= vm.result.length) {
+            if (vm.dpointer >= vm.result.length) {
                 vm.halt();
             }
             vm.registers[1] = vm.result[vm.dpointer];
@@ -7205,8 +7257,8 @@
             var struct   = Scule.global.functions.traverseObject(instruction[1][0], document);
             var leaf     = struct[0];
             var o        = struct[1];
-            if(!(leaf in o)) {
-                if(vm.upsert == true) {
+            if (!(leaf in o)) {
+                if (vm.upsert === true) {
                     o[leaf] = instruction[1][1];
                 }
             } else {
@@ -7223,7 +7275,7 @@
             var struct   = Scule.global.functions.traverseObject(instruction[1][0], document);
             var leaf     = struct[0];
             var o        = struct[1];
-            if(leaf in o) {
+            if (leaf in o) {
                 delete o[leaf];
             }
             vm.ipointer++;        
@@ -7237,12 +7289,12 @@
             var struct   = Scule.global.functions.traverseObject(instruction[1][0], document);
             var leaf     = struct[0];
             var o        = struct[1];
-            if(!(leaf in o)) {
-                if(vm.upsert) {
+            if (!(leaf in o)) {
+                if (vm.upsert) {
                     o[leaf] = instruction[1][1];
                 }
             } else {
-                if(Scule.global.functions.isInteger(o[leaf]) || Scule.global.functions.isDouble(o[leaf])) {
+                if (Scule.global.functions.isInteger(o[leaf]) || Scule.global.functions.isDouble(o[leaf])) {
                     o[leaf] += instruction[1][1];   
                 }
             }
@@ -7257,10 +7309,10 @@
             var struct   = Scule.global.functions.traverseObject(instruction[1][0], document);
             var leaf     = struct[0];
             var o        = struct[1];
-            if(leaf in o && Scule.global.functions.isArray(o[leaf])) {
+            if (leaf in o && Scule.global.functions.isArray(o[leaf])) {
                 var val = instruction[1][1];
-                for(var i=0; i < o[leaf].length; i++) {
-                    if(o[leaf][i] == val) {
+                for (var i=0; i < o[leaf].length; i++) {
+                    if (o[leaf][i] == val) {
                         o[leaf].splice(i, 1);
                         i--;
                     }
@@ -7277,17 +7329,17 @@
             var struct   = Scule.global.functions.traverseObject(instruction[1][0], document);
             var leaf     = struct[0];
             var o        = struct[1];
-            if(leaf in o && Scule.global.functions.isArray(o[leaf])) {
+            if (leaf in o && Scule.global.functions.isArray(o[leaf])) {
                 var value = instruction[1][1];
-                if(!Scule.global.functions.isArray(value)) {
+                if (!Scule.global.functions.isArray(value)) {
                     throw 'the $pullAll operator requires an associated array as an operand';
                 }
                 var table = Scule.getHashTable();
                 value.forEach(function(val) {
                     table.put(val, true); 
                 });
-                for(var i=0; i < o[leaf].length; i++) {
-                    if(table.contains(o[leaf][i])) {
+                for (var i=0; i < o[leaf].length; i++) {
+                    if (table.contains(o[leaf][i])) {
                         o[leaf].splice(i, 1);
                         i--;
                     }
@@ -7304,7 +7356,7 @@
             var struct   = Scule.global.functions.traverseObject(instruction[1][0], document);
             var leaf     = struct[0];
             var o        = struct[1];
-            if(leaf in o && Scule.global.functions.isArray(o[leaf])) {
+            if (leaf in o && Scule.global.functions.isArray(o[leaf])) {
                 o[leaf].pop();   
             }
             vm.ipointer++;        
@@ -7318,10 +7370,10 @@
             var struct   = Scule.global.functions.traverseObject(instruction[1][0], document);
             var leaf     = struct[0];
             var o        = struct[1];
-            if(!(leaf in o) && vm.upsert) {
+            if (!(leaf in o) && vm.upsert) {
                 o[leaf] = instruction[1][1];
             } else {
-                if(Scule.global.functions.isArray(o[leaf])) {
+                if (Scule.global.functions.isArray(o[leaf])) {
                     o[leaf].push(instruction[1][1]);   
                 }
             }
@@ -7336,14 +7388,14 @@
             var struct   = Scule.global.functions.traverseObject(instruction[1][0], document);
             var leaf     = struct[0];
             var o        = struct[1];
-            if(!(leaf in o) && vm.upsert) {
+            if (!(leaf in o) && vm.upsert) {
                 o[leaf] = instruction[1][1];
             } else {
                 var value = instruction[1][1];
-                if(!Scule.global.functions.isArray(value)) {
+                if (!Scule.global.functions.isArray(value)) {
                     throw 'the $pushAll operator requires an associated array as an operand';
                 }            
-                if(Scule.global.functions.isArray(o[leaf])) {
+                if (Scule.global.functions.isArray(o[leaf])) {
                     o[leaf] = o[leaf].concat(value);   
                 }
             }
@@ -7364,16 +7416,16 @@
         this.registerInstruction(0x10, function(vm, instruction) {
             var document = vm.registers[1];
             var loc1     = Scule.global.functions.traverseObject(Scule.global.functions.parseAttributes(instruction[1][0]), document);
-            if(loc1.length < 2 || !('loc' in loc1[1])) {
+            if (loc1.length < 2 || !('loc' in loc1[1])) {
                 vm.stack.push(false);
             } else {        
                 loc1 = loc1[1].loc;
-                if(!('lat' in loc1) || !('lon' in loc1)) {
+                if (!('lat' in loc1) || !('lon' in loc1)) {
                     vm.stack.push(false);
                 } else {
                     var loc2 = instruction[1][1];
                     var d    = Math.sqrt(Math.pow(loc2.lat - loc1.lat, 2) + Math.pow(loc2.lon - loc1.lon, 2));
-                    if(d <= loc2.distance) {
+                    if (d <= loc2.distance) {
                         document = Scule.global.functions.cloneObject(document);
                         document._meta = {
                             distance: d
@@ -7394,17 +7446,17 @@
         this.registerInstruction(0x11, function(vm, instruction) {
             var document = vm.registers[1];
             var loc1     = Scule.global.functions.traverseObject(Scule.global.functions.parseAttributes(instruction[1][0]), document);
-            if(loc1.length < 2 || !('loc' in loc1[1])) {
+            if (loc1.length < 2 || !('loc' in loc1[1])) {
                 vm.stack.push(false);
             } else {
                 loc1         = loc1[1].loc;
                 var loc2     = instruction[1][1];
                 var distance = loc2.distance;
-                if(!('lat' in loc1) || !('lon' in loc1)) {
+                if (!('lat' in loc1) || !('lon' in loc1)) {
                     vm.stack.push(false);
                 } else {
                     var d = Math.acos(Math.sin(loc1.lat) * Math.sin(loc2.lat) + Math.cos(loc1.lat) * Math.cos(loc2.lat) * Math.cos(loc2.lon - loc1.lon)) * 6371;
-                    if(d <= distance) {
+                    if (d <= distance) {
                         document = Scule.global.functions.cloneObject(document);
                         document._meta = {
                             distance: d
@@ -7451,17 +7503,17 @@
      * @returns {Array}
      */
     Scule.vm.functions.intersection = function(lists) {
-        if(lists.length == 1) {
+        if (lists.length === 1) {
             return lists[0];
         }
         var table = Scule.getHashTable();
         var list  = null;
         lists.forEach(function(o) {
-            if(!list || o.length < list.length) {
+            if (!list || o.length < list.length) {
                 list = o;
             }
         });
-        if(!list) {
+        if (!list) {
             return [];
         }
         list.forEach(function(o) {
@@ -7472,15 +7524,15 @@
         });
         var intersection = [];
         var len = lists.length;
-        for(var i=0; i < len; i++) {
-            if(lists[i] == list) {
+        for (var i=0; i < len; i++) {
+            if (lists[i] == list) {
                 continue;
             }
             lists[i].forEach(function(o) {
                 var o2 = table.get(Scule.global.functions.getObjectId(o));
-                if(o2) {
+                if (o2) {
                     o2.c++;
-                    if(o2.c == len) {
+                    if (o2.c == len) {
                         intersection.push(o);
                     }
                 }
@@ -7500,6 +7552,8 @@
 }());
 
 (function() {
+    
+    "use strict";
     
     /**
      * Represents a "bucketed" hash table, entries are added to the bucket corresponding to the provided key.
@@ -7522,7 +7576,7 @@
          */
         this.insert = function(key, value) {
             var table;
-            if(!this.contains(key)) {
+            if (!this.contains(key)) {
                 table = Scule.getHashTable();
                 table.put(Scule.global.functions.getObjectId(value), value);
                 this.put(key, table);
@@ -7558,7 +7612,7 @@
         this.insert = function(key, value) {
             var table;
             var index = this.indexSearch(key);
-            if(index == this.data.length) {
+            if (index == this.data.length) {
                 table = Scule.getHashTable();
                 table.put(Scule.global.functions.getObjectId(value, true), value);
                 this.data.push({
@@ -7567,9 +7621,9 @@
                 });
             } else {
                 var element = this.data[index];
-                if(element.key == key) {
+                if (element.key == key) {
                     element.value.put(Scule.global.functions.getObjectId(value, true), value);
-                } else if(element.key < key) {
+                } else if (element.key < key) {
                     table = Scule.getHashTable();
                     table.put(Scule.global.functions.getObjectId(value, true), value);                
                     this.data.splice(index + 1, 0, {
@@ -7585,7 +7639,7 @@
                     });               
                 }
             }
-            if(table) {
+            if (table) {
                 this.lookup.put(key, {
                     key:key, 
                     value:table
@@ -7601,7 +7655,7 @@
          * @returns {Null|Object}
          */
         this.split = function() {
-            if(this.data.length <= this.order) {
+            if (this.data.length <= this.order) {
                 return null;
             }
             var middle = Math.floor(this.data.length / 2);
@@ -7617,12 +7671,12 @@
             right.data = this.data.splice(0, middle + 1);
 
             left.setRight(right);
-            if(this.getLeft()) {
+            if (this.getLeft()) {
                 this.getLeft().setRight(left);
             }
 
             right.setLeft(left);
-            if(this.getRight()) {
+            if (this.getRight()) {
                 this.getRight().setLeft(right);
             }
 
@@ -7643,49 +7697,49 @@
          * @returns {Array}
          */
         this.range = function(min, max, includeMin, includeMax) {
-            if(includeMax === undefined) {
+            if (includeMax === undefined) {
                 includeMax = false;
             }
-            if(includeMin === undefined) {
+            if (includeMin === undefined) {
                 includeMin = false;
             }
-            if(min === undefined) {
+            if (min === undefined) {
                 min = null;
             }
-            if(max === undefined) {
+            if (max === undefined) {
                 max = null;
             }
             var curr  = this;
             var rng = null;
-            if(includeMin && includeMax) {
+            if (includeMin && includeMax) {
                 rng = function(min, max, key, range, value) {
-                    if(min === null) {
-                        if(key <= max) {
+                    if (min === null) {
+                        if (key <= max) {
                             range = range.concat(value);
                         }
-                    } else if(max === null) {
-                        if(key >= min) {
+                    } else if (max === null) {
+                        if (key >= min) {
                             range = range.concat(value);
                         }
                     } else {
-                        if(key >= min && key <= max) {
+                        if (key >= min && key <= max) {
                             range = range.concat(value);
                         }
                     }
                     return range;
                 };
-            } else if(includeMin) {
+            } else if (includeMin) {
                 rng = function(min, max, key, range, value) {
-                    if(min === null) {
-                        if(key < max) {
+                    if (min === null) {
+                        if (key < max) {
                             range = range.concat(value);
                         }
-                    } else if(max === null) {
-                        if(key >= min) {
+                    } else if (max === null) {
+                        if (key >= min) {
                             range = range.concat(value);
                         }
                     } else {
-                        if(key >= min && key < max) {
+                        if (key >= min && key < max) {
                             range = range.concat(value);
                         }
                     }
@@ -7693,16 +7747,16 @@
                 };
             } else { // includeMax
                 rng = function(min, max, key, range, value) {
-                    if(min === null) {
-                        if(key <= max) {
+                    if (min === null) {
+                        if (key <= max) {
                             range = range.concat(value);
                         }
-                    } else if(max === null) {
-                        if(key > min) {
+                    } else if (max === null) {
+                        if (key > min) {
                             range = range.concat(value);
                         }
                     } else {
-                        if(key > min && key <= max) {
+                        if (key > min && key <= max) {
                             range = range.concat(value);
                         }
                     }
@@ -7712,16 +7766,16 @@
 
             var range = [];
                 outer:
-                while(curr) {
+                while (curr) {
                     var data  = curr.data;
                     var left  = curr.indexSearch(min);
                     var right = (max === null || max === undefined) ? (data.length - 1) : curr.indexSearch(max);
-                    if(right >= data.length) {
+                    if (right >= data.length) {
                         right = data.length - 1;
                     }
-                    if(left <= data.length) {
-                        for(var i=left; i <= right; i++) {
-                            if(max !== null && data[i].key > max) {
+                    if (left <= data.length) {
+                        for (var i=left; i <= right; i++) {
+                            if (max !== null && data[i].key > max) {
                                 break outer;
                             }
                             range = rng(min, max, data[i].key, range, data[i].value.getValues());
@@ -7741,7 +7795,7 @@
             var o = {
                 type:'hashing-leaf'
             };
-            for(var i=0; i < this.data.length; i++) {
+            for (var i=0; i < this.data.length; i++) {
                 o[i + ':' + this.data[i].key] = this.data[i].value;
             }
             return o;
@@ -7857,7 +7911,7 @@
          */
         this.populateAttributeStrings = function(attributes) {
             var self = this;
-            if(!Scule.global.functions.isArray(attributes)) {
+            if (!Scule.global.functions.isArray(attributes)) {
                 attributes = attributes.split(',');
             }
             attributes.forEach(function(attr) {
@@ -7901,10 +7955,10 @@
          * @returns {boolean|Object}
          */
         this.applies = function(attributes, range) {
-            if(range && this.getType() == Scule.global.constants.INDEX_TYPE_HASH) {
+            if (range && this.getType() == Scule.global.constants.INDEX_TYPE_HASH) {
                 return false;
             }
-            if(attributes.length < this.astrings.getLength()) {
+            if (attributes.length < this.astrings.getLength()) {
                 return false;
             }
             var matches = {
@@ -7916,17 +7970,17 @@
             };
             var self = this;
             attributes.forEach(function(attr) {
-                if(self.astrings.contains(attr)) {
+                if (self.astrings.contains(attr)) {
                     matches.$attr[attr] = true;
                     matches.$none = false;
                 } else {
-                    if(!matches.$partial) {
+                    if (!matches.$partial) {
                         matches.$partial = true;
                     }
                     matches.$attr[attr] = false;
                 }
             });
-            if(matches.$none) {
+            if (matches.$none) {
                 return false;
             }
             return matches;
@@ -7940,7 +7994,7 @@
          */
         this.generateIndexKey = function(document) {
             var composite = Scule.global.functions.searchObject(this.attributes, document);
-            if(composite.length == 1) {
+            if (composite.length === 1) {
                 return composite[0];
             }
             return composite.join(',');
@@ -7953,7 +8007,7 @@
          * @returns {Boolean}
          */
         this.index = function(document) {
-            if(!this.structure) {
+            if (!this.structure) {
                 return false;
             }
             var id  = Scule.global.functions.getObjectId(document, true);
@@ -7974,16 +8028,16 @@
          * @returns {Boolean}
          */
         this.remove = function(document) {
-            if(!this.structure) {
+            if (!this.structure) {
                 return false;
             }
             var id = Scule.global.functions.getObjectId(document, true);
-            if(!this.leaves.contains(id)) {
+            if (!this.leaves.contains(id)) {
                 return false;
             }
             var node = this.leaves.get(id);
             node.table.remove(id);
-            if(node.table.getLength() == 0) {
+            if (node.table.getLength() === 0) {
                 this.structure.remove(node.key);
             }
             return true;
@@ -7996,14 +8050,16 @@
          * @returns {Boolean}
          */
         this.removeKey = function(key) {
-            if(!this.structure) {
+            if (!this.structure) {
                 return false;
             }  
             var table = this.structure.search(key);
-            if(table && table.length > 0) {
+            if (table && table.length > 0) {
                 this.structure.remove(key);
-                for(var k in table.table) {
-                    this.leaves.remove(Scule.global.functions.getObjectId(table.get(k), true));
+                for (var k in table.table) {
+                    if(table.table.hasOwnProperty(k)) {
+                        this.leaves.remove(Scule.global.functions.getObjectId(table.get(k), true));
+                    }
                 }
             }
             return true;
@@ -8016,9 +8072,9 @@
          * @returns {Array}
          */
         this.search = function(key) {
-            if(this.structure) {
+            if (this.structure) {
                 var table = this.structure.search(key);
-                if(table) {
+                if (table) {
                     return table.getValues();
                 }
             }
@@ -8035,7 +8091,7 @@
          * @returns {Array}
          */
         this.range = function(min, max, includeMin, includeMax) {
-            if(this.structure) {
+            if (this.structure) {
                 return this.structure.range(min, max, includeMin, includeMax);
             }
             return false;
@@ -8047,7 +8103,7 @@
          * @returns {Void}
          */
         this.clear = function() {
-            if(this.structure) {
+            if (this.structure) {
                 this.structure.clear();
                 return true;
             }
@@ -8079,7 +8135,7 @@
 
         Scule.db.classes.Index.call(this);
 
-        if(!order) {
+        if (!order) {
             order = 100;
         }
 
@@ -8306,7 +8362,7 @@
          * @returns {Void}
          */  
         this.write = function(name, object, callback) {
-            if(callback) {
+            if (callback) {
                 callback(object);
             }
         };
@@ -8319,7 +8375,7 @@
          * @returns {Object}
          */ 
         this.read = function(name, callback) {
-            if(callback) {
+            if (callback) {
                 callback();
             }
         };
@@ -8350,12 +8406,12 @@
          * @returns {Void}
          */  
         this.write = function(name, object, callback) {
-            if(!object._salt) {
+            if (!object._salt) {
                 object._salt = Scule.sha1.hash((new Date()).getTime() + '');
             }
             object._sig = this.crypto.signObject(object, this.configuration.secret, object._salt);
             this.storage['__scule_collection__' + name] = JSON.stringify(object);
-            if(callback) {
+            if (callback) {
                 callback(object);
             }
         };
@@ -8368,7 +8424,7 @@
          * @returns {Object}
          */  
         this.read  = function(name, callback) {
-            if(!('__scule_collection__' + name in this.storage)) {
+            if (!('__scule_collection__' + name in this.storage)) {
                 var object = {
                     _sig: null,
                     _salt: Scule.sha1.hash((new Date()).getTime() + ''),
@@ -8381,15 +8437,14 @@
             }
             var data = this.storage['__scule_collection__' + name];
             var o = JSON.parse(data);
-            if(this.crypto.verifyObjectSignature(o, this.configuration.secret, o._salt) == false) {
+            if (this.crypto.verifyObjectSignature(o, this.configuration.secret, o._salt) === false) {
                 throw JSON.stringify({
                     event:'SculeDataTampered', 
                     filename:this.configuration.collection
                 });
-                return false;
             }
             delete o._sig;
-            if(callback) {
+            if (callback) {
                 callback(o);  
             }
         };
@@ -8411,7 +8466,7 @@
 
         this.setCryptographyProvider(new Scule.db.classes.SimpleCryptographyProvider());
 
-        if(!window || (!('localStorage' in window) && (window['localStorage'] !== null))) {
+        if (!window || (!window.hasOwnProperty('localStorage') && (window.localStorage !== null))) {
             throw JSON.stringify({
                 event:'SculeLocalStorageError',
                 message:'Local storage is not available on this device'
@@ -8427,13 +8482,13 @@
          * @returns {Void}
          */ 
         this.write = function(name, object, callback) {
-            if(!object._salt) {
+            if (!object._salt) {
                 object._salt = Scule.sha1.hash((new Date()).getTime() + '');
             }
             try {
                 object._sig = this.crypto.signObject(object, this.configuration.secret, object._salt);
                 localStorage.setItem('__scule_collection__' + name, JSON.stringify(object));
-                if(callback) {
+                if (callback) {
                     callback(object);
                 }
             } catch (e) {
@@ -8454,7 +8509,7 @@
          */
         this.read = function(name, callback) {
             var data = localStorage.getItem('__scule_collection__' + name);
-            if(!data) {
+            if (!data) {
                 throw JSON.stringify({
                     event:'SculeLocalStorageError',
                     message:'Unable to load collection from local storage',
@@ -8462,15 +8517,14 @@
                 });
             }
             var o = JSON.parse(data);
-            if(this.crypto.verifyObjectSignature(o, this.configuration.secret, o._salt) == false) {
+            if (this.crypto.verifyObjectSignature(o, this.configuration.secret, o._salt) === false) {
                 throw JSON.stringify({
                     event:'SculeDataTampered', 
                     filename:this.configuration.collection
                 });
-                return false;
             }
             delete o._sig;
-            if(callback) {
+            if (callback) {
                 callback(o);  
             }
         };
@@ -8487,15 +8541,15 @@
      */
     Scule.db.classes.ObjectId = function(id) {
 
-        if(id === undefined) {
+        if (id === undefined) {
             var ts = Math.floor((new Date()).getTime()/1000).toString(16);
             var hs = Scule.md5.hash(Scule.global.functions.getMACAddress()).substring(0, 6);
             var pid = Scule.global.functions.randomFromTo(1000, 9999).toString(16);
-            while(pid.length < 4) {
+            while (pid.length < 4) {
                 pid = '0' + pid;
             }
             var inc = Scule.global.functions.randomFromTo(100000, 999999).toString(16);
-            while(inc.length < 6) {
+            while (inc.length < 6) {
                 inc = '0' + inc;
             }
             id = ts + hs + pid + inc;        
@@ -8535,17 +8589,17 @@
      */
     Scule.db.classes.ObjectDate = function(sec, usec) {
 
-        if(sec === undefined && usec == undefined) {
+        if (sec === undefined && usec === undefined) {
             var ts = (new Date()).getTime().toString();
-            sec  = parseInt(ts.substring(0, 10));
-            usec = parseInt(ts.substring(10));
+            sec  = parseInt(ts.substring(0, 10), 10);
+            usec = parseInt(ts.substring(10), 10);
         }
 
         /**
          * @private
          * @type {Number}
          */
-        this.ts    = parseInt(sec + usec);
+        this.ts    = parseInt(sec + usec, 10);
 
         /**
          * @private
@@ -8603,7 +8657,7 @@
      */
     Scule.db.classes.DBRef = function(ref, id) {
 
-        if(ref === undefined || id === undefined) {
+        if (ref === undefined || id === undefined) {
             throw "illegal object reference";
         }
 
@@ -8632,7 +8686,7 @@
          */
         this.getRef = function() {
             return this.ref;
-        }
+        };
 
         /**
          * Returns the ObjectId instance for the reference
@@ -8641,7 +8695,7 @@
          */
         this.getId = function() {
             return this.id;
-        }
+        };
 
         /**
          * Resolves the reference, this function is an alias of DBRef::resolveReference
@@ -8650,7 +8704,7 @@
          */
         this.resolve = function() {
             return this.resolveReference();
-        }
+        };
 
         /**
          * Resolves the reference
@@ -8660,7 +8714,7 @@
         this.resolveReference = function() {
             var collection = Scule.factoryCollection(this.ref);
             return collection.findOne(this.id);
-        }
+        };
 
     };
 
@@ -8757,7 +8811,7 @@
             var index;
             switch(type) {
                 case Scule.global.constants.INDEX_TYPE_BTREE:
-                    if(!options) {
+                    if (!options) {
                         options = {
                             order:100
                         };
@@ -8771,17 +8825,17 @@
                     index.parseAttributes(definition);
                     break;
             }
-            if(index) {
+            if (index) {
                 var inserted = false;
                 var alen     = index.astrings.length;
-                for(var i=0; i < this.indices.length; i++) {
-                    if(alen > this.indices[i].astrings.length) {
+                for (var i=0; i < this.indices.length; i++) {
+                    if (alen > this.indices[i].astrings.length) {
                         this.indices.splice(i, 0, index);
                         inserted = true;
                         break;
                     }
                 }
-                if(!inserted) {
+                if (!inserted) {
                     var o = this.findAll();
                     o.forEach(function(document) {
                         index.index(document);
@@ -8859,24 +8913,26 @@
          * @returns {Void}
          */
         this.open = function(callback) {
-            if(this.isOpen) {
+            if (this.isOpen) {
                 return;
             }
             var self = this;
             this.storage.read(this.name, function(o) {
-                if(!o) {
+                if (!o) {
                     return;
                 }
-                for(var ky in o._objects) {
-                    var document = o._objects[ky];
-                    Scule.db.functions.unflattenObject(o._objects[ky]);
-                    self.documents.put(Scule.global.functions.getObjectId(document, true), document);
-                    for(var i=0; i < self.indices.length; i++) {
-                        self.indices[i].index(document);
+                for (var ky in o._objects) {
+                    if(o._objects.hasOwnProperty(ky)) {
+                        var document = o._objects[ky];
+                        Scule.db.functions.unflattenObject(o._objects[ky]);
+                        self.documents.put(Scule.global.functions.getObjectId(document, true), document);
+                        for (var i=0; i < self.indices.length; i++) {
+                            self.indices[i].index(document);
+                        }
                     }
                 }
                 self.isOpen = true;
-                if(callback) {
+                if (callback) {
                     callback(this);
                 }
             });
@@ -8910,12 +8966,12 @@
          * @returns {Array}
          */
         this.find = function(query, conditions, callback) {
-            if(Scule.global.constants.ID_FIELD in query) {
+            if (Scule.global.constants.ID_FIELD in query) {
                 return [this.findOne(query[Scule.global.constants.ID_FIELD])];
             }
             this.vm.reset();
             var result = this.vm.execute(this.compiler.compileQuery(query, conditions, this));
-            if(callback) {
+            if (callback) {
                 callback(result);
             }
             return result;
@@ -8933,7 +8989,7 @@
          */
         this.explain = function(query, conditions, callback) {
             this.compiler.explainQuery(query, conditions, this);
-            if(callback) {
+            if (callback) {
                 callback();
             }
         };
@@ -8947,10 +9003,10 @@
          */
         this.clear = function(callback) {
             this.documents.clear();
-            for(var i=0; i < this.indices.length; i++) {
+            for (var i=0; i < this.indices.length; i++) {
                 this.indices[i].clear();
             }
-            if(callback) {
+            if (callback) {
                 callback(this);
             }
         };
@@ -8965,10 +9021,12 @@
          */
         this.findAll = function(callback) {
             var result = [];
-            for(var ky in this.documents.table) {
-                result.push(this.documents.get(ky));
+            for (var ky in this.documents.table) {
+                if(this.documents.table.hasOwnProperty(ky)) {
+                    result.push(this.documents.get(ky));
+                }
             }
-            if(callback) {
+            if (callback) {
                 callback(result);
             }
             return result;
@@ -8985,14 +9043,14 @@
          * @returns {Object|null}
          */
         this.findOne = function(id, callback) {
-            if(!Scule.global.functions.isScalar(id)) {
+            if (!Scule.global.functions.isScalar(id)) {
                 id = id.toString();
             }
             var document = null;
-            if(this.documents.contains(id)) {
+            if (this.documents.contains(id)) {
                 document = this.documents.get(id);
             }
-            if(callback) {
+            if (callback) {
                 callback(document);
             }
             return document;
@@ -9011,15 +9069,15 @@
         this.save = function(document, callback) {
             Scule.db.functions.unflattenObject(document);
             this.documents.put(Scule.global.functions.getObjectId(document, true), document);
-            for(var i=0; i < this.indices.length; i++) {
+            for (var i=0; i < this.indices.length; i++) {
                 this.indices[i].remove(document);
                 this.indices[i].index(document);
             }
-            if(this.autoCommit) {
+            if (this.autoCommit) {
                 this.commit();
             }
             this.lastId = Scule.global.functions.getObjectId(document);
-            if(callback) {
+            if (callback) {
                 callback(this.lastId);
             }
             return this.lastId;
@@ -9040,7 +9098,7 @@
         this.update = function(query, updates, conditions, upsert, callback) {
             this.vm.reset();
             var result = this.vm.execute(this.compiler.compileQuery(query, conditions, this), this.compiler.compileMutate(updates, this), upsert);
-            if(callback) {
+            if (callback) {
                 callback(result);
             }
             return result;
@@ -9058,7 +9116,7 @@
          */
         this.count = function(query, conditions, callback) {
             var count = this.find(query, conditions).length;
-            if(callback) {
+            if (callback) {
                 callback(count);
             }
             return count;
@@ -9103,12 +9161,12 @@
             var o = this.find(query);
             var t = {};
             o.forEach(function(d) {
-                if(!(d[key] in t)) {
+                if (!(d[key] in t)) {
                     t[d[key]] = 0;
                 }
                 t[d[key]]++;
             });
-            if(callback) {
+            if (callback) {
                 callback(t);
             }
             return t;
@@ -9123,17 +9181,17 @@
          * @returns {Boolean}
          */
         this.merge = function(collection, callback) {
-            if(!collection) {
+            if (!collection) {
                 throw 'the merge function requires a valid collection as a parameter';
             }
             var self = this;
             var o    = collection.findAll();
             o.forEach(function(document) {
-                if(!self.documents.contains(document._id)) {
+                if (!self.documents.contains(document._id)) {
                     self.documents.put(document._id, document);
                 }
             });
-            if(callback) {
+            if (callback) {
                 callback(this);
             }
             return true;
@@ -9195,27 +9253,27 @@
 
         this.options = options;
 
-        if(!map) {
+        if (!map) {
             throw 'A valid function is requires as the `map` parameter of the map/reduce operation';
         }
 
-        if(!reduce) {
+        if (!reduce) {
             throw 'A valid function is requires as the `reduce` parameter of the map/reduce operation';
         }
 
-        if(!('out' in options)) {
+        if (!('out' in options)) {
             throw 'A valid output collection connection url is required as the `out` parameter of the map/reduce options object';
         } else {
-            if(!('merge' in options.out) && !('reduce' in options.out)) {
+            if (!('merge' in options.out) && !('reduce' in options.out)) {
                 throw 'A valid output collection connection url is required as either the `merge` or `reduce` out parameter of the map/reduce options object';
             }
         }
 
-        if(!('query' in options)) {
+        if (!('query' in options)) {
             options.query = {};
         }
 
-        if(!('conditions' in options)) {
+        if (!('conditions' in options)) {
             options.conditions = {};
         }
 
@@ -9240,7 +9298,7 @@
             var table = Scule.getHashTable();
 
             var emit  = function(key, value) {
-                if(!table.contains(key)) {
+                if (!table.contains(key)) {
                     table.put(key, []);
                 }
                 table.get(key).push(value);
@@ -9252,7 +9310,7 @@
             });
 
             var temp = null;
-            if(merge) {
+            if (merge) {
                 temp = Scule.factoryCollection('scule+dummy://__mr' + (new Date()).getTime());
             }
 
@@ -9260,21 +9318,21 @@
             var keys   = table.getKeys();
             keys.forEach(function(key) {
                 result.put(key, self.reduce(key, table.get(key)));
-                if(self.finalize) {
+                if (self.finalize) {
                     result.put(key, self.finalize(key, result.get(key)));
                 }
-                if(!merge) {
+                if (!merge) {
                     out.save(result.get(key));
                 } else {
                     temp.save(result.get(key));
                 }
             });
 
-            if(merge) {
+            if (merge) {
                 out.merge(temp);
             }
 
-            if(callback) {
+            if (callback) {
                 callback(out);
             }
 
@@ -9307,22 +9365,22 @@
          * @returns {Collection}
          */
         this.getCollection = function(url, configuration) {
-            if(this.collections.contains(url)) {
+            if (this.collections.contains(url)) {
                 return this.collections.get(url).c;
             }
 
-            if(!configuration) {
+            if (!configuration) {
                 configuration = {
                     secret:'dummy'
                 };
             }
 
             var parts = Scule.db.functions.parseCollectionURL(url);
-            if(!(parts.plugin in Scule.db.plugins)) {
+            if (!(parts.plugin in Scule.db.plugins)) {
                 throw parts.plugin + ' is not a registered Scule plugin';
             }
 
-            if(!(parts.engine in Scule.db.engines)) {
+            if (!(parts.engine in Scule.db.engines)) {
                 throw parts.engine + ' is nto a registered Scule storage engine';
             }
 
@@ -9348,12 +9406,8 @@
      * @returns {Void}
      */
     Scule.db.functions.debug = function(message) {
-        if(Scule.db.variables.debug == true) {
-            if(typeof Titanium !== 'undefined') {
-                Ti.API.info(message);
-            } else {
-                console.log(message);
-            }
+        if (Scule.db.variables.debug === true) {
+            console.log(message);
         }
     };
 
@@ -9366,33 +9420,35 @@
      */
     Scule.db.functions.unflattenObject = function(object) {
         var u = function(object) {
-            if(Scule.global.functions.isScalar(object)) {
+            if (Scule.global.functions.isScalar(object)) {
                 return;
             }
-            for(var key in object) {
-                var o = object[key];
-                if(!Scule.global.functions.isScalar(o) && ('$type' in object[key])) {
-                    switch(o.$type) {
-                        case 'date':
-                            object[key] = new Scule.db.classes.ObjectDate(o.sec, o.usec)
-                            object[key].ts = o.ts;
-                            break;
+            for (var key in object) {
+                if(object.hasOwnProperty(key)) {
+                    var o = object[key];
+                    if (!Scule.global.functions.isScalar(o) && ('$type' in object[key])) {
+                        switch(o.$type) {
+                            case 'date':
+                                object[key] = new Scule.db.classes.ObjectDate(o.sec, o.usec);
+                                object[key].ts = o.ts;
+                                break;
 
-                        case 'id':
-                            object[key] = new Scule.db.classes.ObjectId(o.id);
-                            break;
+                            case 'id':
+                                object[key] = new Scule.db.classes.ObjectId(o.id);
+                                break;
 
-                        case 'dbref':
-                            object[key] = new Scule.db.classes.DBRef(o.ref, o.id);
-                            break;
+                            case 'dbref':
+                                object[key] = new Scule.db.classes.DBRef(o.ref, o.id);
+                                break;
+                        }
+                    } else {
+                        u(o);
                     }
-                } else {
-                    u(o);
                 }
             }
-        }
+        };
         u(object);
-        if(!(Scule.global.constants.ID_FIELD in object)) {
+        if (!(Scule.global.constants.ID_FIELD in object)) {
             object[Scule.global.constants.ID_FIELD] = new Scule.db.classes.ObjectId();
         }
     };
@@ -9406,7 +9462,7 @@
      */
     Scule.db.functions.parseCollectionURL = function(url) {
         var matches = url.match(/^([^\+]*)\+([^\/]*)\:\/\/(.*)/);
-        if(!matches || matches.length != 4) {
+        if (!matches || matches.length != 4) {
             throw url + ' is an invalid collection url';
         }
         return {
@@ -9439,7 +9495,7 @@
      * @returns {Void}
      */
     Scule.registerStorageEngine = function(name, engine) {
-        if(name in Scule.db.engines) {
+        if (name in Scule.db.engines) {
             throw name + ' storage engine is already registered';
         }
         Scule.db.engines[name] = engine;
@@ -9453,7 +9509,7 @@
      * @returns {Void}
      */
     Scule.registerCollectionPlugin = function(name, plugin) {
-        if(name in Scule.db.plugins) {
+        if (name in Scule.db.plugins) {
             throw name + ' collection plugin is already registered';
         }
         Scule.db.plugins[name] = plugin;
