@@ -1,0 +1,13 @@
+{
+  "private":true,
+  "version":"0.0.1",
+  "name": "sculejs",
+  "description": "Data structures for the web",
+  "author": "Dan Eyles <dan@irlgaming.com>",
+  "repository" : {"type": "git", "url": "git@github.com:dan-eyles/sculejs.git"},
+  "engine": "node >= 0.8",
+  "dependencies":[],
+  "scripts": {
+      "test":"node ./tests/AllTests.js"
+  }
+}
