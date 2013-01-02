@@ -1170,17 +1170,17 @@ function testBPlusTreeRandomBalanced() {
 function testBPlusTreeBulkLoad() {
     var tree = sculedb.getBPlusTree(sculedb.Scule.$f.randomFromTo(5000, 10000));
     var ts = (new Date()).getTime();
-    for(var i=0; i < 100000; i++) {
-        var v = sculedb.Scule.$f.randomFromTo(0, 100000);
+    for(var i=0; i < 10000; i++) {
+        var v = sculedb.Scule.$f.randomFromTo(0, 10000);
         tree.insert(v, v);
     }
     jsunit.assertTrue(((new Date().getTime()) - ts) < 1500);
     
     var start = (new Date()).getTime();
     var ttl = 0;
-    for(var i=0; i < 1000000; i++) {
+    for(var i=0; i < 10000; i++) {
         var t = (new Date()).getTime();
-        var v = sculedb.Scule.$f.randomFromTo(0, 100000);
+        var v = sculedb.Scule.$f.randomFromTo(0, 10000);
         tree.search(v);
         t = (new Date()).getTime() - t;
         ttl += t;
