@@ -32,6 +32,18 @@ Data structures currently included in *SculeJS* are:
 * [FIFO Stack](http://bit.ly/v0kKey "FIFO Stack")
 * [Queue](http://bit.ly/v0kKey "Queue")
 
+## Where's the documentation?
+
+I do my best to keep the JSDoc annotation in the source up to date with changes, sometimes I miss things though. To generate a HTML version of the API reference for _SculeJS_
+clone a copy of the [jsdoc3 repository](https://github.com/jsdoc3/jsdoc) and follow the instructions in the README.md file there.
+
+You should be able to generate JSDoc for _SculeJS_ using the following commands (assuming the sculejs and jsdoc directories are at the same level):
+
+    $ cd jsdoc
+    $ ./jsdoc ../sculejs/lib/*.js
+
+If you have any specific questions about how to use _SculeJS_ then head on over to the [project wiki](https://github.com/dan-eyles/sculejs/wiki).
+
 ## How does it work?
 
 *SculeJS* stores collections of JavaScript objects in memory and uses a [Hybrid Virtual Machine](http://en.wikipedia.org/wiki/Virtual_machine "Virtual Machine") to process query expressions.
