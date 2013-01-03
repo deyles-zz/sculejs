@@ -26,9 +26,8 @@
  */
 
 var sculedb   = require('../lib/com.scule.db');
-var jsunit    = require('../lib/com.scule.jsunit');
 
-function testDBRefCreation() {
+exports['test DBRefCreation'] = function(beforeExit, assert) {
     var storage    = sculedb.getNodeJSDiskStorageEngine({
         secret: 'mysecretkey',
         path:   '/tmp'
@@ -52,11 +51,5 @@ function testDBRefCreation() {
     o2 = o2[0];    
     
     var o3 = o2.ref.resolve(storage);
-    jsunit.assertEquals(o1, o3);
+    assert.equal(o1, o3);
 };
-
-(function() {
-    jsunit.resetTests(__filename);
-    jsunit.addTest(testDBRefCreation);
-    jsunit.runTests();
-}());

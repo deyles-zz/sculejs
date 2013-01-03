@@ -30,9 +30,8 @@ var db      = require('../lib/com.scule.db');
 var vm      = require('../lib/com.scule.db.vm');
 var build   = require('../lib/com.scule.db.builder');
 var inst    = require('../lib/com.scule.instrumentation');
-var jsunit  = require('../lib/com.scule.jsunit');
 
-function testVirtualMachine() {
+exports['test VirtualMachine'] = function(beforeExit, assert) {
 
     db.dropAll();
     var collection = db.factoryCollection('scule+dummy://unittest');
@@ -105,145 +104,93 @@ function testVirtualMachine() {
     machine.execute(program);
 
     // scan
-    jsunit.assertEquals(machine.stack.getLength(), 1);
+    assert.equal(machine.stack.getLength(), 1);
     machine.resume();
     
     // union
-    jsunit.assertEquals(machine.stack.getLength(), 1);
+    assert.equal(machine.stack.getLength(), 1);
     machine.resume();
 
     // store
-    jsunit.assertEquals(machine.stack.getLength(), 0);
-    jsunit.assertEquals(machine.registers[0].length, 1);
+    assert.equal(machine.stack.getLength(), 0);
+    assert.equal(machine.registers[0].length, 1);
     machine.resume();
 
     // read
-    jsunit.assertEquals(machine.stack.getLength(), 0);
-    jsunit.assertNotEquals(machine.registers[1], null);
+    assert.equal(machine.stack.getLength(), 0);
+    assert.equal(false, machine.registers[1] == null);
     machine.resume();
     
     // eq
-    jsunit.assertEquals(machine.stack.getLength(), 1);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.stack.getLength(), 1);
+    assert.equal(true, machine.stack.peek());
     machine.resume();
     
     // ne
-    jsunit.assertEquals(machine.stack.getLength(), 2);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.stack.getLength(), 2);
+    assert.equal(true, machine.stack.peek());
     machine.resume();
 
     // gt
-    jsunit.assertEquals(machine.stack.getLength(), 3);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.stack.getLength(), 3);
+    assert.equal(true, machine.stack.peek());
     machine.resume();
     
     // lt
-    jsunit.assertEquals(machine.stack.getLength(), 4);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.stack.getLength(), 4);
+    assert.equal(true, machine.stack.peek());
     machine.resume();
 
     // gte
-    jsunit.assertEquals(machine.stack.getLength(), 5);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.stack.getLength(), 5);
+    assert.equal(true, machine.stack.peek());
     machine.resume();
     
     // lte
-    jsunit.assertEquals(machine.stack.getLength(), 6);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.stack.getLength(), 6);
+    assert.equal(true, machine.stack.peek());
     machine.resume();    
     
     // in
-    jsunit.assertEquals(machine.stack.getLength(), 7);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.stack.getLength(), 7);
+    assert.equal(true, machine.stack.peek());
     machine.resume();
 
     // nin
-    jsunit.assertEquals(machine.stack.getLength(), 8);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.stack.getLength(), 8);
+    assert.equal(true, machine.stack.peek());
     machine.resume();
     
     // all
-    jsunit.assertEquals(machine.stack.getLength(), 9);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.stack.getLength(), 9);
+    assert.equal(true, machine.stack.peek());
     machine.resume();
 
     // size
-    jsunit.assertEquals(machine.stack.getLength(), 10);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.stack.getLength(), 10);
+    assert.equal(true, machine.stack.peek());
     machine.resume();
     
     // exists
-    jsunit.assertEquals(machine.stack.getLength(), 11);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.stack.getLength(), 11);
+    assert.equal(true, machine.stack.peek());
     machine.resume();    
     
     // and
-    jsunit.assertEquals(machine.stack.getLength(), 1);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.stack.getLength(), 1);
+    assert.equal(true, machine.stack.peek());
     machine.resume();
     
     // shift
-    jsunit.assertEquals(machine.result.length, 1);
-    jsunit.assertEquals(machine.stack.getLength(), 0);
+    assert.equal(machine.result.length, 1);
+    assert.equal(machine.stack.getLength(), 0);
 
 };
 
-function testVirtualMachineSimpleSelection() {
+exports['test VirtualMachineSelection'] = function(beforeExit, assert) {
 
     db.dropAll();
     var collection = db.factoryCollection('scule+dummy://unittest');
-    collection.ensureBTreeIndex('a', {order:1000});
-    collection.ensureBTreeIndex('b', {order:1000});
-    
-    for(var i=0; i < 10000; i++) {
-        var a = [];
-        var r = vm.Scule.$f.randomFromTo(2, 5);
-        for(var j=0; j < r; j++) {
-            a.push(j);
-        }
-        collection.save({
-            a:vm.Scule.$f.randomFromTo(1, 10),
-            b:vm.Scule.$f.randomFromTo(1, 10),
-            c:vm.Scule.$f.randomFromTo(1, 10),
-            d:vm.Scule.$f.randomFromTo(1, 10),
-            e:vm.Scule.$f.randomFromTo(1, 10),
-            f:a
-        });
-    }
-
-    var result;
-    var program  = null;
-    var machine  = vm.getVirtualMachine();
-    var compiler = build.getQueryCompiler();
-    var timer    = inst.getTimer();
-
-    compiler.explainQuery({a:3, b:4}, {$limit:100, $sort:{e:1}}, collection);
-    
-    timer.startInterval('CompileQuery');
-    program = compiler.compileQuery({a:3, b:4}, {$limit:10, $sort:{e:1}}, collection);
-    timer.stopInterval();
-    timer.startInterval('ExecuteQuery');
-    result = machine.execute(program);
-    timer.stopInterval();
-    timer.logToConsole();
-
-    machine.reset();
-    timer.startInterval('CompileQuery');
-    program = compiler.compileQuery({a:3, b:4}, {$limit:10, $sort:{e:1}}, collection);
-    timer.stopInterval();
-    timer.startInterval('ExecuteQuery');
-    result = machine.execute(program);
-    timer.stopInterval();
-    timer.logToConsole();
-    
-};
-
-function testVirtualMachineSelection() {
-
-    db.dropAll();
-    var collection = db.factoryCollection('scule+dummy://unittest');
-//    collection.ensureHashIndex('a', {order:1000});
-//    collection.ensureBTreeIndex('c', {order:1000});
     
     for(var i=0; i < 300; i++) {
         var a = [];
@@ -277,8 +224,6 @@ function testVirtualMachineSelection() {
     });
     timer.stopInterval();
     
-    compiler.explainQuery({a:3, c:{$gt:4, $lte:10}}, {}, collection);
-    
     timer.startInterval('CompileQuery');
     program  = compiler.compileQuery({a:3, c:{$gt:4, $lte:10}}, {}, collection);
     timer.stopInterval();
@@ -307,13 +252,5 @@ function testVirtualMachineSelection() {
     timer.stopInterval();
     timer.logToConsole();
 
-    jsunit.assertEquals(count, result.length);
+    assert.equal(count, result.length);
 };
-
-(function() {
-    jsunit.resetTests(__filename);
-    jsunit.addTest(testVirtualMachine);
-    jsunit.addTest(testVirtualMachineSelection);
-    jsunit.addTest(testVirtualMachineSimpleSelection);
-    jsunit.runTests();
-}());

@@ -27,82 +27,81 @@
 
 var sculedb = require('../lib/com.scule.db');
 var inst    = require('../lib/com.scule.instrumentation');
-var jsunit  = require('../lib/com.scule.jsunit');
 
-function testHashMapSize() {
+exports['test HashMapSize'] = function(beforeExit, assert) {
     var table = sculedb.Scule.$d.getHashMap(10);
     table.put('foo', 'bar');
     table.put('foo2', 'bar2');
     table.put('foo3', 'bar3');
-    jsunit.assertEquals(table.getLength(), 3);
+    assert.equal(table.getLength(), 3);
     table.put('foo', 'bar4');
-    jsunit.assertEquals(table.getLength(), 3);
-}
+    assert.equal(table.getLength(), 3);
+};
 
-function testHashMapClear() {
+exports['test HashMapClear'] = function(beforeExit, assert) {
     var table = sculedb.Scule.$d.getHashMap(10);
     table.put('foo1', 'bar1');
     table.put('foo2', 'bar2');
     table.put('foo3', 'bar3');
     table.clear();
-    jsunit.assertEquals(table.getLength(), 0);
-}
+    assert.equal(table.getLength(), 0);
+};
 
-function testHashMapContains() {
+exports['test HashMapContains'] = function(beforeExit, assert) {
     var table = sculedb.Scule.$d.getHashMap(10);
     table.put('foo1', 'bar1');
     table.put('foo2', 'bar2');
     table.put('foo3', 'bar3');
     table.put(3, 'bar4');
-    jsunit.assertTrue(table.contains('foo2'));
-    jsunit.assertFalse(table.contains('foo4'));
-    jsunit.assertTrue(table.contains(3));
-}
+    assert.equal(table.contains('foo2'), true);
+    assert.equal(table.contains('foo4'), false);
+    assert.equal(table.contains(3), true);
+};
 
-function testHashMapGet() {
+exports['test HashMapGet'] = function(beforeExit, assert) {
     var table = sculedb.Scule.$d.getHashMap(10);
     table.put('foo', 'bar');
     table.put('foo2', 'bar2');
     table.put('foo3', 'bar3');
     table.put('foo', 'bar4');
-    jsunit.assertEquals(table.get('foo'), 'bar4');
-    jsunit.assertEquals(table.get('foo3'), 'bar3');
-}
+    assert.equal(table.get('foo'), 'bar4');
+    assert.equal(table.get('foo3'), 'bar3');
+};
 
-function testHashMapRemove() {
+exports['test HashMapRemove'] = function(beforeExit, assert) {
     var table = sculedb.Scule.$d.getHashMap(10);
     table.put('foo', 'bar');
     table.put('foo2', 'bar2');
     table.put('foo3', 'bar3');
     table.put(666, 'the devil!');
     table.remove('foo');
-    jsunit.assertFalse(table.contains('foo'));
-    jsunit.assertTrue(table.contains('foo2'));
+    assert.equal(table.contains('foo'), false);
+    assert.equal(table.contains('foo2'), true);
     table.remove('foo2');
-    jsunit.assertEquals(table.getLength(), 2);
+    assert.equal(table.getLength(), 2);
     table.remove('foo2');
-    jsunit.assertEquals(table.getLength(), 2);
+    assert.equal(table.getLength(), 2);
     table.remove(666)
-    jsunit.assertEquals(table.getLength(), 1);
-}
+    assert.equal(table.getLength(), 1);
+};
 
-function testHashMapGetKeys() {
+exports['test HashMapGetKeys'] = function(beforeExit, assert) {
     var table = sculedb.Scule.$d.getHashMap(10);
     table.put('foo1', 'bar1');
     table.put('foo2', 'bar2');
     table.put('foo3', 'bar3');
-    jsunit.assertEquals(JSON.stringify(table.getKeys().sort()), JSON.stringify(['foo1','foo2','foo3'].sort()));
-}
+    assert.equal(JSON.stringify(table.getKeys().sort()), JSON.stringify(['foo1','foo2','foo3'].sort()));
+};
 
-function testHashMapGetValues() {
+exports['test HashMapGetValues'] = function(beforeExit, assert) {
     var table = sculedb.Scule.$d.getHashMap(10);
     table.put('foo1', 'bar1');
     table.put('foo2', 'bar2');
     table.put('foo3', 'bar3');
-    jsunit.assertEquals(JSON.stringify(table.getValues().sort()), JSON.stringify(['bar1','bar2','bar3'].sort()));
-}
+    assert.equal(JSON.stringify(table.getValues().sort()), JSON.stringify(['bar1','bar2','bar3'].sort()));
+};
 
-function testHashMapLoadFactor() {
+exports['test HashMapLoadFactor'] = function(beforeExit, assert) {
     
     var timer = inst.getTimer();
     var tree  = sculedb.Scule.$d.getBPlusTree(1000);
@@ -150,16 +149,3 @@ function testHashMapLoadFactor() {
 
     timer.logToConsole();
 };
-
-(function() {
-    jsunit.resetTests(__filename);
-    jsunit.addTest(testHashMapSize);
-    jsunit.addTest(testHashMapClear);  
-    jsunit.addTest(testHashMapContains);
-    jsunit.addTest(testHashMapGet);
-    jsunit.addTest(testHashMapRemove);
-    jsunit.addTest(testHashMapGetKeys);
-    jsunit.addTest(testHashMapGetValues);
-    jsunit.addTest(testHashMapLoadFactor);
-    jsunit.runTests();
-}());

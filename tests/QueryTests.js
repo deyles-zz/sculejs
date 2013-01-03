@@ -26,10 +26,9 @@
  */
 
 var sculedb = require('../lib/com.scule.db');
-var jsunit  = require('../lib/com.scule.jsunit');
 var inst    = require('../lib/com.scule.instrumentation');
 
-function testQueries() {
+exports['test Queries'] = function(beforeExit, assert) {
     
     sculedb.dropAll();
     
@@ -86,14 +85,14 @@ function testQueries() {
                 c++;
             }
         });
-        jsunit.assertEquals(count, c);
-        jsunit.assertEquals(count, 5000);
+        assert.equal(count, c);
+        assert.equal(count, 5000);
     });
     timer.stopInterval();
 
     timer.startInterval("collection - {i:{$gte:5000}, n:{$lte:80}}");
     collection.count({i:{$gte:5000}, n:{$lte:80}}, {}, function(count) {
-        jsunit.assertEquals(count, 5000);
+        assert.equal(count, 5000);
     });
     timer.stopInterval();
 
@@ -106,14 +105,14 @@ function testQueries() {
                 c++;
             }
         });
-        jsunit.assertEquals(count, c);        
-        jsunit.assertEquals(count, 5);
+        assert.equal(count, c);        
+        assert.equal(count, 5);
     });
     timer.stopInterval();
 
     timer.startInterval("collection - {i:{$in:[1, 2, 3, 4, 5]}}");
     collection.count({i:{$in:[1, 2, 3, 4, 5]}}, {}, function(count) {
-        jsunit.assertEquals(count, 5);
+        assert.equal(count, 5);
     });
     timer.stopInterval();
 
@@ -126,14 +125,14 @@ function testQueries() {
                 c++;
             }
         });
-        jsunit.assertEquals(count, c);         
-        jsunit.assertEquals(count, 2500);
+        assert.equal(count, c);         
+        assert.equal(count, 2500);
     });
     timer.stopInterval();
 
     timer.startInterval("collection - {s:{$size:3}}");
     collection.count({s:{$size:3}}, {}, function(count) {
-        jsunit.assertEquals(count, 2500);
+        assert.equal(count, 2500);
     });
     timer.stopInterval();
 
@@ -146,14 +145,14 @@ function testQueries() {
                 c++;
             }
         });
-        jsunit.assertEquals(count, c);        
-        jsunit.assertEquals(count, 10000);
+        assert.equal(count, c);        
+        assert.equal(count, 10000);
     });
     timer.stopInterval();
 
     timer.startInterval("collection - {o:{$size:5}}");
     collection.count({o:{$size:5}}, {}, function(count) {
-        jsunit.assertEquals(count, 10000);
+        assert.equal(count, 10000);
     });
     timer.stopInterval();
 
@@ -166,14 +165,14 @@ function testQueries() {
                 c++;
             }
         });
-        jsunit.assertEquals(count, c);        
-        jsunit.assertEquals(count, 0);
+        assert.equal(count, c);        
+        assert.equal(count, 0);
     });
     timer.stopInterval();
 
     timer.startInterval("collection - {n:{$exists:false}}");
     collection.count({n:{$exists:false}}, {}, function(count) {
-        jsunit.assertEquals(count, 0);
+        assert.equal(count, 0);
     });
     timer.stopInterval();
 
@@ -186,14 +185,14 @@ function testQueries() {
                 c++;
             }
         });
-        jsunit.assertEquals(count, c);         
-        jsunit.assertEquals(count, 10000);
+        assert.equal(count, c);         
+        assert.equal(count, 10000);
     });
     timer.stopInterval();
 
     timer.startInterval("collection - {n:{$exists:true}}");
     collection.count({n:{$exists:true}}, {}, function(count) {
-        jsunit.assertEquals(count, 10000);
+        assert.equal(count, 10000);
     });
     timer.stopInterval();
 
@@ -206,14 +205,14 @@ function testQueries() {
                 c++;
             }
         });
-        jsunit.assertEquals(count, c);         
-        jsunit.assertEquals(count, 9930);
+        assert.equal(count, c);         
+        assert.equal(count, 9930);
     });
     timer.stopInterval();
 
     timer.startInterval("collection - {i:{$gte:70}}");
     collection.count({i:{$gte:70}}, {}, function(count) {
-        jsunit.assertEquals(count, 9930);
+        assert.equal(count, 9930);
     });
     timer.stopInterval();
 
@@ -226,14 +225,14 @@ function testQueries() {
                 c++;
             }
         });
-        jsunit.assertEquals(count, c);         
-        jsunit.assertEquals(count, 2500);
+        assert.equal(count, c);         
+        assert.equal(count, 2500);
     });
     timer.stopInterval();
 
     timer.startInterval("collection - {s:/^T/}");
     collection.count({s:/^T/}, {}, function(count) {
-        jsunit.assertEquals(count, 2500);
+        assert.equal(count, 2500);
     });
     timer.stopInterval();
 
@@ -246,14 +245,14 @@ function testQueries() {
                 c++;
             }
         });
-        jsunit.assertEquals(count, c);        
-        jsunit.assertEquals(count, 10000);
+        assert.equal(count, c);        
+        assert.equal(count, 10000);
     });
     timer.stopInterval();
 
     timer.startInterval("collection - {$or:[{n:{$lt:40}}, {i:{$gt:50}}]}");
     collection.count({$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {}, function(count) {
-        jsunit.assertEquals(count, 10000);
+        assert.equal(count, 10000);
     });
     timer.stopInterval();
 
@@ -266,14 +265,14 @@ function testQueries() {
                 c++;
             }
         });
-        jsunit.assertEquals(count, c);        
-        jsunit.assertEquals(count, 10000);
+        assert.equal(count, c);        
+        assert.equal(count, 10000);
     });
     timer.stopInterval();
 
     timer.startInterval("collection - {$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}");
     collection.count({$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}, function(count) {
-        jsunit.assertEquals(count, 10000);
+        assert.equal(count, 10000);
     });
     timer.stopInterval();
 
@@ -286,8 +285,8 @@ function testQueries() {
                 c++;
             }
         });
-        jsunit.assertEquals(count.length, c);        
-        jsunit.assertEquals(count.length, 91);
+        assert.equal(count.length, c);        
+        assert.equal(count.length, 91);
     });
     timer.stopInterval();
 
@@ -300,23 +299,17 @@ function testQueries() {
                 c++;
             }
         });
-        jsunit.assertEquals(count.length, c);         
-        jsunit.assertEquals(count.length, 1);
+        assert.equal(count.length, c);         
+        assert.equal(count.length, 1);
     });
     timer.stopInterval();
 
     timer.startInterval("collection - {i:10}, {$pushAll:{foo:['bar3', 'bar4']}}");
     collection.update({i:10}, {$pushAll:{foo:['bar3', 'bar4']}}, {}, false, function(count) {
-        jsunit.assertEquals(count.length, 1);
+        assert.equal(count.length, 1);
     });
     timer.stopInterval();
 
     console.log('');
     timer.logToConsole();
 };
-
-(function() {
-    jsunit.resetTests(__filename);
-    jsunit.addTest(testQueries);
-    jsunit.runTests();
-}());

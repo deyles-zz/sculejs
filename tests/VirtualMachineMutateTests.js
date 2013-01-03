@@ -30,16 +30,15 @@ var db      = require('../lib/com.scule.db');
 var vm      = require('../lib/com.scule.db.vm');
 var build   = require('../lib/com.scule.db.builder');
 var inst    = require('../lib/com.scule.instrumentation');
-var jsunit  = require('../lib/com.scule.jsunit');
 
-function testVirtualMachineSimpleMutation() {
+exports['test VirtualMachineSimpleMutation'] = function(beforeExit, assert) {
 
     db.dropAll();
     var collection = db.factoryCollection('scule+dummy://unittest');
     var timer    = inst.getTimer();
     
     timer.startInterval('InsertDocuments');
-    for(var i=0; i < 100000; i++) {
+    for(var i=0; i < 10000; i++) {
         var a = [];
         var r = vm.Scule.$f.randomFromTo(2, 5);
         for(var j=0; j < r; j++) {
@@ -68,12 +67,6 @@ function testVirtualMachineSimpleMutation() {
     var machine  = vm.getVirtualMachine();
     var compiler = build.getQueryCompiler();
     
-    compiler.explainMutate({
-        $set:{
-            foo:'bar'
-        }
-    }, collection);
-    
     timer.startInterval('CompileQuery');
     program = compiler.compileQuery({
         a:3, 
@@ -91,13 +84,7 @@ function testVirtualMachineSimpleMutation() {
     timer.logToConsole();
 
     result.forEach(function(o) {
-        jsunit.assertEquals(o.foo, 'bar');
+        assert.equal(o.foo, 'bar');
     });
     
 };
-
-(function() {
-    jsunit.resetTests(__filename);
-    jsunit.addTest(testVirtualMachineSimpleMutation);
-    jsunit.runTests();
-}());

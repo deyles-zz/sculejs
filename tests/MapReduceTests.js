@@ -26,9 +26,8 @@
  */
 
 var sculedb   = require('../lib/com.scule.db');
-var jsunit    = require('../lib/com.scule.jsunit');
 
-function testCollectionMapReduce() {
+exports['test CollectionMapReduce'] = function(beforeExit, assert) {
     sculedb.dropAll();
     var collection = sculedb.factoryCollection('scule+dummy://unittest');
     collection.ensureIndex(sculedb.Scule.$c.INDEX_TYPE_BTREE, 'a.b', {order:100});
@@ -70,32 +69,26 @@ function testCollectionMapReduce() {
         },
         function(out) {
             var o = out.findAll();
-            jsunit.assertEquals(o[0].total, 49500);
-            jsunit.assertEquals(o[0].finalized, o[0].key);
-            jsunit.assertEquals(o[1].total, 49600);
-            jsunit.assertEquals(o[1].finalized, o[1].key);
-            jsunit.assertEquals(o[2].total, 49700);
-            jsunit.assertEquals(o[2].finalized, o[2].key);
-            jsunit.assertEquals(o[3].total, 49800);
-            jsunit.assertEquals(o[3].finalized, o[3].key);
-            jsunit.assertEquals(o[4].total, 49900);
-            jsunit.assertEquals(o[4].finalized, o[4].key);
-            jsunit.assertEquals(o[5].total, 50000);
-            jsunit.assertEquals(o[5].finalized, o[5].key);
-            jsunit.assertEquals(o[6].total, 50100);
-            jsunit.assertEquals(o[6].finalized, o[6].key);
-            jsunit.assertEquals(o[7].total, 50200);
-            jsunit.assertEquals(o[7].finalized, o[7].key);
-            jsunit.assertEquals(o[8].total, 50300);
-            jsunit.assertEquals(o[8].finalized, o[8].key);
-            jsunit.assertEquals(o[9].total, 50400);
-            jsunit.assertEquals(o[9].finalized, o[9].key);
+            assert.equal(o[0].total, 49500);
+            assert.equal(o[0].finalized, o[0].key);
+            assert.equal(o[1].total, 49600);
+            assert.equal(o[1].finalized, o[1].key);
+            assert.equal(o[2].total, 49700);
+            assert.equal(o[2].finalized, o[2].key);
+            assert.equal(o[3].total, 49800);
+            assert.equal(o[3].finalized, o[3].key);
+            assert.equal(o[4].total, 49900);
+            assert.equal(o[4].finalized, o[4].key);
+            assert.equal(o[5].total, 50000);
+            assert.equal(o[5].finalized, o[5].key);
+            assert.equal(o[6].total, 50100);
+            assert.equal(o[6].finalized, o[6].key);
+            assert.equal(o[7].total, 50200);
+            assert.equal(o[7].finalized, o[7].key);
+            assert.equal(o[8].total, 50300);
+            assert.equal(o[8].finalized, o[8].key);
+            assert.equal(o[9].total, 50400);
+            assert.equal(o[9].finalized, o[9].key);
         }
     );
 };
-
-(function() {
-    jsunit.resetTests(__filename);
-    jsunit.addTest(testCollectionMapReduce);
-    jsunit.runTests();
-}());

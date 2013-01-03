@@ -26,9 +26,8 @@
  */
 
 var sculedb = require('../lib/com.scule.db');
-var jsunit  = require('../lib/com.scule.jsunit');
 
-function testGeoQueriesWithin() {
+exports['test GeoQueriesWithin'] = function(beforeExit, assert) {
     sculedb.dropAll();
     var collection = sculedb.factoryCollection('scule+dummy://unittest');
     for(var i=0; i < 5000; i++) {
@@ -48,13 +47,13 @@ function testGeoQueriesWithin() {
     }
     collection.find({'loc':{$near:{lat:53, lon:-67, distance:1000}}}, {}, function(o) {
         o.forEach(function(document) {
-            jsunit.assertTrue('_meta' in document);
-            jsunit.assertLessThanEqualTo(document._meta.distance, 1000);
+            assert.equal(true, '_meta' in document);
+            assert.equal(true, document._meta.distance <= 1000);
         });
     });
 };
 
-function testGeoQueriesNear() {
+exports['test GeoQueriesNear'] = function(beforeExit, assert) {
     sculedb.dropAll();
     var collection = sculedb.factoryCollection('scule+dummy://unittest');
     collection.ensureIndex(sculedb.Scule.$c.INDEX_TYPE_BTREE, 'a.b', {order:100});
@@ -75,15 +74,8 @@ function testGeoQueriesNear() {
     }
     collection.find({'loc':{$within:{lat:53, lon:-67, distance:10}}}, {}, function(o) {
         o.forEach(function(document) {
-            jsunit.assertTrue('_meta' in document);
-            jsunit.assertLessThanEqualTo(document._meta.distance, 10);
+            assert.equal(true, '_meta' in document);
+            assert.equal(true, document._meta.distance <= 10);
         });
     });
 };
-
-(function() {
-    jsunit.resetTests(__filename);
-    jsunit.addTest(testGeoQueriesWithin);
-    jsunit.addTest(testGeoQueriesNear);
-    jsunit.runTests();
-}());

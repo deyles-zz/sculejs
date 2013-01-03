@@ -26,9 +26,8 @@
  */
 
 var sculedb = require('../lib/com.scule.db');
-var jsunit  = require('../lib/com.scule.jsunit');
 
-function testCollectionFactory() {
+exports['test CollectionFactory'] = function(beforeExit, assert) {
     sculedb.dropAll();
     var collection = sculedb.factoryCollection('scule+dummy://unittest');
     collection.ensureIndex(sculedb.Scule.$c.INDEX_TYPE_BTREE, 'a.b', {order:100});
@@ -43,13 +42,13 @@ function testCollectionFactory() {
            scl: r
         });
     }
-    jsunit.assertEquals(collection.getLength(), 1000);
-    jsunit.assertTrue(collection.getLastInsertId() !== null);
+    assert.equal(collection.getLength(), 1000);
+    assert.isNotNull(collection.getLastInsertId());
     collection.clear();
-    jsunit.assertEquals(collection.getLength(), 0);
+    assert.equal(collection.getLength(), 0);
 };
 
-function testCollectionMerge() {
+exports['test CollectionMerge'] = function(beforeExit, assert) {
     sculedb.dropAll();
     var collection1 = sculedb.factoryCollection('scule+dummy://unittest1');
     var collection2 = sculedb.factoryCollection('scule+dummy://unittest2');    
@@ -67,7 +66,7 @@ function testCollectionMerge() {
         collection2.save(o);
     }
     collection1.merge(collection2);
-    jsunit.assertEquals(collection1.getLength(), 1000);
+    assert.equal(collection1.getLength(), 1000);
     for(var i=0; i < 1000; i++) {
         var r = i%10;
         var o = {
@@ -81,12 +80,5 @@ function testCollectionMerge() {
         collection2.save(o);
     } 
     collection1.merge(collection2);
-    jsunit.assertEquals(collection1.getLength(), 2000);    
+    assert.equal(collection1.getLength(), 2000);    
 };
-
-(function() {
-    jsunit.resetTests(__filename);
-    jsunit.addTest(testCollectionFactory);
-    jsunit.addTest(testCollectionMerge);
-    jsunit.runTests();
-}());

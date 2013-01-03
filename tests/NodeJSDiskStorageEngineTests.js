@@ -26,10 +26,9 @@
  */
 
 var sculedb   = require('../lib/com.scule.db');
-var jsunit    = require('../lib/com.scule.jsunit');
 var fs        = require('fs');
 
-function testNodeJSDiskStorageWrite() {
+exports['test NodeJSDiskStorageWrite'] = function(beforeExit, assert) {
     var object = {
         foo: 'bar',
         bar: 'foo',
@@ -44,35 +43,28 @@ function testNodeJSDiskStorageWrite() {
     });
     storage.write('unittest', object, function(o) {
         fs.stat('/tmp/unittest.json', function(err, stats) {
-            jsunit.assertTrue(!err);
-            jsunit.assertTrue(stats.isFile());
-            jsunit.assertTrue(stats.size > 0);
+            assert.equal(true, !err);
+            assert.equal(true, stats.isFile());
+            assert.equal(true, stats.size > 0);
         });
     });
 };
 
-function testNodeJSDiskStorageRead() {
+exports['test NodeJSDiskStorageRead'] = function(beforeExit, assert) {
     var storage = sculedb.getNodeJSDiskStorageEngine({
         secret: 'mysecretkey',
         path: '/tmp'
     });
     try {
         storage.read('unittest', function(o) {
-            jsunit.assertNotEquals(o, null);
-            jsunit.assertEquals(o.foo, 'bar');
-            jsunit.assertEquals(o.bar, 'foo');
-            jsunit.assertEquals(o.arr.length, 6);
-            jsunit.assertEquals(o.arr[5], 7);
-            jsunit.assertEquals(o.obj.me, 'string');
+            assert.isNotNull(o);
+            assert.equal(o.foo, 'bar');
+            assert.equal(o.bar, 'foo');
+            assert.equal(o.arr.length, 6);
+            assert.equal(o.arr[5], 7);
+            assert.equal(o.obj.me, 'string');
         });  
     } catch (e) {
-        jsunit.assertFalse(true);
+        assert.equal(false, true);
     }
 };
-
-(function() {
-    jsunit.resetTests(__filename);
-    jsunit.addTest(testNodeJSDiskStorageWrite);
-    jsunit.addTest(testNodeJSDiskStorageRead);
-    jsunit.runTests();
-}());

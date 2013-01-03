@@ -26,21 +26,20 @@
  */
 
 var sculedb = require('../lib/com.scule.datastructures');
-var jsunit  = require('../lib/com.scule.jsunit');
 
-function testBPlusTreeNode() {
+exports['test BPlusTreeNode'] = function(beforeExit, assert) {
     var node = sculedb.getBPlusTreeNode();
     // test defaults
-    jsunit.assertEquals(node.getOrder(), 100);
-    jsunit.assertEquals(node.getMergeThreshold(), 40);
+    assert.equal(node.getOrder(), 100);
+    assert.equal(node.getMergeThreshold(), 40);
     // test bean functions
     node.setOrder(400);
     node.setMergeThreshold(33);
-    jsunit.assertEquals(node.getOrder(), 400);
-    jsunit.assertEquals(node.getMergeThreshold(), 33);
+    assert.equal(node.getOrder(), 400);
+    assert.equal(node.getMergeThreshold(), 33);
 };
 
-function testBPlusTreeLeafNodeBinarySearch() {
+exports['test BPlusTreeLeafNodeBinarySearch'] = function(beforeExit, assert) {
     var node = sculedb.getBPlusTreeLeafNode();
     for(var i=13; i < 329; i++) {
         node.data.push({
@@ -48,13 +47,13 @@ function testBPlusTreeLeafNodeBinarySearch() {
             value: i
         });
     }
-    jsunit.assertEquals(node.indexSearch(30), 17);
-    jsunit.assertEquals(node.indexSearch(3), 0);
-    jsunit.assertEquals(node.indexSearch(400), 315);
-    jsunit.assertEquals(node.indexSearch(14), 1);
+    assert.equal(node.indexSearch(30), 17);
+    assert.equal(node.indexSearch(3), 0);
+    assert.equal(node.indexSearch(400), 315);
+    assert.equal(node.indexSearch(14), 1);
 };
 
-function testBPlusTreeLeafNodeIdentifySiblings() {
+exports['test BPlusTreeLeafNodeIdentifySiblings'] = function(beforeExit, assert) {
 
     var interior = {
         data:[]
@@ -200,27 +199,27 @@ function testBPlusTreeLeafNodeIdentifySiblings() {
     interior.data[8] = leaf5;
     
     var siblings = leaf1.identifySiblings(interior);
-    jsunit.assertEquals(siblings.left, null);
-    jsunit.assertEquals(siblings.right, leaf2);
-    jsunit.assertEquals(siblings.index, 0);
+    assert.equal(siblings.left, null);
+    assert.equal(siblings.right, leaf2);
+    assert.equal(siblings.index, 0);
     
     var siblings = leaf2.identifySiblings(interior);
-    jsunit.assertEquals(siblings.left, leaf1);
-    jsunit.assertEquals(siblings.right, leaf3);
-    jsunit.assertEquals(siblings.index, 2);
+    assert.equal(siblings.left, leaf1);
+    assert.equal(siblings.right, leaf3);
+    assert.equal(siblings.index, 2);
     
     var siblings = leaf4.identifySiblings(interior);
-    jsunit.assertEquals(siblings.left, leaf3);
-    jsunit.assertEquals(siblings.right, leaf5);
-    jsunit.assertEquals(siblings.index, 6);
+    assert.equal(siblings.left, leaf3);
+    assert.equal(siblings.right, leaf5);
+    assert.equal(siblings.index, 6);
     
     var siblings = leaf5.identifySiblings(interior);
-    jsunit.assertEquals(siblings.left, leaf4);
-    jsunit.assertEquals(siblings.right, null);
-    jsunit.assertEquals(siblings.index, 8);
+    assert.equal(siblings.left, leaf4);
+    assert.equal(siblings.right, null);
+    assert.equal(siblings.index, 8);
 };
 
-function testBPlusTreeLeafNodeInsert() {
+exports['test BPlusTreeLeafNodeInsert'] = function(beforeExit, assert) {
     var leaf = sculedb.getBPlusTreeLeafNode();
     leaf.setOrder(5);
     leaf.insert('foo0', 'bar0');
@@ -228,13 +227,13 @@ function testBPlusTreeLeafNodeInsert() {
     leaf.insert('foo2', 'bar2');
     leaf.insert('foo3', 'bar3');
     leaf.insert('foo4', 'bar4');
-    jsunit.assertEquals(leaf.data.length, 5);
+    assert.equal(leaf.data.length, 5);
     for(var i=0; i < leaf.data.length; i++) {
-        jsunit.assertEquals(leaf.data[i].key, 'foo' + i);
+        assert.equal(leaf.data[i].key, 'foo' + i);
     }
 };
 
-function testBPlusTreeLeafNodeSearch() {
+exports['test BPlusTreeLeafNodeSearch'] = function(beforeExit, assert) {
     var leaf = sculedb.getBPlusTreeLeafNode();
     leaf.insert('foo', 'bar');
     leaf.insert('foo1', 'bar1');
@@ -242,31 +241,31 @@ function testBPlusTreeLeafNodeSearch() {
     leaf.insert('foo3', 'bar3');
     leaf.insert('foo4', 'bar4');
     leaf.lookup.clear();
-    jsunit.assertEquals(leaf.search('foo2'), 'bar2');
-    jsunit.assertEquals(leaf.search('foo4'), 'bar4');
-    jsunit.assertEquals(leaf.search('foo4'), 'bar4');
+    assert.equal(leaf.search('foo2'), 'bar2');
+    assert.equal(leaf.search('foo4'), 'bar4');
+    assert.equal(leaf.search('foo4'), 'bar4');
 };
 
-function testBPlusTreeLeafNodeSplit() {
+exports['test BPlusTreeLeafNodeSplit'] = function(beforeExit, assert) {
     var leaf = sculedb.getBPlusTreeLeafNode();
     var inner;
     leaf.setOrder(5);
     for(var i=0; i < 6; i++) {
         inner = leaf.insert(i, i);
         if(i < 5) {
-            jsunit.assertEquals(null, inner);
-            jsunit.assertEquals(leaf.data[i].key, i);
-            jsunit.assertEquals(leaf.data[i].value, i);
+            assert.equal(null, inner);
+            assert.equal(leaf.data[i].key, i);
+            assert.equal(leaf.data[i].value, i);
         }
     }
-    jsunit.assertEquals(inner.left.data.length, 3);
-    jsunit.assertEquals(inner.right.data.length, 3);
-    jsunit.assertEquals(inner.key, 3);
-    jsunit.assertEquals(inner.left.getRight(), inner.right);
-    jsunit.assertEquals(inner.right.getLeft(), inner.left);
+    assert.equal(inner.left.data.length, 3);
+    assert.equal(inner.right.data.length, 3);
+    assert.equal(inner.key, 3);
+    assert.equal(inner.left.getRight(), inner.right);
+    assert.equal(inner.right.getLeft(), inner.left);
 };
 
-function testBPlusTreeLeafNodeSplit2() {
+exports['test BPlusTreeLeafNodeSplit2'] = function(beforeExit, assert) {
     var leaf = sculedb.getBPlusTreeLeafNode();
     var inner;
     leaf.setOrder(5);
@@ -274,21 +273,21 @@ function testBPlusTreeLeafNodeSplit2() {
     for(var i=0; i < values.length; i++) {
         inner = leaf.insert(values[i], values[i]);
         if(i < 5) {
-            jsunit.assertEquals(null, inner);
+            assert.equal(null, inner);
         }
     }
-    jsunit.assertEquals(inner.left.data[0].value, 1);
-    jsunit.assertEquals(inner.left.data[1].value, 3);
-    jsunit.assertEquals(inner.left.data[2].value, 34);
-    jsunit.assertEquals(inner.right.data[0].value, 43);
-    jsunit.assertEquals(inner.right.data[1].value, 50);
-    jsunit.assertEquals(inner.right.data[2].value, 78);    
-    jsunit.assertEquals(inner.left.data.length, 3);
-    jsunit.assertEquals(inner.right.data.length, 3);
-    jsunit.assertEquals(inner.key, 43);
+    assert.equal(inner.left.data[0].value, 1);
+    assert.equal(inner.left.data[1].value, 3);
+    assert.equal(inner.left.data[2].value, 34);
+    assert.equal(inner.right.data[0].value, 43);
+    assert.equal(inner.right.data[1].value, 50);
+    assert.equal(inner.right.data[2].value, 78);    
+    assert.equal(inner.left.data.length, 3);
+    assert.equal(inner.right.data.length, 3);
+    assert.equal(inner.key, 43);
 };
 
-function testBPlusTreeInteriorNodeIndexSearch() {
+exports['test BPlusTreeInteriorNodeIndexSearch'] = function(beforeExit, assert) {
     var interior = sculedb.getBPlusTreeInteriorNode();
     interior.setOrder(5);
     interior.setMergeThreshold(2);
@@ -432,14 +431,14 @@ function testBPlusTreeInteriorNodeIndexSearch() {
     interior.data[7] = 16;
     interior.data[8] = leaf5;
     
-    jsunit.assertEquals(interior.indexSearch(1), 1);
-    jsunit.assertEquals(interior.indexSearch(5), 3);
-    jsunit.assertEquals(interior.indexSearch(11), 5);
-    jsunit.assertEquals(interior.indexSearch(15), 7);
-    jsunit.assertEquals(interior.indexSearch(24), 7);
+    assert.equal(interior.indexSearch(1), 1);
+    assert.equal(interior.indexSearch(5), 3);
+    assert.equal(interior.indexSearch(11), 5);
+    assert.equal(interior.indexSearch(15), 7);
+    assert.equal(interior.indexSearch(24), 7);
 };
 
-function testBPlusTreeLeafNodeRedistribute() {
+exports['test BPlusTreeLeafNodeRedistribute'] = function(beforeExit, assert) {
     var interior = sculedb.getBPlusTreeInteriorNode();
     interior.setOrder(5);
     interior.setMergeThreshold(2);
@@ -583,16 +582,16 @@ function testBPlusTreeLeafNodeRedistribute() {
     interior.data[7] = 16;
     interior.data[8] = leaf5;    
 
-    jsunit.assertEquals(leaf5.search(19), 19);
+    assert.equal(leaf5.search(19), 19);
     leaf5.remove(19, interior);
-    jsunit.assertEquals(leaf5.search(19), null);
+    assert.equal(leaf5.search(19), null);
     leaf5.remove(18, interior);
-    jsunit.assertEquals(leaf5.search(18), null);
-    jsunit.assertEquals(leaf5.search(15), 15);
+    assert.equal(leaf5.search(18), null);
+    assert.equal(leaf5.search(15), 15);
 
 };
 
-function testBPlusTreeLeafNodeMergeLeft() {
+exports['test BPlusTreeLeafNodeMergeLeft'] = function(beforeExit, assert) {
     var interior = sculedb.getBPlusTreeInteriorNode();
     interior.setOrder(5);
     interior.setMergeThreshold(2);
@@ -736,26 +735,26 @@ function testBPlusTreeLeafNodeMergeLeft() {
     interior.data[7] = 16;
     interior.data[8] = leaf5;    
 
-    jsunit.assertEquals(leaf5.search(19), 19);
+    assert.equal(leaf5.search(19), 19);
 
     leaf5.remove(19, interior);
-    jsunit.assertEquals(leaf5.search(19), null);
+    assert.equal(leaf5.search(19), null);
 
     leaf5.remove(18, interior);
-    jsunit.assertEquals(leaf5.search(18), null);
-    jsunit.assertEquals(leaf5.search(15), 15);
+    assert.equal(leaf5.search(18), null);
+    assert.equal(leaf5.search(15), 15);
     
     var merge = leaf5.remove(15, interior);
-    jsunit.assertEquals(leaf5.data.length, 0);
-    jsunit.assertEquals(leaf4.data.length, 5);
-    jsunit.assertEquals(merge.node, leaf4);
-    jsunit.assertTrue(merge.left);
-    jsunit.assertEquals(merge.oldkey, 16);
-    jsunit.assertEquals(merge.operation, 1);
+    assert.equal(leaf5.data.length, 0);
+    assert.equal(leaf4.data.length, 5);
+    assert.equal(merge.node, leaf4);
+    assert.equal(true, merge.left);
+    assert.equal(merge.oldkey, 16);
+    assert.equal(merge.operation, 1);
 
 };
 
-function testBPlusTreeLeafNodeMergeRight() {
+exports['test BPlusTreeLeafNodeMergeRight'] = function(beforeExit, assert) {
     var interior = sculedb.getBPlusTreeInteriorNode();
     interior.setOrder(5);
     interior.setMergeThreshold(2);
@@ -879,27 +878,27 @@ function testBPlusTreeLeafNodeMergeRight() {
     interior.data[7] = 16;
     interior.data[8] = leaf5;    
 
-    jsunit.assertEquals(leaf1.search(1), 1);
+    assert.equal(leaf1.search(1), 1);
 
     leaf1.remove(1, interior);
-    jsunit.assertEquals(leaf5.search(1), null);
+    assert.equal(leaf5.search(1), null);
 
     leaf1.remove(2, interior);
-    jsunit.assertEquals(leaf1.search(2), null);
-    jsunit.assertEquals(leaf1.search(4), 4);
+    assert.equal(leaf1.search(2), null);
+    assert.equal(leaf1.search(4), 4);
     
     var merge = leaf1.remove(4, interior);
-    jsunit.assertEquals(leaf1.data.length, 0);
-    jsunit.assertEquals(leaf2.data.length, 5);
-    jsunit.assertEquals(merge.node, leaf2);
-    jsunit.assertFalse(merge.left);
-    jsunit.assertEquals(merge.oldkey, 4);
-    jsunit.assertEquals(merge.operation, 1);
+    assert.equal(leaf1.data.length, 0);
+    assert.equal(leaf2.data.length, 5);
+    assert.equal(merge.node, leaf2);
+    assert.equal(false, merge.left);
+    assert.equal(merge.oldkey, 4);
+    assert.equal(merge.operation, 1);
 
     var curr = leaf2;
     var prev;
     while(curr) {
-        jsunit.assertEquals(curr.getLeft(), prev);
+        assert.equal(curr.getLeft(), prev);
         prev = curr;
         curr = curr.getRight();
     }
@@ -907,14 +906,14 @@ function testBPlusTreeLeafNodeMergeRight() {
     var curr = leaf5;
     var prev = undefined;
     while(curr) {
-        jsunit.assertEquals(curr.getRight(), prev);
+        assert.equal(curr.getRight(), prev);
         prev = curr;
         curr = curr.getLeft();
     }
 
 };
 
-function testBPlusTreeVerifyKeys(node) {
+testBPlusTreeVerifyKeys = function(beforeExit, assert, node) {
     if(node.isLeaf()) {
         return;
     }
@@ -924,72 +923,72 @@ function testBPlusTreeVerifyKeys(node) {
         left  = node.data[i-1];
         right = node.data[i+1];
         if(left.isLeaf() && right.isLeaf()) {
-            jsunit.assertTrue(left.data[0].key < key);
-            jsunit.assertTrue(right.data[0].key == key);                
+            assert.equal(true, left.data[0].key < key);
+            assert.equal(true, right.data[0].key == key);                
             return;
         }
-        jsunit.assertTrue(left.data[1] < key);
-        jsunit.assertTrue(right.data[1] >= key);
-        testBPlusTreeVerifyKeys(left);
-        testBPlusTreeVerifyKeys(right);
+        assert.equal(true, left.data[1] < key);
+        assert.equal(true, right.data[1] >= key);
+        testBPlusTreeVerifyKeys(beforeExit, assert, left);
+        testBPlusTreeVerifyKeys(beforeExit, assert, right);
     }    
 };
 
-function testBPlusTreeLinkedListOrder(tree) {
+testBPlusTreeLinkedListOrder = function(beforeExit, assert, tree) {
     var prev = undefined;    
     var curr = tree.root.data[0];
     while(curr) {
-        jsunit.assertEquals(prev, curr.getLeft());
+        assert.equal(prev, curr.getLeft());
         prev = curr;       
         curr = curr.getRight();
     }    
 };
 
-function testBPlusTreeInteriorNodeRemove() {  
+exports['test BPlusTreeInteriorNodeRemove'] = function(beforeExit, assert) {  
     var tree = sculedb.getBPlusTree(5);
     for(var i=0; i < 23; i++) {
         tree.insert(i, i);
-        testBPlusTreeVerifyKeys(tree.root);
+        testBPlusTreeVerifyKeys(beforeExit, assert, tree.root);
     }    
     tree.remove(0);
-    testBPlusTreeLinkedListOrder(tree);
-    testBPlusTreeVerifyKeys(tree.root);
+    testBPlusTreeLinkedListOrder(beforeExit, assert, tree);
+    testBPlusTreeVerifyKeys(beforeExit, assert, tree.root);
     tree.remove(3);
-    testBPlusTreeLinkedListOrder(tree);    
-    testBPlusTreeVerifyKeys(tree.root);
+    testBPlusTreeLinkedListOrder(beforeExit, assert, tree);    
+    testBPlusTreeVerifyKeys(beforeExit, assert, tree.root);
     tree.remove(6);
-    testBPlusTreeLinkedListOrder(tree);    
-    testBPlusTreeVerifyKeys(tree.root);    
+    testBPlusTreeLinkedListOrder(beforeExit, assert, tree);    
+    testBPlusTreeVerifyKeys(beforeExit, assert, tree.root);    
     tree.remove(12);
-    testBPlusTreeLinkedListOrder(tree);    
-    testBPlusTreeVerifyKeys(tree.root);    
+    testBPlusTreeLinkedListOrder(beforeExit, assert, tree);    
+    testBPlusTreeVerifyKeys(beforeExit, assert, tree.root);    
     tree.remove(1);
-    testBPlusTreeLinkedListOrder(tree);    
-    testBPlusTreeVerifyKeys(tree.root);    
+    testBPlusTreeLinkedListOrder(beforeExit, assert, tree);    
+    testBPlusTreeVerifyKeys(beforeExit, assert, tree.root);    
     tree.remove(18);
-    testBPlusTreeLinkedListOrder(tree);    
-    testBPlusTreeVerifyKeys(tree.root);    
+    testBPlusTreeLinkedListOrder(beforeExit, assert, tree);    
+    testBPlusTreeVerifyKeys(beforeExit, assert, tree.root);    
     tree.remove(21);
-    testBPlusTreeLinkedListOrder(tree);    
-    testBPlusTreeVerifyKeys(tree.root);    
+    testBPlusTreeLinkedListOrder(beforeExit, assert, tree);    
+    testBPlusTreeVerifyKeys(beforeExit, assert, tree.root);    
     tree.remove(13);
-    testBPlusTreeLinkedListOrder(tree);    
-    testBPlusTreeVerifyKeys(tree.root);    
+    testBPlusTreeLinkedListOrder(beforeExit, assert, tree);    
+    testBPlusTreeVerifyKeys(beforeExit, assert, tree.root);    
     tree.remove(19);
-    testBPlusTreeLinkedListOrder(tree);    
-    testBPlusTreeVerifyKeys(tree.root);    
+    testBPlusTreeLinkedListOrder(beforeExit, assert, tree);    
+    testBPlusTreeVerifyKeys(beforeExit, assert, tree.root);    
     tree.remove(9);
-    testBPlusTreeLinkedListOrder(tree);    
-    testBPlusTreeVerifyKeys(tree.root);
+    testBPlusTreeLinkedListOrder(beforeExit, assert, tree);    
+    testBPlusTreeVerifyKeys(beforeExit, assert, tree.root);
     tree.remove(8);
-    testBPlusTreeLinkedListOrder(tree);    
-    testBPlusTreeVerifyKeys(tree.root);
+    testBPlusTreeLinkedListOrder(beforeExit, assert, tree);    
+    testBPlusTreeVerifyKeys(beforeExit, assert, tree.root);
     tree.remove(7);
-    testBPlusTreeLinkedListOrder(tree);
-    testBPlusTreeVerifyKeys(tree.root);
+    testBPlusTreeLinkedListOrder(beforeExit, assert, tree);
+    testBPlusTreeVerifyKeys(beforeExit, assert, tree.root);
 };
 
-function testBPlusTreeVerifyOrder(node) {
+testBPlusTreeVerifyOrder = function(beforeExit, assert, node) {
     if(node.isLeaf()) {
         for(var i=0; i < node.data.length; i++) {
             if(i > 0) {
@@ -997,25 +996,25 @@ function testBPlusTreeVerifyOrder(node) {
                     if(node.data[j].key >= node.data[i].key) {
                         //console.log(node.data[j].key + ' >= ' + node.data[i].key);
                     }
-                    jsunit.assertFalse(node.data[j].key >= node.data[i].key);
+                    assert.equal(false, node.data[j].key >= node.data[i].key);
                 }
             }
         }
     } else {
         for(var i=0; i < node.data.length; i=i+2) {
-            testBPlusTreeVerifyOrder(node.data[i]);
+            testBPlusTreeVerifyOrder(beforeExit, assert, node.data[i]);
         }
     }    
 };
 
-function testBPlusTreeRangeOrder(tree) {
+testBPlusTreeRangeOrder = function(beforeExit, assert, tree) {
     var range = tree.range(2000, 5000, true, true);
     for(var i=0; i < range.length - 1; i++) {
-        jsunit.assertTrue(range[i] < range[i + 1]);
+        assert.equal(true, range[i] < range[i + 1]);
     }    
 }
 
-function testBPlusTreeInteriorRemoveRandom() {
+exports['test BPlusTreeInteriorRemoveRandom'] = function(beforeExit, assert) {
     var tree = sculedb.getBPlusTree(5);
     var val  = [];
     for(var i=0; i < 23; i++) {
@@ -1031,79 +1030,79 @@ function testBPlusTreeInteriorRemoveRandom() {
         } else {
             gone.push(v);
             tree.remove(v)
-            testBPlusTreeVerifyKeys(tree.root);
-            testBPlusTreeVerifyOrder(tree.root);
+            testBPlusTreeVerifyKeys(beforeExit, assert, tree.root);
+            testBPlusTreeVerifyOrder(beforeExit, assert, tree.root);
         }
     });
     gone.forEach(function(v) {
-        jsunit.assertEquals(tree.search(v), null);
+        assert.equal(tree.search(v), null);
     });
     exist.forEach(function(v) {
-        jsunit.assertEquals(tree.search(v), v);
+        assert.equal(tree.search(v), v);
     });
-    testBPlusTreeVerifyKeys(tree.root);
+    testBPlusTreeVerifyKeys(beforeExit, assert, tree.root);
 };
 
-function testBPlusTreeInteriorNodeInsert() {
+exports['test BPlusTreeInteriorNodeInsert'] = function(beforeExit, assert) {
     var tree = sculedb.getBPlusTree(5);
     for(var i=0; i < 32; i++) {
         tree.insert(i, i);
     }
     for(var i=0; i < 32; i++) {
-        jsunit.assertEquals(tree.search(i), i);
+        assert.equal(tree.search(i), i);
     }
-    jsunit.assertEquals(tree.search(-1), null);
-    jsunit.assertEquals(tree.search(38), null);
+    assert.equal(tree.search(-1), null);
+    assert.equal(tree.search(38), null);
 };
 
-function testBPlusTreeAlphabetSequentialInsert() {
+exports['test BPlusTreeAlphabetSequentialInsert'] = function(beforeExit, assert) {
     var tree = sculedb.getBPlusTree(5);
     var alpha = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"];
     for(var i=0; i < alpha.length; i++) {
         tree.insert(alpha[i], alpha[i]);
     }
     var range = tree.range("a", "z", true, true);
-    jsunit.assertEquals(range.length, 26);
-    jsunit.assertEquals(range[0], "a");
-    jsunit.assertEquals(range[range.length-1], "z");
+    assert.equal(range.length, 26);
+    assert.equal(range[0], "a");
+    assert.equal(range[range.length-1], "z");
 };
 
-function testBPlusTreeRange() {
+exports['test BPlusTreeRange'] = function(beforeExit, assert) {
     var tree = sculedb.getBPlusTree(33);
     for(var i=0; i < 1000; i++) {
         var ts = (new Date()).getTime();
         tree.insert(i, i);
     }
     var range = tree.range(333, 633, true, true);  
-    jsunit.assertEquals(range.length, 301);
-    jsunit.assertEquals(range[0], 333);
-    jsunit.assertEquals(range[range.length - 1], 633);
+    assert.equal(range.length, 301);
+    assert.equal(range[0], 333);
+    assert.equal(range[range.length - 1], 633);
     for(var i=0; i < range.length - 1; i++) {
-        jsunit.assertTrue(((range[i] + 1) == (range[i + 1])));
+        assert.equal(true, ((range[i] + 1) == (range[i + 1])));
     }
 };
 
-function testBPlusTreeRandomInsert() {
+exports['test BPlusTreeRandomInsert'] = function(beforeExit, assert) {
     var tree = sculedb.getBPlusTree(5);
     var values = [34, 1, 10, 2, 5, 9, 0, 48, 99, 35, 11, 12, 7, 8, 23, 88, 17, 19, 33];
     for(var i=0; i < values.length; i++) {
         tree.insert(values[i], values[i]);
     }
     for(var i=0; i < values.length; i++) {
-        jsunit.assertEquals(tree.search(values[i]), values[i]);
+        assert.equal(tree.search(values[i]), values[i]);
     }
 };
 
-function testBPlusTreeRandomBulkInsert() {
+exports['test BPlusTreeRandomBulkInsert'] = function(beforeExit, assert) {
     var tree = sculedb.getBPlusTree(5);
     for(var i=0; i < 1000; i++) {
         var v = sculedb.Scule.$f.randomFromTo(1000, 5000);
         tree.insert(v, v);
     }    
-    testBPlusTreeRangeOrder(tree);
+    testBPlusTreeRangeOrder(beforeExit, assert, tree);
 };
 
-function testBPlusTreeBalanced() {
+exports['test BPlusTreeBalanced'] = function(beforeExit, assert) {
     var tree = sculedb.getBPlusTree(5);
     for(var i=0; i < 10000; i++) {
         tree.insert(i, i);
@@ -1129,10 +1128,10 @@ function testBPlusTreeBalanced() {
             e = false;
         }
     }
-    jsunit.assertTrue(e);
+    assert.equal(true, e);
 }
 
-function testBPlusTreeRandomBalanced() {
+exports['test BPlusTreeRandomBalanced'] = function(beforeExit, assert) {
     var tree = sculedb.getBPlusTree(5);
     var values = [];
     for(var i=0; i < 700; i++) {
@@ -1141,7 +1140,7 @@ function testBPlusTreeRandomBalanced() {
         tree.insert(v, v);
     }
     for(var i=0; i < values.length; i++) {
-        jsunit.assertEquals(tree.search(values[i]), values[i]);
+        assert.equal(tree.search(values[i]), values[i]);
     }
     var depths = [];
     var r = function(node, depth) {
@@ -1164,17 +1163,17 @@ function testBPlusTreeRandomBalanced() {
             e = false;
         }
     }
-    jsunit.assertTrue(e);
+    assert.equal(true, e);
 };
 
-function testBPlusTreeBulkLoad() {
+exports['test BPlusTreeBulkLoad'] = function(beforeExit, assert) {
     var tree = sculedb.getBPlusTree(sculedb.Scule.$f.randomFromTo(5000, 10000));
     var ts = (new Date()).getTime();
     for(var i=0; i < 10000; i++) {
         var v = sculedb.Scule.$f.randomFromTo(0, 10000);
         tree.insert(v, v);
     }
-    jsunit.assertTrue(((new Date().getTime()) - ts) < 1500);
+    assert.equal(true, ((new Date().getTime()) - ts) < 1500);
     
     var start = (new Date()).getTime();
     var ttl = 0;
@@ -1188,29 +1187,3 @@ function testBPlusTreeBulkLoad() {
     var avg = (ttl/1000000);
 
 };
-
-(function() {
-    jsunit.resetTests(__filename);
-    jsunit.addTest(testBPlusTreeLeafNodeIdentifySiblings);
-    jsunit.addTest(testBPlusTreeLeafNodeBinarySearch);
-    jsunit.addTest(testBPlusTreeLeafNodeInsert);
-    jsunit.addTest(testBPlusTreeLeafNodeSearch);
-    jsunit.addTest(testBPlusTreeLeafNodeSplit);
-    jsunit.addTest(testBPlusTreeLeafNodeSplit2);
-    jsunit.addTest(testBPlusTreeInteriorNodeIndexSearch);
-    jsunit.addTest(testBPlusTreeInteriorNodeInsert);
-    jsunit.addTest(testBPlusTreeAlphabetSequentialInsert);
-    jsunit.addTest(testBPlusTreeNode);
-    jsunit.addTest(testBPlusTreeBalanced);
-    jsunit.addTest(testBPlusTreeRange);
-    jsunit.addTest(testBPlusTreeRandomInsert);
-    jsunit.addTest(testBPlusTreeRandomBalanced);
-    jsunit.addTest(testBPlusTreeLeafNodeRedistribute);
-    jsunit.addTest(testBPlusTreeLeafNodeMergeLeft);
-    jsunit.addTest(testBPlusTreeLeafNodeMergeRight);
-    jsunit.addTest(testBPlusTreeInteriorNodeRemove);
-    jsunit.addTest(testBPlusTreeInteriorRemoveRandom);
-    jsunit.addTest(testBPlusTreeRandomBulkInsert);
-    jsunit.addTest(testBPlusTreeBulkLoad);
-    jsunit.runTests();
-}());

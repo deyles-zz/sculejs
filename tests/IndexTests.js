@@ -26,9 +26,8 @@
  */
 
 var sculedb   = require('../lib/com.scule.db');
-var jsunit = require('../lib/com.scule.jsunit');
 
-function testIndexParseAttributes() {
+exports['test IndexParseAttributes'] = function(beforeExit, assert) {
     var index = sculedb.getIndex();
     
     index.parseAttributes([
@@ -46,18 +45,18 @@ function testIndexParseAttributes() {
     index.parseAttributes('a , c.d, e. f.0 ');
     var o3 = index.attributes;
     
-    jsunit.assertEquals(o1.a, o2.a);
-    jsunit.assertEquals(o1.c.d, o2.c.d);
-    jsunit.assertEquals(o1.e.f[0], o2.e.f[0]);
-    jsunit.assertEquals(o1.a, o3.a);
-    jsunit.assertEquals(o1.c.d, o3.c.d);
-    jsunit.assertEquals(o1.e.f[0], o3.e.f[0]);
-    jsunit.assertEquals(o3.a, o2.a);
-    jsunit.assertEquals(o3.c.d, o2.c.d);
-    jsunit.assertEquals(o3.e.f[0], o2.e.f[0]);
+    assert.equal(o1.a, o2.a);
+    assert.equal(o1.c.d, o2.c.d);
+    assert.equal(o1.e.f[0], o2.e.f[0]);
+    assert.equal(o1.a, o3.a);
+    assert.equal(o1.c.d, o3.c.d);
+    assert.equal(o1.e.f[0], o3.e.f[0]);
+    assert.equal(o3.a, o2.a);
+    assert.equal(o3.c.d, o2.c.d);
+    assert.equal(o3.e.f[0], o2.e.f[0]);
 };
 
-function testIndexGenerateKey() {
+exports['test IndexGenerateKey'] = function(beforeExit, assert) {
     var index = sculedb.getIndex();
     var document = {
         a:21,
@@ -72,48 +71,48 @@ function testIndexGenerateKey() {
         bar:'foo'
     };
     index.parseAttributes('a,c.d,e.f.0');
-    jsunit.assertEquals(index.generateIndexKey(document), '21,34,32');
+    assert.equal(index.generateIndexKey(document), '21,34,32');
     index.resetAttributes();
     index.parseAttributes('e.f.0,c.d,a');
-    jsunit.assertEquals(index.generateIndexKey(document), '21,34,32');
+    assert.equal(index.generateIndexKey(document), '21,34,32');
     index.resetAttributes();
     index.parseAttributes('c.d,e.f.0,a');
-    jsunit.assertEquals(index.generateIndexKey(document), '21,34,32');    
+    assert.equal(index.generateIndexKey(document), '21,34,32');    
     index.resetAttributes();    
     index.parseAttributes('c.d,e.f.3');
-    jsunit.assertEquals(index.generateIndexKey(document), '34,45');
+    assert.equal(index.generateIndexKey(document), '34,45');
     index.resetAttributes();
     index.parseAttributes('f.1,c.d,e.f.1');
-    jsunit.assertEquals(index.generateIndexKey(document), '34,23,7');
+    assert.equal(index.generateIndexKey(document), '34,23,7');
     index.resetAttributes();
     index.parseAttributes('f.0');
-    jsunit.assertEquals(index.generateIndexKey(document), 2);
+    assert.equal(index.generateIndexKey(document), 2);
     index.resetAttributes();
     index.parseAttributes('foo');
-    jsunit.assertEquals(index.generateIndexKey(document), 'bar');
-    jsunit.assertNotEquals(index.generateIndexKey(document), 'foo');
+    assert.equal(index.generateIndexKey(document), 'bar');
+    assert.equal(false, index.generateIndexKey(document) == 'foo');
     index.resetAttributes();
     index.parseAttributes('bar');
-    jsunit.assertEquals(index.generateIndexKey(document), 'foo');
-    jsunit.assertNotEquals(index.generateIndexKey(document), 'bar');    
+    assert.equal(index.generateIndexKey(document), 'foo');
+    assert.equal(false, index.generateIndexKey(document) == 'bar');    
 };
 
-function testIndexSearch() {
+exports['test IndexSearch'] = function(beforeExit, assert) {
     var index = sculedb.getIndex();
-    jsunit.assertEquals(index.search('1,2,3').length, 0);
+    assert.equal(index.search('1,2,3').length, 0);
 };
 
-function testIndexClear() {
+exports['test IndexClear'] = function(beforeExit, assert) {
     var index = sculedb.getIndex();
-    jsunit.assertFalse(index.clear());
+    assert.equal(false, index.clear());
 };
 
-function testIndexRange() {
+exports['test IndexRange'] = function(beforeExit, assert) {
     var index = sculedb.getIndex();
-    jsunit.assertFalse(index.range(0, 100000));    
+    assert.equal(false, index.range(0, 100000));    
 };
 
-function testIndexIndex() {
+exports['test IndexIndex'] = function(beforeExit, assert) {
     var document = {
         a:21,
         c:{
@@ -127,10 +126,10 @@ function testIndexIndex() {
         bar:'foo'
     };    
     var index = sculedb.getIndex();
-    jsunit.assertFalse(index.index(document));    
+    assert.equal(false, index.index(document));    
 };
 
-function testIndexRemove() {
+exports['test IndexRemove'] = function(beforeExit, assert) {
     var document = {
         a:21,
         c:{
@@ -144,16 +143,5 @@ function testIndexRemove() {
         bar:'foo'
     };    
     var index = sculedb.getIndex();
-    jsunit.assertFalse(index.remove(document));    
+    assert.equal(false, index.remove(document));    
 };
-
-(function() {
-    jsunit.resetTests(__filename);
-    jsunit.addTest(testIndexParseAttributes);
-    jsunit.addTest(testIndexGenerateKey);
-    jsunit.addTest(testIndexSearch);
-    jsunit.addTest(testIndexClear);
-    jsunit.addTest(testIndexRange);
-    jsunit.addTest(testIndexRemove);
-    jsunit.runTests();
-}());

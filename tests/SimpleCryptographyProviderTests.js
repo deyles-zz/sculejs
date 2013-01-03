@@ -26,15 +26,14 @@
  */
 
 var sculedb   = require('../lib/com.scule.db');
-var jsunit = require('../lib/com.scule.jsunit');
 
-function testSignString() {
+exports['test SignString'] = function(beforeExit, assert) {
     var provider = sculedb.getSimpleCryptographyProvider();
     var hash = provider.signString('foobar');
-    jsunit.assertEquals(hash, provider.signString('foobar'));
+    assert.equal(hash, provider.signString('foobar'));
 };
 
-function testSignObject() {
+exports['test SignObject'] = function(beforeExit, assert) {
     var provider = sculedb.getSimpleCryptographyProvider();
     var object = {
         _sig: null,
@@ -50,10 +49,10 @@ function testSignObject() {
         }
     };
     var hash = provider.signObject(object, 'mysecretkey', 'mysecretsalt');
-    jsunit.assertEquals(hash, provider.signObject(object, 'mysecretkey', 'mysecretsalt'));
+    assert.equal(hash, provider.signObject(object, 'mysecretkey', 'mysecretsalt'));
 };
 
-function testSignJSONString() {
+exports['test SignJSONString'] = function(beforeExit, assert) {
     var provider = sculedb.getSimpleCryptographyProvider();
     var object = {
         _sig: null,
@@ -69,10 +68,10 @@ function testSignJSONString() {
         }
     };
     var hash = provider.signJSONString(object, 'mysecretkey', 'mysecretsalt'); 
-    jsunit.assertEquals(hash, provider.signJSONString(object, 'mysecretkey', 'mysecretsalt'));
+    assert.equal(hash, provider.signJSONString(object, 'mysecretkey', 'mysecretsalt'));
 };
 
-function testVerifyObjectSignature() {
+exports['test VerifyObjectSignature'] = function(beforeExit, assert) {
     var provider = sculedb.getSimpleCryptographyProvider();
     var object = {
         _sig: null,
@@ -88,16 +87,7 @@ function testVerifyObjectSignature() {
         }
     };
     object._sig = provider.signObject(object, 'mysecretkey', 'mysecretsalt');
-    jsunit.assertTrue(provider.verifyObjectSignature(object, 'mysecretkey', 'mysecretsalt'));
+    assert.equal(true, provider.verifyObjectSignature(object, 'mysecretkey', 'mysecretsalt'));
     object._sig = 'foobar';
-    jsunit.assertFalse(provider.verifyObjectSignature(object, 'mysecretkey', 'mysecretsalt'));    
+    assert.equal(false, provider.verifyObjectSignature(object, 'mysecretkey', 'mysecretsalt'));    
 };
-
-(function() {
-    jsunit.resetTests(__filename);
-    jsunit.addTest(testSignString);
-    jsunit.addTest(testSignObject);
-    jsunit.addTest(testSignJSONString);
-    jsunit.addTest(testVerifyObjectSignature);
-    jsunit.runTests();
-}());

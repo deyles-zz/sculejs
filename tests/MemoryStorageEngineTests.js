@@ -26,14 +26,12 @@
  */
 
 var sculedb   = require('../lib/com.scule.db');
-var jsunit = require('../lib/com.scule.jsunit');
-
 var storage = sculedb.getMemoryStorageEngine({
     collection:'unittest',
     secret: 'mysecretkey'
 });
 
-function testMemoryStorageWrite() {
+exports['test MemoryStorageWrite'] = function(beforeExit, assert) {
     var object = {
         foo: 'bar',
         bar: 'foo',
@@ -43,24 +41,17 @@ function testMemoryStorageWrite() {
         }
     }
     storage.write('unittest', object, function(o) {
-        jsunit.assertTrue('__scule_collection__unittest' in storage.storage);
+        assert.equal(true, '__scule_collection__unittest' in storage.storage);
     });
 };
 
-function testMemoryStorageRead() {
+exports['test MemoryStorageRead'] = function(beforeExit, assert) {
     storage.read('unittest', function(o) {
-        jsunit.assertNotEquals(o, null);
-        jsunit.assertEquals(o.foo, 'bar');
-        jsunit.assertEquals(o.bar, 'foo');
-        jsunit.assertEquals(o.arr.length, 6);
-        jsunit.assertEquals(o.arr[5], 7);
-        jsunit.assertEquals(o.obj.me, 'string');
+        assert.isNotNull(o);
+        assert.equal(o.foo, 'bar');
+        assert.equal(o.bar, 'foo');
+        assert.equal(o.arr.length, 6);
+        assert.equal(o.arr[5], 7);
+        assert.equal(o.obj.me, 'string');
     });  
 };
-
-(function() {
-    jsunit.resetTests(__filename);
-    jsunit.addTest(testMemoryStorageWrite);
-    jsunit.addTest(testMemoryStorageRead);
-    jsunit.runTests();
-}());

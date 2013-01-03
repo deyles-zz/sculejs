@@ -26,108 +26,94 @@
  */
 
 var sculedb   = require('../lib/com.scule.db');
-var jsunit = require('../lib/com.scule.jsunit');
 
-function testLIFOStackPushPop() {
+exports['test LIFOStackPushPop'] = function(beforeExit, assert) {
     var stack = sculedb.Scule.$d.getLIFOStack();
     stack.push(1);
     stack.push(2);
     stack.push(3);
     stack.push(4);
-    jsunit.assertEquals(stack.pop(), 4);
-    jsunit.assertEquals(stack.pop(), 3);
-    jsunit.assertEquals(stack.pop(), 2);
-    jsunit.assertEquals(stack.pop(), 1);
+    assert.equal(stack.pop(), 4);
+    assert.equal(stack.pop(), 3);
+    assert.equal(stack.pop(), 2);
+    assert.equal(stack.pop(), 1);
 };
 
-function testLIFOStackPeek() {
+exports['test LIFOStackPeek'] = function(beforeExit, assert) {
     var stack = sculedb.Scule.$d.getLIFOStack();
     stack.push(1);
     stack.push(2);
     stack.push(3);
     stack.push(4);
-    jsunit.assertEquals(stack.peek(), 4);
+    assert.equal(stack.peek(), 4);
     stack.pop();
-    jsunit.assertEquals(stack.pop(), 3);
+    assert.equal(stack.pop(), 3);
 };
 
-function testLIFOStackClear() {
+exports['test LIFOStackClear'] = function(beforeExit, assert) {
     var stack = sculedb.Scule.$d.getLIFOStack();
     stack.push(1);
     stack.push(2);
     stack.push(3);
     stack.push(4);
     stack.clear();
-    jsunit.assertEquals(stack.getLength(), 0);
-    jsunit.assertTrue(stack.isEmpty());
+    assert.equal(stack.getLength(), 0);
+    assert.equal(true, stack.isEmpty());
 };
 
-function testFIFOStackPushPop() {
+exports['test FIFOStackPushPop'] = function(beforeExit, assert) {
     var stack = sculedb.Scule.$d.getFIFOStack();
     stack.push(1);
     stack.push(2);
     stack.push(3);
     stack.push(4);
-    jsunit.assertEquals(stack.pop(), 1);
-    jsunit.assertEquals(stack.pop(), 2);
-    jsunit.assertEquals(stack.pop(), 3);
-    jsunit.assertEquals(stack.pop(), 4);    
+    assert.equal(stack.pop(), 1);
+    assert.equal(stack.pop(), 2);
+    assert.equal(stack.pop(), 3);
+    assert.equal(stack.pop(), 4);    
 };
 
-function testFIFOStackPeek() {
+exports['test FIFOStackPeek'] = function(beforeExit, assert) {
     var stack = sculedb.Scule.$d.getFIFOStack();
     stack.push(1);
     stack.push(2);
     stack.push(3);
     stack.push(4);
-    jsunit.assertEquals(stack.peek(), 1);
+    assert.equal(stack.peek(), 1);
     stack.pop();
-    jsunit.assertEquals(stack.pop(), 2);    
+    assert.equal(stack.pop(), 2);    
 };
 
-function testFIFOStackClear() {
+exports['test FIFOStackClear'] = function(beforeExit, assert) {
     var stack = sculedb.Scule.$d.getFIFOStack();
     stack.push(1);
     stack.push(2);
     stack.push(3);
     stack.push(4);
     stack.clear();
-    jsunit.assertEquals(stack.getLength(), 0);
-    jsunit.assertTrue(stack.isEmpty());    
+    assert.equal(stack.getLength(), 0);
+    assert.equal(true, stack.isEmpty());    
 };
 
-function testQueueEnqueueDequeue() {
+exports['test QueueEnqueueDequeue'] = function(beforeExit, assert) {
     var queue = sculedb.Scule.$d.getQueue();
     queue.enqueue(1);
     queue.enqueue(2);
     queue.enqueue(3);
     queue.enqueue(4);
-    jsunit.assertEquals(queue.dequeue(), 1);
-    jsunit.assertEquals(queue.dequeue(), 2);
-    jsunit.assertEquals(queue.dequeue(), 3);
-    jsunit.assertEquals(queue.dequeue(), 4);    
+    assert.equal(queue.dequeue(), 1);
+    assert.equal(queue.dequeue(), 2);
+    assert.equal(queue.dequeue(), 3);
+    assert.equal(queue.dequeue(), 4);    
 };
 
-function testQueueClear() {
+exports['test QueueClear'] = function(beforeExit, assert) {
     var queue = sculedb.Scule.$d.getQueue();
     queue.push(1);
     queue.push(2);
     queue.push(3);
     queue.push(4);
     queue.clear();
-    jsunit.assertEquals(queue.getLength(), 0);
-    jsunit.assertTrue(queue.isEmpty());    
+    assert.equal(queue.getLength(), 0);
+    assert.equal(true, queue.isEmpty());    
 };
-
-(function() {
-    jsunit.resetTests(__filename);
-    jsunit.addTest(testLIFOStackPushPop);
-    jsunit.addTest(testLIFOStackPeek);
-    jsunit.addTest(testLIFOStackClear);
-    jsunit.addTest(testFIFOStackPushPop);
-    jsunit.addTest(testFIFOStackPeek);
-    jsunit.addTest(testFIFOStackClear);
-    jsunit.addTest(testQueueEnqueueDequeue);
-    jsunit.addTest(testQueueClear);    
-    jsunit.runTests();
-}());

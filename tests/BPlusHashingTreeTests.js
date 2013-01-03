@@ -27,9 +27,8 @@
 
 var sculedb   = require('../lib/com.scule.datastructures');
 var db   = require('../lib/com.scule.db');
-var jsunit = require('../lib/com.scule.jsunit');
-
-function testBPlusHashingTreeVerifyKeys(node) {
+    
+function testBPlusHashingTreeVerifyKeys(beforeExit, assert, node) {
     if(node.isLeaf()) {
         return;
     }
@@ -39,44 +38,44 @@ function testBPlusHashingTreeVerifyKeys(node) {
         left  = node.data[i-1];
         right = node.data[i+1];
         if(left.isLeaf() && right.isLeaf()) {
-            jsunit.assertTrue(left.data[0].key < key);
-            jsunit.assertTrue(right.data[0].key == key);                
+            assert.equal(true, left.data[0].key < key);
+            assert.equal(true, right.data[0].key == key);                
             return;
         }
-        jsunit.assertTrue(left.data[1] < key);
-        jsunit.assertTrue(right.data[1] >= key);
-        testBPlusHashingTreeVerifyKeys(left);
-        testBPlusHashingTreeVerifyKeys(right);
+        assert.equal(true, left.data[1] < key);
+        assert.equal(true, right.data[1] >= key);
+        testBPlusHashingTreeVerifyKeys(beforeExit, assert, left);
+        testBPlusHashingTreeVerifyKeys(beforeExit, assert, right);
     }    
 };
 
-function testBPlusHashingTreeLinkedListOrder(tree) {
+function testBPlusHashingTreeLinkedListOrder(beforeExit, assert, tree) {
     var prev = undefined;    
     var curr = tree.root.data[0];
     while(curr) {
-        jsunit.assertEquals(prev, curr.getLeft());
+        assert.equal(prev, curr.getLeft());
         prev = curr;       
         curr = curr.getRight();
     }    
 };
 
-function testBPlusHashingTreeVerifyOrder(node) {
+function testBPlusHashingTreeVerifyOrder(beforeExit, assert, node) {
     if(node.isLeaf()) {
         for(var i=0; i < node.data.length; i++) {
             if(i > 0) {
                 for(var j=0; j < i; j++) {
-                    jsunit.assertFalse(node.data[j].key >= node.data[i].key);
+                    assert.equal(false, node.data[j].key >= node.data[i].key);
                 }
             }
         }
     } else {
         for(var i=0; i < node.data.length; i=i+2) {
-            testBPlusHashingTreeVerifyOrder(node.data[i]);
+            testBPlusHashingTreeVerifyOrder(beforeExit, assert, node.data[i]);
         }
     }    
 };
 
-function testBPlusHashingTreeInsert() {
+exports['test BPlusHashingTreeInsert'] = function(beforeExit, assert) {
     var tree = db.getBPlusHashingTree(5);
     for(var i=0; i < 200; i++) {
         var k = sculedb.Scule.$f.randomFromTo(10, 200);
@@ -87,11 +86,11 @@ function testBPlusHashingTreeInsert() {
         };
         tree.insert(k, o);
     }
-    testBPlusHashingTreeVerifyKeys(tree.root);
-    testBPlusHashingTreeVerifyOrder(tree.root);
+    testBPlusHashingTreeVerifyKeys(beforeExit, assert, tree.root);
+    testBPlusHashingTreeVerifyOrder(beforeExit, assert, tree.root);
 };
 
-function testBPlusHashingTreeInsert2() {
+exports['test BPlusHashingTreeInsert2'] = function(beforeExit, assert) {
     var tree = db.getBPlusHashingTree(5);
     for(var i=0; i < 10; i++) {
         var k = sculedb.Scule.$f.randomFromTo(10, 200);
@@ -102,12 +101,12 @@ function testBPlusHashingTreeInsert2() {
         };
         tree.insert(k, o);
     }
-    testBPlusHashingTreeVerifyKeys(tree.root);
-    testBPlusHashingTreeVerifyOrder(tree.root);
-    testBPlusHashingTreeLinkedListOrder(tree);
+    testBPlusHashingTreeVerifyKeys(beforeExit, assert, tree.root);
+    testBPlusHashingTreeVerifyOrder(beforeExit, assert, tree.root);
+    testBPlusHashingTreeLinkedListOrder(beforeExit, assert, tree);
 };
 
-function testBPlusHashingTreeInsert3() {
+exports['test BPlusHashingTreeInsert3'] = function(beforeExit, assert) {
     var tree = db.getBPlusHashingTree(5);
     for(var i=0; i < 100; i++) {
         var k = i%10;
@@ -120,16 +119,16 @@ function testBPlusHashingTreeInsert3() {
     }
     for(var i=0; i < 10; i++) {
         var table = tree.search(i);
-        jsunit.assertEquals(table.getLength(), 10);
+        assert.equal(table.getLength(), 10);
         var keys = table.getKeys();
         keys.forEach(function(key) {
-           jsunit.assertEquals(table.get(key).key, i);
-           jsunit.assertEquals(table.get(key)._id.toString(), key);
+           assert.equal(table.get(key).key, i);
+           assert.equal(table.get(key)._id.toString(), key);
         });
     }
 }
 
-function testBPlusHashingTreeRemove() {
+exports['test BPlusHashingTreeRemove'] = function(beforeExit, assert) {
     var tree = db.getBPlusHashingTree(5);
     for(var i=0; i < 100; i++) {
         var k = i%10;
@@ -141,13 +140,13 @@ function testBPlusHashingTreeRemove() {
         tree.insert(k, o);        
     }
     tree.remove(5);
-    jsunit.assertEquals(tree.search(5), null);
+    assert.equal(tree.search(5), null);
     tree.remove(2);
-    jsunit.assertEquals(tree.search(2), null);    
-    jsunit.assertNotEquals(tree.search(9), null);    
+    assert.equal(tree.search(2), null);    
+    assert.equal(false, tree.search(9) == null);    
 }
 
-function testBPlusHashingTreeRange() {
+exports['test BPlusHashingTreeRange'] = function(beforeExit, assert) {
     var tree = db.getBPlusHashingTree(5);
     for(var i=0; i < 2000; i++) {
         var k = sculedb.Scule.$f.randomFromTo(10, 2000);
@@ -168,15 +167,5 @@ function testBPlusHashingTreeRange() {
             }
         }
     }
-    jsunit.assertFalse(broken);
+    assert.equal(false, broken);
 };
-
-(function() {
-    jsunit.resetTests(__filename);
-    jsunit.addTest(testBPlusHashingTreeInsert);
-    jsunit.addTest(testBPlusHashingTreeInsert2);
-    jsunit.addTest(testBPlusHashingTreeInsert3);
-    jsunit.addTest(testBPlusHashingTreeRemove);
-    jsunit.addTest(testBPlusHashingTreeRange);
-    jsunit.runTests();
-}());

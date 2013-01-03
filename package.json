@@ -8,6 +8,6 @@
   "engine": "node >= 0.8",
   "dependencies":[],
   "scripts": {
-      "test":"node ./tests/AllTests.js"
+      "test":"expresso tests/*"
   }
 }

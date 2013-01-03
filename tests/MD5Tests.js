@@ -26,15 +26,8 @@
  */
 
 var md5    = require('../lib/com.jkm3.md5');
-var jsunit = require('../lib/com.scule.jsunit');
 
-function testMD5Hashing() {
-    jsunit.assertEquals(md5.hash('hello'), '5d41402abc4b2a76b9719d911017c592');
-    jsunit.assertNotEquals(md5.hash('goodbye'), '5d41402abc4b2a76b9719d911017c592');
+exports['test MD5Hashing'] = function(beforeExit, assert) {
+    assert.equal(md5.hash('hello'), '5d41402abc4b2a76b9719d911017c592');
+    assert.equal((md5.hash('goodbye') == '5d41402abc4b2a76b9719d911017c592'), false);
 };
-
-(function() {
-    jsunit.resetTests(__filename);
-    jsunit.addTest(testMD5Hashing);
-    jsunit.runTests();
-}());

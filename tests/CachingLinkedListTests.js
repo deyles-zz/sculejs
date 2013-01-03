@@ -28,7 +28,7 @@
 var sculedb   = require('../lib/com.scule.db');
 var jsunit = require('../lib/com.scule.jsunit');
 
-function testCachingLinkedListSize() {
+exports['test CachingLinkedListSize'] = function(beforeExit, assert) {
     var list = sculedb.Scule.$d.getCachingLinkedList(10, 'key');
     list.add({
         key: 'foo', 
@@ -46,10 +46,10 @@ function testCachingLinkedListSize() {
         key: 'foo3', 
         bar: 4
     });
-    jsunit.assertEquals(list.getLength(), 4);
+    assert.equal(list.getLength(), 4);
 }
 
-function testCachingLinkedListGet() {
+exports['test CachingLinkedListGet'] = function(beforeExit, assert) {
     var list = sculedb.Scule.$d.getCachingLinkedList(10, 'key');
     list.add({
         key: 'foo', 
@@ -84,10 +84,10 @@ function testCachingLinkedListGet() {
         bar: 8
     });
     var node = list.get(4);
-    jsunit.assertEquals(node.getElement().bar, 5);
+    assert.equal(node.getElement().bar, 5);
 };
 
-function testCachingLinkedListSplit() {
+exports['test CachingLinkedListSplit'] = function(beforeExit, assert) {
     var list1 = sculedb.Scule.$d.getCachingLinkedList(10, 'key');
     list1.add(1);
     list1.add(2);
@@ -98,13 +98,13 @@ function testCachingLinkedListSplit() {
     list1.add(7);
     list1.add(8);
     var list2 = list1.split(4);
-    jsunit.assertEquals(list1.getLength(), 4);
-    jsunit.assertEquals(list1.getTail().getElement(), 4);
-    jsunit.assertEquals(list2.getLength(), 4);
-    jsunit.assertEquals(list2.getTail().getElement(), 8);
+    assert.equal(list1.getLength(), 4);
+    assert.equal(list1.getTail().getElement(), 4);
+    assert.equal(list2.getLength(), 4);
+    assert.equal(list2.getTail().getElement(), 8);
 }
 
-function testCachingLinkedListSplit2() {
+exports['test CachingLinkedListSplit2'] = function(beforeExit, assert) {
     var list1 = sculedb.Scule.$d.getCachingLinkedList(10, 'key');
     list1.add(1);
     list1.add(2);
@@ -116,13 +116,13 @@ function testCachingLinkedListSplit2() {
     list1.add(8);
     list1.add(9);
     var list2 = list1.split();
-    jsunit.assertEquals(list1.getLength(), 5);
-    jsunit.assertEquals(list1.getTail().getElement(), 5);
-    jsunit.assertEquals(list2.getLength(), 4);
-    jsunit.assertEquals(list2.getTail().getElement(), 9);
+    assert.equal(list1.getLength(), 5);
+    assert.equal(list1.getTail().getElement(), 5);
+    assert.equal(list2.getLength(), 4);
+    assert.equal(list2.getTail().getElement(), 9);
 }
 
-function testCachingLinkedListClear() {
+exports['test CachingLinkedListClear'] = function(beforeExit, assert) {
     var list = sculedb.Scule.$d.getCachingLinkedList(10, 'key');
     list.add(1);
     list.add(2);
@@ -133,11 +133,11 @@ function testCachingLinkedListClear() {
     list.add(7);
     list.add(8);
     list.clear();
-    jsunit.assertEquals(list.getLength(), 0);
-    jsunit.assertEquals(list.getHead(), null);
+    assert.equal(list.getLength(), 0);
+    assert.equal(list.getHead(), null);
 }
 
-function testCachingLinkedListContains() {
+exports['test CachingLinkedListContains'] = function(beforeExit, assert) {
     var list = sculedb.Scule.$d.getCachingLinkedList(10, 'key');
     list.add(1);
     list.add(2);
@@ -147,18 +147,18 @@ function testCachingLinkedListContains() {
     list.add(6);
     list.add(7);
     list.add(8);
-    jsunit.assertTrue(list.contains(6)); 
-    jsunit.assertFalse(list.contains(10));
+    assert.equal(list.contains(6), true); 
+    assert.equal(list.contains(10), false);
 };
 
-function testCachingLinkedListIsEmpty() {
+exports['test CachingLinkedListIsEmpty'] = function(beforeExit, assert) {
     var list = sculedb.Scule.$d.getCachingLinkedList(10, 'key');
     list.add(1);
     list.add(2);
-    jsunit.assertFalse(list.isEmpty());
+    assert.equal(list.isEmpty(), false);
 }
 
-function testCachingLinkedListRemove() {
+exports['test CachingLinkedListRemove'] = function(beforeExit, assert) {
     var list = sculedb.Scule.$d.getCachingLinkedList(10, 'key');
     list.add(1);
     list.add(2);
@@ -169,13 +169,13 @@ function testCachingLinkedListRemove() {
     list.add(7);
     list.add(8);
     list.remove(4);
-    jsunit.assertEquals(list.remove(-1), null);
-    jsunit.assertEquals(list.remove(10), null);
-    jsunit.assertEquals(list.getLength(), 7);
-    jsunit.assertEquals(list.get(4).getElement(), 6);
+    assert.equal(list.remove(-1), null);
+    assert.equal(list.remove(10), null);
+    assert.equal(list.getLength(), 7);
+    assert.equal(list.get(4).getElement(), 6);
 };
 
-function testCachingLinkedListReverse() {
+exports['test CachingLinkedListReverse'] = function(beforeExit, assert) {
     var list = sculedb.Scule.$d.getCachingLinkedList(10, 'key');
     list.add(1);
     list.add(2);
@@ -186,11 +186,11 @@ function testCachingLinkedListReverse() {
     list.add(7);
     list.add(8);
     list.reverse();
-    jsunit.assertEquals(list.getHead().getElement(), 8);
-    jsunit.assertEquals(list.getTail().getElement(), 1);
+    assert.equal(list.getHead().getElement(), 8);
+    assert.equal(list.getTail().getElement(), 1);
 };
 
-function testCachingLinkedListSort() {
+exports['test CachingLinkedListSort'] = function(beforeExit, assert) {
     var list = sculedb.Scule.$d.getCachingLinkedList(10, 'key');
     for(var i=0; i < 30; i++) {
         list.add(sculedb.Scule.$f.randomFromTo(10, 10000));
@@ -203,7 +203,7 @@ function testCachingLinkedListSort() {
     }
 };
 
-function testCachingLinkedListComparison() {
+exports['test CachingLinkedListComparison'] = function(beforeExit, assert) {
     var list  = sculedb.Scule.$d.getLinkedList();
     var clist = sculedb.Scule.$d.getCachingLinkedList(10, 'key');
 
@@ -217,22 +217,6 @@ function testCachingLinkedListComparison() {
     for(i=0; i < 1000; i++) {
         clist.search(sculedb.Scule.$f.randomFromTo(1, 100000));
     }
-    jsunit.assertEquals(list.search(999, 'key').getElement().key, clist.search(999, 'key').getElement().key);
-    jsunit.assertEquals(list.search(599, 'key').getElement().value, clist.search(599, 'key').getElement().value);
+    assert.equal(list.search(999, 'key').getElement().key, clist.search(999, 'key').getElement().key);
+    assert.equal(list.search(599, 'key').getElement().value, clist.search(599, 'key').getElement().value);
 };
-
-(function() {
-    jsunit.resetTests(__filename);
-    jsunit.addTest(testCachingLinkedListSize);
-    jsunit.addTest(testCachingLinkedListGet);
-    jsunit.addTest(testCachingLinkedListSplit);
-    jsunit.addTest(testCachingLinkedListSplit2);
-    jsunit.addTest(testCachingLinkedListClear);
-    jsunit.addTest(testCachingLinkedListIsEmpty);
-    jsunit.addTest(testCachingLinkedListContains);
-    jsunit.addTest(testCachingLinkedListRemove);
-    jsunit.addTest(testCachingLinkedListReverse);
-    jsunit.addTest(testCachingLinkedListSort);
-    jsunit.addTest(testCachingLinkedListComparison);
-    jsunit.runTests();
-}());

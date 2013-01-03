@@ -28,48 +28,47 @@
 var vm      = require('../lib/com.scule.db.vm');
 var db      = require('../lib/com.scule.db');
 var inst    = require('../lib/com.scule.instrumentation');
-var jsunit  = require('../lib/com.scule.jsunit');
 
-function testVirtualMachineExecuteInstruction() {
+exports['test VirtualMachineExecuteInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     machine.reset();
     machine.registerInstruction(0x42, function(vm, instruction) {
         vm.stack.push(instruction[1][0])
         vm.ipointer++;
     });
-    jsunit.assertEquals(machine.ipointer, 0);
+    assert.equal(machine.ipointer, 0);
     machine.executeInstruction([0x42, ['lol']]);
-    jsunit.assertEquals(machine.stack.peek(), 'lol');
-    jsunit.assertEquals(machine.ipointer, 1);
+    assert.equal(machine.stack.peek(), 'lol');
+    assert.equal(machine.ipointer, 1);
 };
 
-function testVirtualMachineHaltInstruction() {
+exports['test VirtualMachineHaltInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     machine.reset();
     machine.running = true;
     machine.executeInstruction([0x00, []]);
-    jsunit.assertFalse(machine.running);
-    jsunit.assertEquals(machine.ipointer, 1);
+    assert.equal(false, machine.running);
+    assert.equal(machine.ipointer, 1);
 };
 
-function testVirtualMachineBreakInstruction() {
+exports['test VirtualMachineBreakInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     machine.reset();
     machine.running = true;
     machine.executeInstruction([0x1A, []]);
-    jsunit.assertFalse(machine.running);
-    jsunit.assertEquals(machine.ipointer, 1);    
+    assert.equal(false, machine.running);
+    assert.equal(machine.ipointer, 1);    
 };
 
-function testVirtualMachineStartInstruction() {
+exports['test VirtualMachineStartInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     machine.reset();
     machine.executeInstruction([0x24, []]);
-    jsunit.assertTrue(machine.running);
-    jsunit.assertEquals(machine.ipointer, 1);    
+    assert.equal(true, machine.running);
+    assert.equal(machine.ipointer, 1);    
 };
 
-function testVirtualMachineScanInstruction() {
+exports['test VirtualMachineScanInstruction'] = function(beforeExit, assert) {
     db.dropAll();
     var collection = db.factoryCollection('scule+dummy://unittest');
     collection.ensureBTreeIndex('a', {
@@ -85,11 +84,11 @@ function testVirtualMachineScanInstruction() {
     var machine = vm.getVirtualMachine();
     machine.reset();
     machine.executeInstruction([0x1C, [collection]]);
-    jsunit.assertEquals(machine.ipointer, 1); 
-    jsunit.assertEquals(machine.stack.peek().length, 1000);
+    assert.equal(machine.ipointer, 1); 
+    assert.equal(machine.stack.peek().length, 1000);
 };
 
-function testVirtualMachineRangeInstruction() {
+exports['test VirtualMachineRangeInstruction'] = function(beforeExit, assert) {
     db.dropAll();
     var collection = db.factoryCollection('scule+dummy://unittest');
     collection.ensureBTreeIndex('a', {
@@ -106,11 +105,11 @@ function testVirtualMachineRangeInstruction() {
     var machine = vm.getVirtualMachine();
     machine.reset();
     machine.executeInstruction([0x1D, [collection.indices[0], [3, 5, true, true]]]);
-    jsunit.assertEquals(machine.ipointer, 1); 
-    jsunit.assertEquals(machine.stack.peek().length, 300);
+    assert.equal(machine.ipointer, 1); 
+    assert.equal(machine.stack.peek().length, 300);
 };
 
-function testVirtualMachineFindInstruction() {
+exports['test VirtualMachineFindInstruction'] = function(beforeExit, assert) {
     db.dropAll();
     var collection = db.factoryCollection('scule+dummy://unittest');
     collection.ensureHashIndex('a', {});
@@ -125,11 +124,11 @@ function testVirtualMachineFindInstruction() {
     var machine = vm.getVirtualMachine();
     machine.reset();
     machine.executeInstruction([0x1B, [collection.indices[0], 2]]);
-    jsunit.assertEquals(machine.ipointer, 1); 
-    jsunit.assertEquals(machine.stack.peek().length, 100);
+    assert.equal(machine.ipointer, 1); 
+    assert.equal(machine.stack.peek().length, 100);
 };
 
-function testVirtualMachineStoreInstruction() {
+exports['test VirtualMachineStoreInstruction'] = function(beforeExit, assert) {
     db.dropAll();
     var collection = db.factoryCollection('scule+dummy://unittest');
     collection.ensureHashIndex('a', {});
@@ -144,14 +143,14 @@ function testVirtualMachineStoreInstruction() {
     var machine = vm.getVirtualMachine();
     machine.reset();
     machine.executeInstruction([0x1B, [collection.indices[0], 2]]);
-    jsunit.assertEquals(machine.ipointer, 1); 
-    jsunit.assertEquals(machine.stack.peek().length, 100);
+    assert.equal(machine.ipointer, 1); 
+    assert.equal(machine.stack.peek().length, 100);
     machine.executeInstruction([0x21, []]);
-    jsunit.assertEquals(machine.ipointer, 2);
-    jsunit.assertEquals(machine.registers[0].length, 100);
+    assert.equal(machine.ipointer, 2);
+    assert.equal(machine.registers[0].length, 100);
 };
 
-function testVirtualMachineTransposeInstruction() {
+exports['test VirtualMachineTransposeInstruction'] = function(beforeExit, assert) {
     db.dropAll();
     var collection = db.factoryCollection('scule+dummy://unittest');
     collection.ensureHashIndex('a', {});
@@ -166,17 +165,17 @@ function testVirtualMachineTransposeInstruction() {
     var machine = vm.getVirtualMachine();
     machine.reset();
     machine.executeInstruction([0x1B, [collection.indices[0], 2]]);
-    jsunit.assertEquals(machine.ipointer, 1); 
-    jsunit.assertEquals(machine.stack.peek().length, 100);
+    assert.equal(machine.ipointer, 1); 
+    assert.equal(machine.stack.peek().length, 100);
     machine.executeInstruction([0x21, []]);
-    jsunit.assertEquals(machine.ipointer, 2);
-    jsunit.assertEquals(machine.registers[0].length, 100);
+    assert.equal(machine.ipointer, 2);
+    assert.equal(machine.registers[0].length, 100);
     machine.executeInstruction([0x28, []]);
-    jsunit.assertEquals(machine.ipointer, 3);
-    jsunit.assertEquals(machine.result.length, 100);
+    assert.equal(machine.ipointer, 3);
+    assert.equal(machine.result.length, 100);
 };
 
-function testVirtualMachineReadInstruction() {
+exports['test VirtualMachineReadInstruction'] = function(beforeExit, assert) {
     db.dropAll();
     var collection = db.factoryCollection('scule+dummy://unittest');
     collection.ensureHashIndex('a', {});
@@ -191,18 +190,18 @@ function testVirtualMachineReadInstruction() {
     var machine = vm.getVirtualMachine();
     machine.reset();
     machine.executeInstruction([0x1B, [collection.indices[0], 2]]);
-    jsunit.assertEquals(machine.ipointer, 1); 
-    jsunit.assertEquals(machine.stack.peek().length, 100);
+    assert.equal(machine.ipointer, 1); 
+    assert.equal(machine.stack.peek().length, 100);
     machine.executeInstruction([0x21, []]);
-    jsunit.assertEquals(machine.ipointer, 2);
-    jsunit.assertEquals(machine.registers[0].length, 100);
+    assert.equal(machine.ipointer, 2);
+    assert.equal(machine.registers[0].length, 100);
     machine.executeInstruction([0x27, []]);
-    jsunit.assertEquals(machine.ipointer, 3);
-    jsunit.assertEquals(machine.dpointer, 1);
-    jsunit.assertEquals(machine.registers[1].a, 2);
+    assert.equal(machine.ipointer, 3);
+    assert.equal(machine.dpointer, 1);
+    assert.equal(machine.registers[1].a, 2);
 };
 
-function testVirtualMachineShiftInstruction() {
+exports['test VirtualMachineShiftInstruction'] = function(beforeExit, assert) {
     db.dropAll();
     var collection = db.factoryCollection('scule+dummy://unittest');
     collection.ensureHashIndex('a', {});
@@ -217,23 +216,23 @@ function testVirtualMachineShiftInstruction() {
     var machine = vm.getVirtualMachine();
     machine.reset();
     machine.executeInstruction([0x1B, [collection.indices[0], 2]]);
-    jsunit.assertEquals(machine.ipointer, 1); 
-    jsunit.assertEquals(machine.stack.peek().length, 100);
+    assert.equal(machine.ipointer, 1); 
+    assert.equal(machine.stack.peek().length, 100);
     machine.executeInstruction([0x21, []]);
-    jsunit.assertEquals(machine.ipointer, 2);
-    jsunit.assertEquals(machine.registers[0].length, 100);
+    assert.equal(machine.ipointer, 2);
+    assert.equal(machine.registers[0].length, 100);
     machine.executeInstruction([0x27, []]);
-    jsunit.assertEquals(machine.ipointer, 3);
-    jsunit.assertEquals(machine.dpointer, 1);
-    jsunit.assertEquals(machine.registers[1].a, 2);
+    assert.equal(machine.ipointer, 3);
+    assert.equal(machine.dpointer, 1);
+    assert.equal(machine.registers[1].a, 2);
     machine.stack.push(true);
     machine.executeInstruction([0x20, []]);
-    jsunit.assertEquals(machine.ipointer, 4);
-    jsunit.assertEquals(machine.dpointer, 1);
-    jsunit.assertEquals(machine.registers[1], machine.result[machine.result.length - 1]);
+    assert.equal(machine.ipointer, 4);
+    assert.equal(machine.dpointer, 1);
+    assert.equal(machine.registers[1], machine.result[machine.result.length - 1]);
 };
 
-function testVirtualMachineIntersectInstruction() {
+exports['test VirtualMachineIntersectInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     machine.reset();
     
@@ -254,47 +253,47 @@ function testVirtualMachineIntersectInstruction() {
     machine.stack.push(list1);
     machine.stack.push(list2);
     machine.executeInstruction([0x23, []]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertEquals(machine.dpointer, 0);
-    jsunit.assertEquals(machine.stack.peek().length, 500);
+    assert.equal(machine.ipointer, 1);
+    assert.equal(machine.dpointer, 0);
+    assert.equal(machine.stack.peek().length, 500);
 };
 
-function testVirtualMachineAndInstruction() {
+exports['test VirtualMachineAndInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     machine.reset();
     machine.running;
     machine.stack.push(true);
     machine.stack.push(true);
     machine.executeInstruction([0x01, [2]]);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(true, machine.stack.peek());
     machine.stack.push(false);
     machine.executeInstruction([0x01, [2]]);
-    jsunit.assertFalse(machine.stack.peek());    
+    assert.equal(false, machine.stack.peek());    
 };
 
-function testVirtualMachineOrInstruction() {
+exports['test VirtualMachineOrInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     machine.reset();
     machine.running;
     machine.stack.push(true);
     machine.stack.push(true);
     machine.executeInstruction([0x02, [2]]);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(true, machine.stack.peek());
     machine.stack.push(false);
     machine.executeInstruction([0x02, [2]]);
-    jsunit.assertTrue(machine.stack.peek());    
+    assert.equal(true, machine.stack.peek());    
 };
 
-function testVirtualMachineGotoInstruction() {
+exports['test VirtualMachineGotoInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     machine.reset();
     machine.running;
-    jsunit.assertEquals(machine.ipointer, 0);
+    assert.equal(machine.ipointer, 0);
     machine.executeInstruction([0x26, [42]]); 
-    jsunit.assertEquals(machine.ipointer, 42);
+    assert.equal(machine.ipointer, 42);
 };
 
-function testVirtualMachineJumpInstruction() {
+exports['test VirtualMachineJumpInstruction'] = function(beforeExit, assert) {
     var list = [];
     for(var i=0; i < 100; i++) {
         var o = {
@@ -307,19 +306,19 @@ function testVirtualMachineJumpInstruction() {
     machine.running;
     machine.dpointer = 100;
     machine.registers[0] = list;
-    jsunit.assertEquals(machine.ipointer, 0);
+    assert.equal(machine.ipointer, 0);
     machine.executeInstruction([0x25, [42]]); 
-    jsunit.assertEquals(machine.ipointer, 42);
+    assert.equal(machine.ipointer, 42);
     machine.reset();
     machine.running;
     machine.dpointer = 50;
     machine.registers[0] = list;
-    jsunit.assertEquals(machine.ipointer, 0);
+    assert.equal(machine.ipointer, 0);
     machine.executeInstruction([0x25, [42]]);
-    jsunit.assertEquals(machine.ipointer, 1);    
+    assert.equal(machine.ipointer, 1);    
 };
 
-function testVirtualMachineEqInstruction() {
+exports['test VirtualMachineEqInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     machine.reset();
     machine.running;
@@ -330,14 +329,14 @@ function testVirtualMachineEqInstruction() {
             d:3
         }
     };
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0xC, ['c.d', 3]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.ipointer, 1);
+    assert.equal(true, machine.stack.peek());
 };
 
-function testVirtualMachineNeInstruction() {
+exports['test VirtualMachineNeInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     machine.reset();
     machine.running;
@@ -348,14 +347,14 @@ function testVirtualMachineNeInstruction() {
             d:3
         }
     };
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0xD, ['c.d', 3]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertFalse(machine.stack.peek());
+    assert.equal(machine.ipointer, 1);
+    assert.equal(false, machine.stack.peek());
 };
 
-function testVirtualMachineGtInstruction() {
+exports['test VirtualMachineGtInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     
     machine.reset();
@@ -367,11 +366,11 @@ function testVirtualMachineGtInstruction() {
             d:3
         }
     };
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0x07, ['c.d', 2]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.ipointer, 1);
+    assert.equal(true, machine.stack.peek());
 
     machine.reset();
     machine.running;
@@ -382,14 +381,14 @@ function testVirtualMachineGtInstruction() {
             d:3
         }
     };
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0x07, ['c.d', 3]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertFalse(machine.stack.peek());    
+    assert.equal(machine.ipointer, 1);
+    assert.equal(false, machine.stack.peek());    
 };
 
-function testVirtualMachineGteInstruction() {
+exports['test VirtualMachineGteInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     
     machine.reset();
@@ -401,11 +400,11 @@ function testVirtualMachineGteInstruction() {
             d:3
         }
     };
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0x08, ['c.d', 2]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.ipointer, 1);
+    assert.equal(true, machine.stack.peek());
 
     machine.reset();
     machine.running;
@@ -416,14 +415,14 @@ function testVirtualMachineGteInstruction() {
             d:3
         }
     };
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0x08, ['c.d', 3]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertTrue(machine.stack.peek());    
+    assert.equal(machine.ipointer, 1);
+    assert.equal(true, machine.stack.peek());    
 };
 
-function testVirtualMachineLtInstruction() {
+exports['test VirtualMachineLtInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     
     machine.reset();
@@ -435,11 +434,11 @@ function testVirtualMachineLtInstruction() {
             d:3
         }
     };
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0x05, ['c.d', 4]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.ipointer, 1);
+    assert.equal(true, machine.stack.peek());
 
     machine.reset();
     machine.running;
@@ -450,14 +449,14 @@ function testVirtualMachineLtInstruction() {
             d:3
         }
     };
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0x05, ['c.d', 3]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertFalse(machine.stack.peek());    
+    assert.equal(machine.ipointer, 1);
+    assert.equal(false, machine.stack.peek());    
 };
 
-function testVirtualMachineLteInstruction() {
+exports['test VirtualMachineLteInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     
     machine.reset();
@@ -469,11 +468,11 @@ function testVirtualMachineLteInstruction() {
             d:3
         }
     };
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0x06, ['c.d', 4]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.ipointer, 1);
+    assert.equal(true, machine.stack.peek());
 
     machine.reset();
     machine.running;
@@ -484,14 +483,14 @@ function testVirtualMachineLteInstruction() {
             d:3
         }
     };
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0x06, ['c.d', 3]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertTrue(machine.stack.peek());    
+    assert.equal(machine.ipointer, 1);
+    assert.equal(true, machine.stack.peek());    
 };
 
-function testVirtualMachineInInstruction() {
+exports['test VirtualMachineInInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     machine.reset();
     machine.running;
@@ -506,11 +505,11 @@ function testVirtualMachineInInstruction() {
     table.put(1, true);
     table.put(3, true);
     table.put(4, true);
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0xA, ['c.d', table]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.ipointer, 1);
+    assert.equal(true, machine.stack.peek());
     machine.reset();
     machine.running;
     machine.registers[1] = {
@@ -520,14 +519,14 @@ function testVirtualMachineInInstruction() {
             d:3
         }
     };
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0xA, ['c', table]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertFalse(machine.stack.peek());    
+    assert.equal(machine.ipointer, 1);
+    assert.equal(false, machine.stack.peek());    
 };
 
-function testVirtualMachineNinInstruction() {
+exports['test VirtualMachineNinInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     machine.reset();
     machine.running;
@@ -542,11 +541,11 @@ function testVirtualMachineNinInstruction() {
     table.put(1, true);
     table.put(3, true);
     table.put(4, true);
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0xB, ['c.d', table]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertFalse(machine.stack.peek());
+    assert.equal(machine.ipointer, 1);
+    assert.equal(false, machine.stack.peek());
     machine.reset();
     machine.running;
     machine.registers[1] = {
@@ -556,14 +555,14 @@ function testVirtualMachineNinInstruction() {
             d:3
         }
     };
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0xB, ['c', table]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertTrue(machine.stack.peek());    
+    assert.equal(machine.ipointer, 1);
+    assert.equal(true, machine.stack.peek());    
 };
 
-function testVirtualMachineSizeInstruction() {
+exports['test VirtualMachineSizeInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     
     machine.reset();
@@ -571,25 +570,25 @@ function testVirtualMachineSizeInstruction() {
     machine.registers[1] = {
         a:[1, 2, 3, 4, 5, 6, 7]
     };
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0xE, ['a', 7]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.ipointer, 1);
+    assert.equal(true, machine.stack.peek());
     
     machine.reset();
     machine.running;
     machine.registers[1] = {
         a:[1, 2, 3, 4, 5, 6, 7]
     };
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0xE, ['a', 5]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertFalse(machine.stack.peek());    
+    assert.equal(machine.ipointer, 1);
+    assert.equal(false, machine.stack.peek());    
 };
 
-function testVirtualMachineExistsInstruction() {
+exports['test VirtualMachineExistsInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     
     machine.reset();
@@ -597,25 +596,25 @@ function testVirtualMachineExistsInstruction() {
     machine.registers[1] = {
         a:[1, 2, 3, 4, 5, 6, 7]
     };
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0xF, ['a', true]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.ipointer, 1);
+    assert.equal(true, machine.stack.peek());
     
     machine.reset();
     machine.running;
     machine.registers[1] = {
         a:[1, 2, 3, 4, 5, 6, 7]
     };
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0xF, ['c', true]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertFalse(machine.stack.peek());    
+    assert.equal(machine.ipointer, 1);
+    assert.equal(false, machine.stack.peek());    
 };
 
-function testVirtualMachineAllInstruction() {
+exports['test VirtualMachineAllInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     var table = db.Scule.$d.getHashTable();
     table.put('foo', true);
@@ -626,11 +625,11 @@ function testVirtualMachineAllInstruction() {
     machine.registers[1] = {
         a:['foo', 'bar', 'poo']
     };
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0x09, ['a', table]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertTrue(machine.stack.peek());
+    assert.equal(machine.ipointer, 1);
+    assert.equal(true, machine.stack.peek());
     
     table.put('lol');
     machine.reset();
@@ -638,27 +637,27 @@ function testVirtualMachineAllInstruction() {
     machine.registers[1] = {
         a:['foo', 'bar', 'poo']
     };
-    jsunit.assertEquals(machine.ipointer, 0);
-    jsunit.assertTrue(machine.stack.isEmpty());
+    assert.equal(machine.ipointer, 0);
+    assert.equal(true, machine.stack.isEmpty());
     machine.executeInstruction([0x09, ['c']]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertFalse(machine.stack.peek());    
+    assert.equal(machine.ipointer, 1);
+    assert.equal(false, machine.stack.peek());    
 };
 
-function testVirtualMachineLimitInstruction() {
+exports['test VirtualMachineLimitInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     for(var i=0; i < 1000; i++) {
         machine.result.push({
             _id:db.getObjectId()
         });
     }
-    jsunit.assertEquals(machine.ipointer, 0);    
+    assert.equal(machine.ipointer, 0);    
     machine.executeInstruction([0x29, [97]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertEquals(machine.result.length, 97);
+    assert.equal(machine.ipointer, 1);
+    assert.equal(machine.result.length, 97);
 }
 
-function testVirtualMachineSetInstruction() {
+exports['test VirtualMachineSetInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     machine.registers[1] = {
         _id:db.getObjectId(),
@@ -667,17 +666,17 @@ function testVirtualMachineSetInstruction() {
     
     machine.running = true;
     machine.upsert  = false;
-    jsunit.assertEquals(machine.ipointer, 0);
+    assert.equal(machine.ipointer, 0);
     machine.executeInstruction([0x12, [{
         foo:true
     }, 'lol']]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertEquals(machine.registers[1].foo, 'lol');
+    assert.equal(machine.ipointer, 1);
+    assert.equal(machine.registers[1].foo, 'lol');
     machine.executeInstruction([0x12, [{
         bar:true
     }, 'foo']]);
-    jsunit.assertEquals(machine.ipointer, 2);
-    jsunit.assertFalse(('bar' in machine.registers[1]));
+    assert.equal(machine.ipointer, 2);
+    assert.equal(false, ('bar' in machine.registers[1]));
 
     machine.reset();
     machine.running = true;
@@ -686,20 +685,20 @@ function testVirtualMachineSetInstruction() {
         _id:db.getObjectId(),
         foo:'bar'
     };    
-    jsunit.assertEquals(machine.ipointer, 0);
+    assert.equal(machine.ipointer, 0);
     machine.executeInstruction([0x12, [{
         foo:true
     }, 'lol']]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertEquals(machine.registers[1].foo, 'lol');
+    assert.equal(machine.ipointer, 1);
+    assert.equal(machine.registers[1].foo, 'lol');
     machine.executeInstruction([0x12, [{
         bar:true
     }, 'foo']]);
-    jsunit.assertEquals(machine.ipointer, 2);
-    jsunit.assertEquals(machine.registers[1].bar, 'foo');
+    assert.equal(machine.ipointer, 2);
+    assert.equal(machine.registers[1].bar, 'foo');
 };
 
-function testVirtualMachineUnsetInstruction() {
+exports['test VirtualMachineUnsetInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     machine.registers[1] = {
         _id:db.getObjectId(),
@@ -708,15 +707,15 @@ function testVirtualMachineUnsetInstruction() {
     
     machine.running = true;
     machine.upsert  = false;
-    jsunit.assertEquals(machine.ipointer, 0);
+    assert.equal(machine.ipointer, 0);
     machine.executeInstruction([0x13, [{
         foo:true
     }]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertFalse('foo' in machine.registers[1]);
+    assert.equal(machine.ipointer, 1);
+    assert.equal(false, 'foo' in machine.registers[1]);
 };
 
-function testVirtualMachineIncInstruction() {
+exports['test VirtualMachineIncInstruction'] = function(beforeExit, assert) {
     
     var machine = vm.getVirtualMachine();
     machine.registers[1] = {
@@ -727,17 +726,17 @@ function testVirtualMachineIncInstruction() {
     
     machine.running = true;
     machine.upsert  = false;
-    jsunit.assertEquals(machine.ipointer, 0);
+    assert.equal(machine.ipointer, 0);
     machine.executeInstruction([0x14, [{
         foo:true
     }, 2]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertEquals(machine.registers[1].foo, 'bar');
+    assert.equal(machine.ipointer, 1);
+    assert.equal(machine.registers[1].foo, 'bar');
     machine.executeInstruction([0x14, [{
         count:true
     }, 2]]);
-    jsunit.assertEquals(machine.ipointer, 2);
-    jsunit.assertEquals(machine.registers[1].count, 2);
+    assert.equal(machine.ipointer, 2);
+    assert.equal(machine.registers[1].count, 2);
 
     machine.reset();
     machine.registers[1] = {
@@ -748,16 +747,16 @@ function testVirtualMachineIncInstruction() {
     
     machine.running = true;
     machine.upsert  = true;
-    jsunit.assertEquals(machine.ipointer, 0);
+    assert.equal(machine.ipointer, 0);
     machine.executeInstruction([0x14, [{
         count1:true
     }, 66]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertEquals(machine.registers[1].count1, 66);
+    assert.equal(machine.ipointer, 1);
+    assert.equal(machine.registers[1].count1, 66);
     
 };
 
-function testVirtualMachineOPullInstruction() {
+exports['test VirtualMachineOPullInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     machine.registers[1] = {
         _id:db.getObjectId(),
@@ -765,15 +764,15 @@ function testVirtualMachineOPullInstruction() {
         arr:['foo', 'bar', 'poo']
     };
     machine.running = true;
-    jsunit.assertEquals(machine.ipointer, 0);
+    assert.equal(machine.ipointer, 0);
     machine.executeInstruction([0x15, [{
         arr:true
     }, 'poo']]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar']));
+    assert.equal(machine.ipointer, 1);
+    assert.equal(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar']));
 };
 
-function testVirtualMachineOPullAllInstruction() {
+exports['test VirtualMachineOPullAllInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     machine.registers[1] = {
         _id:db.getObjectId(),
@@ -781,15 +780,15 @@ function testVirtualMachineOPullAllInstruction() {
         arr:['foo', 'bar', 'poo']
     };
     machine.running = true;
-    jsunit.assertEquals(machine.ipointer, 0);
+    assert.equal(machine.ipointer, 0);
     machine.executeInstruction([0x16, [{
         arr:true
     }, ['poo', 'foo']]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['bar']));
+    assert.equal(machine.ipointer, 1);
+    assert.equal(JSON.stringify(machine.registers[1].arr), JSON.stringify(['bar']));
 };
 
-function testVirtualMachinePopInstruction() {
+exports['test VirtualMachinePopInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     machine.registers[1] = {
         _id:db.getObjectId(),
@@ -797,20 +796,20 @@ function testVirtualMachinePopInstruction() {
         arr:['foo', 'bar', 'poo']
     };
     machine.running = true;
-    jsunit.assertEquals(machine.ipointer, 0);
+    assert.equal(machine.ipointer, 0);
     machine.executeInstruction([0x17, [{
         arr:true
     }]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar']));
+    assert.equal(machine.ipointer, 1);
+    assert.equal(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar']));
     machine.executeInstruction([0x17, [{
         arr:true
     }]]);
-    jsunit.assertEquals(machine.ipointer, 2);
-    jsunit.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo']));
+    assert.equal(machine.ipointer, 2);
+    assert.equal(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo']));
 };
 
-function testVirtualMachineOPushInstruction() {
+exports['test VirtualMachineOPushInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     machine.registers[1] = {
         _id:db.getObjectId(),
@@ -818,20 +817,20 @@ function testVirtualMachineOPushInstruction() {
         arr:['foo', 'bar', 'poo']
     };
     machine.running = true;
-    jsunit.assertEquals(machine.ipointer, 0);
+    assert.equal(machine.ipointer, 0);
     machine.executeInstruction([0x18, [{
         arr:true
     }, 'poo']]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar', 'poo', 'poo']));
+    assert.equal(machine.ipointer, 1);
+    assert.equal(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar', 'poo', 'poo']));
     machine.executeInstruction([0x18, [{
         arr:true
     }, 'poo2']]);
-    jsunit.assertEquals(machine.ipointer, 2);
-    jsunit.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar', 'poo', 'poo', 'poo2']));    
+    assert.equal(machine.ipointer, 2);
+    assert.equal(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar', 'poo', 'poo', 'poo2']));    
 };
 
-function testVirtualMachineOPushAllInstruction() {
+exports['test VirtualMachineOPushAllInstruction'] = function(beforeExit, assert) {
     var machine = vm.getVirtualMachine();
     machine.registers[1] = {
         _id:db.getObjectId(),
@@ -839,51 +838,10 @@ function testVirtualMachineOPushAllInstruction() {
         arr:['foo', 'bar', 'poo']
     };
     machine.running = true;
-    jsunit.assertEquals(machine.ipointer, 0);
+    assert.equal(machine.ipointer, 0);
     machine.executeInstruction([0x19, [{
         arr:true
     }, ['poo', 'foo']]]);
-    jsunit.assertEquals(machine.ipointer, 1);
-    jsunit.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar', 'poo', 'poo', 'foo']));
+    assert.equal(machine.ipointer, 1);
+    assert.equal(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar', 'poo', 'poo', 'foo']));
 };
-
-(function() {
-    jsunit.resetTests(__filename);
-    jsunit.addTest(testVirtualMachineExecuteInstruction);
-    jsunit.addTest(testVirtualMachineHaltInstruction);
-    jsunit.addTest(testVirtualMachineBreakInstruction);
-    jsunit.addTest(testVirtualMachineStartInstruction);
-    jsunit.addTest(testVirtualMachineScanInstruction);
-    jsunit.addTest(testVirtualMachineRangeInstruction);
-    jsunit.addTest(testVirtualMachineFindInstruction);
-    jsunit.addTest(testVirtualMachineStoreInstruction);
-    jsunit.addTest(testVirtualMachineTransposeInstruction);
-    jsunit.addTest(testVirtualMachineReadInstruction);
-    jsunit.addTest(testVirtualMachineShiftInstruction);
-    jsunit.addTest(testVirtualMachineIntersectInstruction);
-    jsunit.addTest(testVirtualMachineAndInstruction);
-    jsunit.addTest(testVirtualMachineOrInstruction);
-    jsunit.addTest(testVirtualMachineGotoInstruction);
-    jsunit.addTest(testVirtualMachineJumpInstruction);
-    jsunit.addTest(testVirtualMachineEqInstruction);
-    jsunit.addTest(testVirtualMachineNeInstruction);
-    jsunit.addTest(testVirtualMachineGtInstruction);
-    jsunit.addTest(testVirtualMachineGteInstruction);
-    jsunit.addTest(testVirtualMachineLtInstruction);
-    jsunit.addTest(testVirtualMachineLteInstruction);
-    jsunit.addTest(testVirtualMachineInInstruction);
-    jsunit.addTest(testVirtualMachineNinInstruction);
-    jsunit.addTest(testVirtualMachineSizeInstruction);
-    jsunit.addTest(testVirtualMachineExistsInstruction);
-    jsunit.addTest(testVirtualMachineAllInstruction);
-    jsunit.addTest(testVirtualMachineLimitInstruction);
-    jsunit.addTest(testVirtualMachineSetInstruction);
-    jsunit.addTest(testVirtualMachineUnsetInstruction);
-    jsunit.addTest(testVirtualMachineIncInstruction);
-    jsunit.addTest(testVirtualMachineOPullInstruction);
-    jsunit.addTest(testVirtualMachineOPullAllInstruction);
-    jsunit.addTest(testVirtualMachinePopInstruction);
-    jsunit.addTest(testVirtualMachineOPushInstruction);
-    jsunit.addTest(testVirtualMachineOPushAllInstruction);
-    jsunit.runTests();
-}());
