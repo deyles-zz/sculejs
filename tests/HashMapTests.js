@@ -105,7 +105,7 @@ exports['test HashMapLoadFactor'] = function(beforeExit, assert) {
     
     var timer = inst.getTimer();
     var tree  = sculedb.Scule.$d.getBPlusTree(1000);
-    var map   = sculedb.Scule.$d.getHashMap(1000);
+    var map   = sculedb.Scule.$d.getHashMap(10000);
     var table = sculedb.Scule.$d.getHashTable();
     
     timer.startInterval('HashMap.Hash');
