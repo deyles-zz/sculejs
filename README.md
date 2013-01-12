@@ -49,7 +49,7 @@ If you have any specific questions about how to use _SculeJS_ then head on over 
 ## Do you use any coding standards?
 
 I run all core library code through [JSHint](http://jshint.com/) as part of my (currently manual) build process. Building code for other platforms such as web and Titanium
-takes a little bit of manual fiddling, so certain portions don't pass. It all runs though, and all test cases are verified by running JSUnit before any commits to TRUNK.
+takes a little bit of manual fiddling, so certain portions don't pass. It all runs though, and all test cases are verified by running expresso before any commits to TRUNK.
 
 ## How does it work?
 
@@ -61,7 +61,7 @@ support for [IndexDB](http://www.w3.org/TR/IndexedDB/ "IndexDB") and [WebSQL](ht
 
 ## Can I contribute/donate/help in some way?
 
-I'm still working on the process to enable users to contribute patches and features to the project, but sure, I'd be happy to have some
-help. Donations aren't necessary - if you use *SculeJS* and love it then tell your friends, just getting the word out would be a huge help.
+If you want to help out with developing *SculeJS* please take a look at the [contributor wiki guide](https://github.com/dan-eyles/sculejs/wiki/Guide-To-Contributing), I'd be happy to have some help. Donations aren't necessary - if you 
+use *SculeJS* and love it then tell your friends, just getting the word out would be a huge help.
 
 I have a full time job and maintain *SculeJS* in my spare time, so if I don't get to your tickets immediately please don't take it personally.
