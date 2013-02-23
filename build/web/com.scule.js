@@ -34,7 +34,7 @@ if (typeof Scule == 'undefined') {
 if (typeof console == 'undefined') {
     var console = {
         log: function(message) {
-            // noop
+        // noop
         }
     };
 }
@@ -851,6 +851,17 @@ if (typeof console == 'undefined') {
             o[i] = object[i];
         });
         return o;
+    };
+
+    Scule.global.functions.objectValues = function(object) {
+        var values = [];
+        for (var k in object) {
+            if (!object.hasOwnProperty(k)) {
+                continue;
+            }
+            values.push(object[k]);
+        }
+        return values;
     };
 
     /**
@@ -5627,7 +5638,7 @@ if (typeof console == 'undefined') {
             index.index = matches.$index;
             index.range = false;
 
-            var values    = [];
+            var values    = {};
             var backtrack = [];
             for (var i=0; i < node.children.length; i++) {
                 var child  = node.children[i];
@@ -5639,7 +5650,7 @@ if (typeof console == 'undefined') {
                     }
                     for (var j=0; j < clauses.length; j++) {
                         if (clauses[j].getSymbol() == '$eq') {
-                            values.push(clauses[j].getFirstChild().getSymbol());
+                            values[symbol] = clauses[j].getFirstChild().getSymbol();
                             backtrack.push({
                                 i_index: i,
                                 j_index: j,
@@ -5663,6 +5674,8 @@ if (typeof console == 'undefined') {
                     }
                 });
             }
+
+            values = Scule.global.functions.objectValues(Scule.global.functions.sortObjectKeys(values));
 
             node.children.unshift(index);
             index.args = values.join(',');

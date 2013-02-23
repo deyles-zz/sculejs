@@ -458,6 +458,17 @@ module.exports.Scule.functions.sortObjectKeys = function(object) {
     return o;
 };
 
+module.exports.Scule.functions.objectValues = function(object) {
+    var values = [];
+    for (var k in object) {
+        if (!object.hasOwnProperty(k)) {
+            continue;
+        }
+        values.push(object[k]);
+    }
+    return values;
+};
+
 /**
  * Returns a count of the number of top level attributes in an object
  * @param {Object} o the object to count the keys of
@@ -4870,7 +4881,7 @@ module.exports.Scule.classes.QueryTreeIndexSelectionVisitor = function(collectio
         index.index = matches.$index;
         index.range = false;
         
-        var values    = [];
+        var values    = {};
         var backtrack = [];
         for(var i=0; i < node.children.length; i++) {
             var child  = node.children[i];
@@ -4882,7 +4893,7 @@ module.exports.Scule.classes.QueryTreeIndexSelectionVisitor = function(collectio
                 }
                 for(var j=0; j < clauses.length; j++) {
                     if(clauses[j].getSymbol() == '$eq') {
-                        values.push(clauses[j].getFirstChild().getSymbol());
+                        values[symbol] = clauses[j].getFirstChild().getSymbol();
                         backtrack.push({
                             i_index: i,
                             j_index: j,
@@ -4906,6 +4917,8 @@ module.exports.Scule.classes.QueryTreeIndexSelectionVisitor = function(collectio
                 }
             });
         }
+        
+        values = module.exports.Scule.functions.objectValues(module.exports.Scule.functions.sortObjectKeys(values));
         
         node.children.unshift(index);
         index.args = values.join(',');
