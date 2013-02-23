@@ -9156,7 +9156,9 @@ if (typeof console == 'undefined') {
                     index.remove(o);
                 });
             });
-            callback(results);
+            if (callback) {
+                callback(results);
+            }
             return results;
         };
 

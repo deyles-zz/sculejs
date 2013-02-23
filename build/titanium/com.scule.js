@@ -8325,7 +8325,9 @@ module.exports.Scule.classes.Collection = function(name) {
                 index.remove(o);
             });
         });
-        callback(results);
+        if (callback) {
+            callback(results);
+        }
         return results;
     };
     
