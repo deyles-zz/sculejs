@@ -203,6 +203,152 @@
     
 }());
 
+(function() {
+   
+    function testBitSetInitializeString() {   
+        var exception = false;
+        try {
+            var bitset = Scule.getBitSet('test');
+        } catch (e) {
+            exception = true;
+        }
+        JSUNIT.assertEquals(true, exception);
+    };
+
+    function testBitSetInitializeNegativeNumber() {   
+        var exception = false;
+        try {
+            var bitset = Scule.getBitSet(-100);
+        } catch (e) {
+            exception = true;
+        }
+        JSUNIT.assertEquals(true, exception);
+    };
+
+    function testBitSetInitializeFloatingPointNumber() {   
+        var exception = false;
+        try {
+            var bitset = Scule.getBitSet(111.030202);
+        } catch (e) {
+            exception = true;
+        }
+        JSUNIT.assertEquals(true, exception);
+    };
+
+    function testBitSetInitialize() {
+        var bitset = Scule.getBitSet(8);
+        JSUNIT.assertEquals(8, bitset.getLength());
+    };
+
+    function testBitSetEmpty() {   
+        var bitset = Scule.getBitSet(1024);
+        for (var i=0; i < bitset.words.length; i++) {
+            JSUNIT.assertEquals(0x00, bitset.words[i]);
+        }
+    };
+
+    function testBitSetSetEverySecondBit() {   
+        var bitset = Scule.getBitSet(10);
+        for (var i=0; i < 10; i++) {
+            if (i%2) {
+                bitset.set(i);
+            }
+        }
+        for (var i=0; i < 10; i++) {
+            if (i%2) {
+                JSUNIT.assertEquals(true, bitset.get(i));
+            } else {
+                JSUNIT.assertEquals(false, bitset.get(i));
+            }
+        }
+    };
+
+    function testBitSetSetRandomBits() {
+        for (var j=0; j < 10000; j++) {
+            var bitset = Scule.getBitSet(90);
+            var string = '';
+            for (var i=0; i < bitset.getLength(); i++) {
+                if (Scule.global.functions.randomFromTo(0, 1) == 1) {
+                    bitset.set(i);
+                    string += '1';
+                } else {
+                    string += '0';
+                }
+            }
+            JSUNIT.assertEquals(string, bitset.toString());
+        }
+    };
+   
+    function testBloomFilterRandomKeys() {
+        for (var j=0; j < 500; j++) {
+            var table  = Scule.getHashTable(2000);
+            var filter = Scule.getBloomFilter(15000);
+            var keys = [];
+            for (var i=0; i < 300; i++) {
+                var key = Math.random().toString(36).substring(5);
+                table.put(key)
+                filter.add(key);
+            }
+            table.getKeys().forEach(function(k) {
+                JSUNIT.assertEquals(true, filter.query(k));
+            });
+            var nkey = Math.random().toString(36).substring(5);
+            while (table.contains(nkey)) {
+                nkey = Math.random().toString(36).substring(5);
+            }
+            JSUNIT.assertEquals(false, filter.query(nkey));
+        }
+    };   
+   
+    function testAtomicCounterInitialize() {   
+        var counter = Scule.getAtomicCounter(999);
+        JSUNIT.assertEquals(counter.getCount(), 999);   
+    };
+
+    function testAtomicCounterIncrement() {   
+        var counter = Scule.getAtomicCounter(1);
+        counter.increment(1);
+        JSUNIT.assertEquals(counter.getCount(), 2);   
+    };
+
+    function testAtomicCounterIncrement2() {   
+        var counter = Scule.getAtomicCounter(1);
+        counter.increment(11);
+        JSUNIT.assertEquals(counter.getCount(), 12);   
+    };
+
+    function testAtomicCounterDecrement() {   
+        var counter = Scule.getAtomicCounter(2);
+        counter.decrement(1);
+        JSUNIT.assertEquals(counter.getCount(), 1);   
+    };
+
+    function testAtomicCounterDecrement2() {   
+        var counter = Scule.getAtomicCounter(12);
+        counter.decrement(6);
+        JSUNIT.assertEquals(counter.getCount(), 6);   
+    };   
+   
+    (function() {
+        JSUNIT.resetTests();
+        JSUNIT.addTest(testBitSetInitializeString);
+        JSUNIT.addTest(testBitSetInitializeNegativeNumber);
+        JSUNIT.addTest(testBitSetInitializeFloatingPointNumber);
+        JSUNIT.addTest(testBitSetInitialize);
+        JSUNIT.addTest(testBitSetEmpty);
+        JSUNIT.addTest(testBitSetSetEverySecondBit);
+        JSUNIT.addTest(testBitSetSetRandomBits);
+        JSUNIT.addTest(testBloomFilterRandomKeys);
+        JSUNIT.addTest(testAtomicCounterInitialize);
+        JSUNIT.addTest(testAtomicCounterIncrement);
+        JSUNIT.addTest(testAtomicCounterIncrement2);
+        JSUNIT.addTest(testAtomicCounterDecrement);
+        JSUNIT.addTest(testAtomicCounterDecrement2);
+        JSUNIT.runTests();
+    }());   
+   
+}());
+
 (function(){
     
     function testBPlusTreeNode() {
@@ -4356,43 +4502,43 @@
         table3.put(14, true);
 
         var program = [
-            [0x1C, [collection]], // scan           0
-            [0x1A, []], // break point              1 
-            [0x23, []], // union                    2
-            [0x1A, []], // break point              3
-            [0x21, []], // store                    4
-            [0x1A, []], // break point              5
-            [0x27, []], // read                     6
-            [0x1A, []], // break point              7
-            [0xC,  ['a', 1]], // eq                 8
-            [0x1A, []], // break point              9
-            [0xD,  ['e', 7]], // ne                 10
-            [0x1A, []], // break point              11
-            [0x07, ['b', 1]], // gt                 12
-            [0x1A, []], // break point              13
-            [0x05, ['b', 3]], // lt                 14
-            [0x1A, []], // break point              15
-            [0x08, ['c', 1]], // gte                16
-            [0x1A, []], // break point              17
-            [0x06, ['c', 4]], // lte                18
-            [0x1A, []], // break point              19
-            [0xA,  ['d', table2]], // in            20
-            [0x1A, []], // break point              21
-            [0xB,  ['d', table3]], // nin           22
-            [0x1A, []], // break point              23
-            [0x09, ['tags', table1]], // all        24
-            [0x1A, []], // break point              25
-            [0xE,  ['tags', 4]], // size            26
-            [0x1A, []], // break point              27
-            [0xF,  ['e', true]], // exists          28
-            [0x1A, []], // break point              29
-            [0x01, [11]], // and                    30
-            [0x1A, []], // break point              31
-            [0x20, []], // shift                    32
-            [0x1A, []], // break point              33
-            [0x25, [36]], // jump                   34
-            [0x26, [6]], // goto                    35
-            [0x00, []] // halt                      36
+        [0x1C, [collection]], // scan           0
+        [0x1A, []], // break point              1 
+        [0x23, []], // union                    2
+        [0x1A, []], // break point              3
+        [0x21, []], // store                    4
+        [0x1A, []], // break point              5
+        [0x27, []], // read                     6
+        [0x1A, []], // break point              7
+        [0xC,  ['a', 1]], // eq                 8
+        [0x1A, []], // break point              9
+        [0xD,  ['e', 7]], // ne                 10
+        [0x1A, []], // break point              11
+        [0x07, ['b', 1]], // gt                 12
+        [0x1A, []], // break point              13
+        [0x05, ['b', 3]], // lt                 14
+        [0x1A, []], // break point              15
+        [0x08, ['c', 1]], // gte                16
+        [0x1A, []], // break point              17
+        [0x06, ['c', 4]], // lte                18
+        [0x1A, []], // break point              19
+        [0xA,  ['d', table2]], // in            20
+        [0x1A, []], // break point              21
+        [0xB,  ['d', table3]], // nin           22
+        [0x1A, []], // break point              23
+        [0x09, ['tags', table1]], // all        24
+        [0x1A, []], // break point              25
+        [0xE,  ['tags', 4]], // size            26
+        [0x1A, []], // break point              27
+        [0xF,  ['e', true]], // exists          28
+        [0x1A, []], // break point              29
+        [0x01, [11]], // and                    30
+        [0x1A, []], // break point              31
+        [0x20, []], // shift                    32
+        [0x1A, []], // break point              33
+        [0x25, [36]], // jump                   34
+        [0x26, [6]], // goto                    35
+        [0x00, []] // halt                      36
         ];
 
         var machine = Scule.getVirtualMachine();
@@ -5457,49 +5603,62 @@
         var timer = Scule.getTimer();
         var collection = Scule.factoryCollection('scule+dummy://unittest');
 
-        collection.ensureBTreeIndex('loc.lat', {order:1000});
-        collection.ensureBTreeIndex('i',       {order:1000});
-        collection.ensureBTreeIndex('n',       {order:1000});    
+        collection.ensureBTreeIndex('loc.lat', {
+            order:1000
+        });
+        collection.ensureBTreeIndex('i',       {
+            order:1000
+        });
+        collection.ensureBTreeIndex('n',       {
+            order:1000
+        });    
 
         collection.clear();    
 
         var k = 0;
         var names = ['Tom', 'Dick', 'Harry', 'John'];
         for(var i=0; i < 10000; i++) {
-                var a = [];
-                var n = i%10;
-                for(var j=0; j < n; j++) {
-                        a.push(j);
+            var a = [];
+            var n = i%10;
+            for(var j=0; j < n; j++) {
+                a.push(j);
+            }
+            var o = {
+                i:i,
+                n:n,
+                s:names[k++],
+                a:a,
+                as:a.length,
+                term: Math.random().toString(36).substring(7),
+                ts:(new Date()).getTime(),
+                foo:['bar','bar2'],
+                o: {
+                    a: i,
+                    b: i+1,
+                    c: i+2,
+                    d: i+3,
+                    e: i+4
+                },
+                loc: {
+                    lng: Scule.global.functions.randomFromTo(-130, 130),
+                    lat: Scule.global.functions.randomFromTo(-130, 130)
                 }
-                var o = {
-                        i:i,
-                        n:n,
-                        s:names[k++],
-                        a:a,
-                        as:a.length,
-                        term: Math.random().toString(36).substring(7),
-                        ts:(new Date()).getTime(),
-                        foo:['bar','bar2'],
-                        o: {
-                                a: i,
-                                b: i+1,
-                                c: i+2,
-                                d: i+3,
-                                e: i+4
-                        },
-                        loc: {
-                                lng: Scule.global.functions.randomFromTo(-130, 130),
-                                lat: Scule.global.functions.randomFromTo(-130, 130)
-                        }
-                };
-                collection.save(o);
-                if(k == 4) {
-                    k = 0;
-                }
+            };
+            collection.save(o);
+            if(k == 4) {
+                k = 0;
+            }
         }
 
         timer.startInterval("collection - {i:{$gte:5000}, n:{$lte:80}}");
-        collection.count({i:{$gte:5000}, n:{$lte:80}}, {}, function(count) {
+        collection.count({
+            i:{
+                $gte:5000
+            }, 
+            n:{
+                $lte:80
+            }
+        }, {}, function(count) {
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -5513,13 +5672,24 @@
         timer.stopInterval();
 
         timer.startInterval("collection - {i:{$gte:5000}, n:{$lte:80}}");
-        collection.count({i:{$gte:5000}, n:{$lte:80}}, {}, function(count) {
+        collection.count({
+            i:{
+                $gte:5000
+            }, 
+            n:{
+                $lte:80
+            }
+        }, {}, function(count) {
             JSUNIT.assertEquals(count, 5000);
         });
         timer.stopInterval();
 
         timer.startInterval("collection - {i:{$in:[1, 2, 3, 4, 5]}}");
-        collection.count({i:{$in:[1, 2, 3, 4, 5]}}, {}, function(count) {
+        collection.count({
+            i:{
+                $in:[1, 2, 3, 4, 5]
+            }
+        }, {}, function(count) {
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -5533,13 +5703,21 @@
         timer.stopInterval();
 
         timer.startInterval("collection - {i:{$in:[1, 2, 3, 4, 5]}}");
-        collection.count({i:{$in:[1, 2, 3, 4, 5]}}, {}, function(count) {
+        collection.count({
+            i:{
+                $in:[1, 2, 3, 4, 5]
+            }
+        }, {}, function(count) {
             JSUNIT.assertEquals(count, 5);
         });
         timer.stopInterval();
 
         timer.startInterval("collection - {s:{$size:3}}");
-        collection.count({s:{$size:3}}, {}, function(count) {
+        collection.count({
+            s:{
+                $size:3
+            }
+        }, {}, function(count) {
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -5553,13 +5731,21 @@
         timer.stopInterval();
 
         timer.startInterval("collection - {s:{$size:3}}");
-        collection.count({s:{$size:3}}, {}, function(count) {
+        collection.count({
+            s:{
+                $size:3
+            }
+        }, {}, function(count) {
             JSUNIT.assertEquals(count, 2500);
         });
         timer.stopInterval();
 
         timer.startInterval("collection - {o:{$size:5}}");
-        collection.count({o:{$size:5}}, {}, function(count) {
+        collection.count({
+            o:{
+                $size:5
+            }
+        }, {}, function(count) {
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -5573,13 +5759,21 @@
         timer.stopInterval();
 
         timer.startInterval("collection - {o:{$size:5}}");
-        collection.count({o:{$size:5}}, {}, function(count) {
+        collection.count({
+            o:{
+                $size:5
+            }
+        }, {}, function(count) {
             JSUNIT.assertEquals(count, 10000);
         });
         timer.stopInterval();
 
         timer.startInterval("collection - {n:{$exists:false}}");
-        collection.count({n:{$exists:false}}, {}, function(count) {
+        collection.count({
+            n:{
+                $exists:false
+            }
+        }, {}, function(count) {
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -5593,13 +5787,21 @@
         timer.stopInterval();
 
         timer.startInterval("collection - {n:{$exists:false}}");
-        collection.count({n:{$exists:false}}, {}, function(count) {
+        collection.count({
+            n:{
+                $exists:false
+            }
+        }, {}, function(count) {
             JSUNIT.assertEquals(count, 0);
         });
         timer.stopInterval();
 
         timer.startInterval("collection - {n:{$exists:true}}");
-        collection.count({n:{$exists:true}}, {}, function(count) {
+        collection.count({
+            n:{
+                $exists:true
+            }
+        }, {}, function(count) {
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -5613,13 +5815,21 @@
         timer.stopInterval();
 
         timer.startInterval("collection - {n:{$exists:true}}");
-        collection.count({n:{$exists:true}}, {}, function(count) {
+        collection.count({
+            n:{
+                $exists:true
+            }
+        }, {}, function(count) {
             JSUNIT.assertEquals(count, 10000);
         });
         timer.stopInterval();
 
         timer.startInterval("collection - {i:{$gte:70}}");
-        collection.count({i:{$gte:70}}, {}, function(count) {
+        collection.count({
+            i:{
+                $gte:70
+            }
+        }, {}, function(count) {
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -5633,13 +5843,19 @@
         timer.stopInterval();
 
         timer.startInterval("collection - {i:{$gte:70}}");
-        collection.count({i:{$gte:70}}, {}, function(count) {
+        collection.count({
+            i:{
+                $gte:70
+            }
+        }, {}, function(count) {
             JSUNIT.assertEquals(count, 9930);
         });
         timer.stopInterval();
 
         timer.startInterval("collection - {s:/^T/}");
-        collection.count({s:/^T/}, {}, function(count) {
+        collection.count({
+            s:/^T/
+        }, {}, function(count) {
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -5653,13 +5869,25 @@
         timer.stopInterval();
 
         timer.startInterval("collection - {s:/^T/}");
-        collection.count({s:/^T/}, {}, function(count) {
+        collection.count({
+            s:/^T/
+        }, {}, function(count) {
             JSUNIT.assertEquals(count, 2500);
         });
         timer.stopInterval();
 
         timer.startInterval("collection - {$or:[{n:{$lt:40}}, {i:{$gt:50}}]}");
-        collection.count({$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {}, function(count) {
+        collection.count({
+            $or:[{
+                n:{
+                    $lt:40
+                }
+            }, {
+                i:{
+                    $gt:50
+                }
+            }]
+        }, {}, function(count) {
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -5673,13 +5901,38 @@
         timer.stopInterval();
 
         timer.startInterval("collection - {$or:[{n:{$lt:40}}, {i:{$gt:50}}]}");
-        collection.count({$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {}, function(count) {
+        collection.count({
+            $or:[{
+                n:{
+                    $lt:40
+                }
+            }, {
+                i:{
+                    $gt:50
+                }
+            }]
+        }, {}, function(count) {
             JSUNIT.assertEquals(count, 10000);
         });
         timer.stopInterval();
 
         timer.startInterval("collection - {$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}");
-        collection.count({$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}, function(count) {
+        collection.count({
+            $or:[{
+                n:{
+                    $lt:40
+                }
+            }, {
+                i:{
+                    $gt:50
+                }
+            }]
+        }, {
+            $sort:{
+                i:-1
+            }, 
+            $limit:30
+        }, function(count) {
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -5693,13 +5946,37 @@
         timer.stopInterval();
 
         timer.startInterval("collection - {$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}");
-        collection.count({$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}, function(count) {
+        collection.count({
+            $or:[{
+                n:{
+                    $lt:40
+                }
+            }, {
+                i:{
+                    $gt:50
+                }
+            }]
+        }, {
+            $sort:{
+                i:-1
+            }, 
+            $limit:30
+        }, function(count) {
             JSUNIT.assertEquals(count, 10000);
         });
         timer.stopInterval();
 
         timer.startInterval("collection - {i:{$lte:90}}, {$set:{n:10, s:'Steve'}}");
-        collection.update({i:{$lte:90}}, {$set:{n:10, s:'Steve'}}, {}, false, function(count) {
+        collection.update({
+            i:{
+                $lte:90
+            }
+        }, {
+            $set:{
+                n:10, 
+                s:'Steve'
+            }
+        }, {}, false, function(count) {
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -5713,7 +5990,13 @@
         timer.stopInterval();
 
         timer.startInterval("collection - {i:10}, {$push:{foo:'bar3'}}");
-        collection.update({i:10}, {$push:{foo:'bar3'}}, {}, true, function(count) {
+        collection.update({
+            i:10
+        }, {
+            $push:{
+                foo:'bar3'
+            }
+        }, {}, true, function(count) {
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -5727,7 +6010,13 @@
         timer.stopInterval();
 
         timer.startInterval("collection - {i:10}, {$pushAll:{foo:['bar3', 'bar4']}}");
-        collection.update({i:10}, {$pushAll:{foo:['bar3', 'bar4']}}, {}, false, function(count) {
+        collection.update({
+            i:10
+        }, {
+            $pushAll:{
+                foo:['bar3', 'bar4']
+            }
+        }, {}, false, function(count) {
             JSUNIT.assertEquals(count.length, 1);
         });
         timer.stopInterval();

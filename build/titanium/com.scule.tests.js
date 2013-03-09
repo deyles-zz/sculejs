@@ -176,6 +176,152 @@ var sfunc  = scule.Scule.functions;
     
 }());
 
+(function() {
+   
+    function testBitSetInitializeString() {   
+        var exception = false;
+        try {
+            var bitset = scule.getBitSet('test');
+        } catch (e) {
+            exception = true;
+        }
+        jsunit.assertEquals(true, exception);
+    };
+
+    function testBitSetInitializeNegativeNumber() {   
+        var exception = false;
+        try {
+            var bitset = scule.getBitSet(-100);
+        } catch (e) {
+            exception = true;
+        }
+        jsunit.assertEquals(true, exception);
+    };
+
+    function testBitSetInitializeFloatingPointNumber() {   
+        var exception = false;
+        try {
+            var bitset = scule.getBitSet(111.030202);
+        } catch (e) {
+            exception = true;
+        }
+        jsunit.assertEquals(true, exception);
+    };
+
+    function testBitSetInitialize() {
+        var bitset = scule.getBitSet(8);
+        jsunit.assertEquals(8, bitset.getLength());
+    };
+
+    function testBitSetEmpty() {   
+        var bitset = scule.getBitSet(1024);
+        for (var i=0; i < bitset.words.length; i++) {
+            jsunit.assertEquals(0x00, bitset.words[i]);
+        }
+    };
+
+    function testBitSetSetEverySecondBit() {   
+        var bitset = scule.getBitSet(10);
+        for (var i=0; i < 10; i++) {
+            if (i%2) {
+                bitset.set(i);
+            }
+        }
+        for (var i=0; i < 10; i++) {
+            if (i%2) {
+                jsunit.assertEquals(true, bitset.get(i));
+            } else {
+                jsunit.assertEquals(false, bitset.get(i));
+            }
+        }
+    };
+
+    function testBitSetSetRandomBits() {
+        for (var j=0; j < 10000; j++) {
+            var bitset = scule.getBitSet(90);
+            var string = '';
+            for (var i=0; i < bitset.getLength(); i++) {
+                if (sfunc.randomFromTo(0, 1) == 1) {
+                    bitset.set(i);
+                    string += '1';
+                } else {
+                    string += '0';
+                }
+            }
+            jsunit.assertEquals(string, bitset.toString());
+        }
+    };
+   
+    function testBloomFilterRandomKeys() {
+        for (var j=0; j < 500; j++) {
+            var table  = scule.getHashTable(2000);
+            var filter = scule.getBloomFilter(15000);
+            var keys = [];
+            for (var i=0; i < 300; i++) {
+                var key = Math.random().toString(36).substring(5);
+                table.put(key)
+                filter.add(key);
+            }
+            table.getKeys().forEach(function(k) {
+                jsunit.assertEquals(true, filter.query(k));
+            });
+            var nkey = Math.random().toString(36).substring(5);
+            while (table.contains(nkey)) {
+                nkey = Math.random().toString(36).substring(5);
+            }
+            jsunit.assertEquals(false, filter.query(nkey));
+        }
+    };   
+   
+    function testAtomicCounterInitialize() {   
+        var counter = scule.getAtomicCounter(999);
+        jsunit.assertEquals(counter.getCount(), 999);   
+    };
+
+    function testAtomicCounterIncrement() {   
+        var counter = scule.getAtomicCounter(1);
+        counter.increment(1);
+        jsunit.assertEquals(counter.getCount(), 2);   
+    };
+
+    function testAtomicCounterIncrement2() {   
+        var counter = scule.getAtomicCounter(1);
+        counter.increment(11);
+        jsunit.assertEquals(counter.getCount(), 12);   
+    };
+
+    function testAtomicCounterDecrement() {   
+        var counter = scule.getAtomicCounter(2);
+        counter.decrement(1);
+        jsunit.assertEquals(counter.getCount(), 1);   
+    };
+
+    function testAtomicCounterDecrement2() {   
+        var counter = scule.getAtomicCounter(12);
+        counter.decrement(6);
+        jsunit.assertEquals(counter.getCount(), 6);   
+    };   
+   
+    (function() {
+        jsunit.resetTests();
+        jsunit.addTest(testBitSetInitializeString);
+        jsunit.addTest(testBitSetInitializeNegativeNumber);
+        jsunit.addTest(testBitSetInitializeFloatingPointNumber);
+        jsunit.addTest(testBitSetInitialize);
+        jsunit.addTest(testBitSetEmpty);
+        jsunit.addTest(testBitSetSetEverySecondBit);
+        jsunit.addTest(testBitSetSetRandomBits);
+        jsunit.addTest(testBloomFilterRandomKeys);
+        jsunit.addTest(testAtomicCounterInitialize);
+        jsunit.addTest(testAtomicCounterIncrement);
+        jsunit.addTest(testAtomicCounterIncrement2);
+        jsunit.addTest(testAtomicCounterDecrement);
+        jsunit.addTest(testAtomicCounterDecrement2);
+        jsunit.runTests();
+    }());   
+   
+}());
+
 (function(){
     
     function testBPlusTreeNode() {

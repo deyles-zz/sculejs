@@ -2323,6 +2323,81 @@ module.exports.Scule.classes.Queue = function() {
 
 };
 
+module.exports.Scule.variables.fnv_hash = function (key, size) {
+    var hash  = 2166136261;
+    var prime = 16777619;
+    var len   = key.length;
+    for (var i=0; i < len; i++) {
+        hash = (hash ^ key.charCodeAt(i)) * prime;
+    }
+    hash += hash << 13;
+    hash ^= hash >> 7;
+    hash += hash << 3;
+    hash ^= hash >> 17;
+    hash += hash << 5;
+    if (hash < 0) {
+        hash = hash * -1;
+    }
+    return hash % size;
+};
+
+/**
+ * Hashes the provided string key to an integer value in the table range (djb2)
+ * @private
+ * @param {String} key the key to hash
+ * @returns {Number}
+ */
+module.exports.Scule.variables.djb2_hash = function (key, size) {
+    var hash = 5381;
+    var len  = key.length;
+    var i    = 0;
+    for (i = 0; i < len; i++) {
+        hash = ((hash << 5) + hash) + key.charCodeAt(i);
+    }
+    if (hash < 0) {
+        hash = hash * -1;
+    }
+    return hash % size;
+};
+
+/**
+ * Hashes the provided string key to an integer value in the table range (jooat)
+ * @private
+ * @param {String} key the key to hash
+ * @returns {Number}
+ */
+module.exports.Scule.variables.joaat_hash = function (key, size) {
+    var hash = 0;
+    var len  = key.length;
+    var i = 0;
+    for (i = 0; i < len; i++) {
+        hash += key.charCodeAt(i);
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
+    }
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+    if (hash < 0) {
+        hash = hash * -1;
+    }
+    return hash % size;
+
+};
+
+module.exports.Scule.variables.elf_hash = function (key, size) {
+    var h = 0, g;
+    for (var i=0; i < key.length; i++)
+    {
+        h = (h << 4) + key.charCodeAt(i);
+        if (g = h & 0xF0000000) {
+            h ^= g >> 24;
+        }
+        h &= ~g;
+    }
+    return h % size;        
+};
+
 /**
  * A simple Hash Table implementation in JavaScript - internally uses the joaat hashing algorithm.
  * The data structure resizes itself geometrically (size = size * 2) once the load factor surpases 0.7.
@@ -2363,51 +2438,7 @@ module.exports.Scule.classes.HashMap = function(size) {
      */    
     this.table   = [];
 
-    /**
-     * Hashes the provided string key to an integer value in the table range (djb2)
-     * @private
-     * @param {String} key the key to hash
-     * @returns {Number}
-     */
-    this.djb2_hash = function(key) {
-        var hash = 5381;
-        var len  = key.length;
-        var i    = 0;
-        for(; i < len; i++) {
-            hash = ((hash << 5) + hash) + key.charCodeAt(i);
-        }
-        if(hash < 0) {
-            hash = hash * -1;
-        }
-        return hash%this.size;            
-    };
-
-    /**
-     * Hashes the provided string key to an integer value in the table range (jooat)
-     * @private
-     * @param {String} key the key to hash
-     * @returns {Number}
-     */
-    this.joaat_hash = function(key) {
-        var hash = 0;
-        var len  = key.length;
-        var i    = 0;
-        for (; i < len; i++)
-        {
-            hash += key.charCodeAt(i);
-            hash += (hash << 10);
-            hash ^= (hash >> 6);
-        }
-        hash += (hash << 3);
-        hash ^= (hash >> 11);
-        hash += (hash << 15);
-        if(hash < 0) {
-            hash = hash * -1;
-        }
-        return hash%this.size;        
-    };
-
-    this.hash = this.joaat_hash;
+    this.hash = module.exports.Scule.variables.joaat_hash;
 
     /**
      * Rebuilds the table
@@ -2450,7 +2481,7 @@ module.exports.Scule.classes.HashMap = function(size) {
      * @returns {Boolean}
      */
     this.put = function(key, value) {
-        var k = this.hash(key);
+        var k = this.hash(key, this.size);
         var b = this.bucket(k);
         var r = b.insert(key, value);
         if(r) {
@@ -2470,7 +2501,7 @@ module.exports.Scule.classes.HashMap = function(size) {
      * @returns {Boolean}
      */
     this.contains = function(key) {
-        var k = this.hash(key);
+        var k = this.hash(key, this.size);
         var b = this.bucket(k);
         return (b.search(key) !== null);        
     };
@@ -2483,7 +2514,7 @@ module.exports.Scule.classes.HashMap = function(size) {
      * @returns {Mixed}
      */
     this.get = function(key) {
-        var k = this.hash(key);
+        var k = this.hash(key, this.size);
         var b = this.bucket(k);
         var v = b.search(key);
         if(v == null) {
@@ -2509,7 +2540,7 @@ module.exports.Scule.classes.HashMap = function(size) {
      * @returns {Boolean}
      */
     this.remove = function(key) {
-        var k = this.hash(key);
+        var k = this.hash(key, this.size);
         var b = this.bucket(k);
         if(b.remove(key)) {
             this.length--;
@@ -2604,6 +2635,251 @@ module.exports.Scule.classes.HashMap = function(size) {
         return array;
     };
 
+};
+
+/**
+ * Represents a counter
+ * @public
+ * @constructor
+ * @class {AtomicCounter}
+ * @param {Integer} initial the initial value for the counter - defaults to 0
+ * @returns {Void}
+ */
+module.exports.Scule.classes.AtomicCounter = function(initial) {
+
+    if (initial === undefined) {
+        initial = 0;
+    }
+
+    if (!module.exports.Scule.functions.isInteger(initial)) {
+        throw "Unable to initialize counter with non-integer value";
+    }
+
+    this.count = initial;
+
+    /**
+     * Increments the counter using the provided integer value. If not value is
+     * provided the counter is incremented by 1
+     * @public
+     * @param {Integer} the amount to increment the counter by
+     * @returns {Integer}
+     */
+    this.increment = function(value) {
+        if (value === undefined) {
+            value = 1;
+        }
+        if (!module.exports.Scule.functions.isInteger(value)) {
+            throw "Unable to increment counter with non-integer value";
+        }
+        this.count += value;
+        return this.count;
+    };
+
+    /**
+     * Decrements the counter using the provided integer value. If not value is
+     * provided the counter is Decremented by 1
+     * @public
+     * @param {Integer} the amount to decrement the counter by
+     * @returns {Integer}
+     */
+    this.decrement = function(value) {
+        if (value === undefined) {
+            value = 1;
+        }
+        if (!module.exports.Scule.functions.isInteger(value)) {
+            throw "Unable to decrement counter with non-integer value";
+        }
+        this.count -= value;
+        return this.count;        
+    };
+    
+    /**
+     * Returns the value of the counter
+     * @public
+     * @returns {Integer}
+     */
+    this.getCount = function() {
+        return this.count;
+    };
+
+};
+
+/**
+ * Represents a bit set (bit array)
+ * @public
+ * @see http://stackoverflow.com/questions/1436438/how-do-you-set-clear-and-toggle-a-single-bit-in-javascript
+ * @constructor
+ * @class {BitSet}
+ * @param {Integer} capacity the capacity of the bit set
+ * @returns {Void}
+ */
+module.exports.Scule.classes.BitSet = function(capacity) {
+  
+    if (capacity === undefined || !module.exports.Scule.functions.isInteger(capacity) || capacity <= 0) {
+        throw "Unable to initialize bitset with non-integer capacity";
+    }
+
+    this.capacity = capacity;
+    this.words = null;
+    
+    /**
+     * Fills the word array with zero bits
+     * @public
+     * @returns {void}
+     */    
+    this.zeroFill = function() {
+        this.words = [];
+        var b = Math.ceil(this.capacity / 32);
+        for (var i=0; i <= b; i++) {
+            this.words[i] = 0x00;
+        }
+    };
+    
+    /**
+     * Converts the provided bit address to an array and bit offset
+     * @public
+     * @returns {Object}
+     */    
+    this.indexToAddress = function(index) {
+        if (index < 0 || index >= this.capacity) {
+            throw "Index out of bounds";
+        }
+        if (index < 32) {
+            return {
+                addr:0, 
+                offs:index
+            };
+        }
+        var addr = Math.floor(index/32);
+        var offs = index%32;
+        return {
+            addr:addr, 
+            offs:offs
+        };
+    };
+    
+    /**
+     * Returns state of the bit at the given offset
+     * @public
+     * @param {Integer} the offset of the bit to check (e.g. 128 for the 128th bit)
+     * @returns {Boolean}
+     */    
+    this.get = function(index) {
+        var o = this.indexToAddress(index);
+        return ((this.words[o.addr] & (1 << o.offs)) != 0);
+    };
+
+    /**
+     * Sets the bit at the given offset to "on"
+     * @public
+     * @param {Integer} the offset of the bit to check (e.g. 128 for the 128th bit)
+     * @returns {Boolean}
+     */    
+    this.set = function(index) {
+        var o = this.indexToAddress(index);
+        this.words[o.addr] |= 0x01 << o.offs;
+    };
+
+    /**
+     * Sets the bit at the given offset to "off"
+     * @public
+     * @param {Integer} the offset of the bit to check (e.g. 128 for the 128th bit)
+     * @returns {Boolean}
+     */    
+    this.clear = function(index) {
+        var o = this.indexToAddress(index);
+        this.words[o.addr] &= ~(0x01 << o.offs);
+    };
+
+    /**
+     * Returns the bit capacity of the bit set
+     * @public
+     * @returns {Integer}
+     */
+    this.getLength = function() {
+        return this.capacity;
+    };
+
+    /**
+     * Returns a string representation of the bit set - e.g. 1 = 1000000
+     * @public
+     * @returns {String}
+     */
+    this.toString = function() {
+        var string = '';
+        for (var i=0; i < this.capacity; i++) {
+            string += (this.get(i) ? 1 : 0);
+        }
+        return string;
+    };
+
+    this.zeroFill();
+
+};
+
+/**
+ * Represents a bloom filter
+ * @public
+ * @see http://en.wikipedia.org/wiki/Bloom_Filter
+ * @constructor
+ * @class {BloomFilter}
+ * @extends {BitSet}
+ * @param {Integer} m capacity the capacity of the bit set
+ * @param {Integer} k the number of hash functions to implement
+ * @returns {Void}
+ */
+module.exports.Scule.classes.BloomFilter = function(m, k) {
+        
+    if (m === undefined || !module.exports.Scule.functions.isInteger(m) || m <= 0) {
+        throw "Unable to initialize bloom filter with non-integer m";
+    }    
+
+    if (k === undefined || !module.exports.Scule.functions.isInteger(k) || k <= 0) {
+        k = Math.floor(m/Math.ceil(m/3));
+    }    
+
+    module.exports.Scule.classes.BitSet.call(this, m);
+    
+    this.k = k;
+    this.f = [];
+    
+    for (var i=0; i < this.k; i++) {
+        this.f.push([
+            module.exports.Scule.functions.randomFromTo(0, 999999),
+            module.exports.Scule.functions.randomFromTo(0, 999999)
+            ]);
+    }
+
+    this.hash = function(i, key, capacity) {
+        return module.exports.Scule.variables.fnv_hash(this.f[i][0] + key + this.f[i][1], capacity);
+    };
+
+    /**
+     * Adds a key to the filter
+     * @param {String} the key to hash to a bit position in the filter
+     * @returns {Void}
+     */
+    this.add = function(key) {
+        for (var i=0; i < this.k; i++) {
+            this.set(this.hash(i, key, this.capacity));
+        }
+    };
+
+    /**
+     * Queries to determine the state of the bit corresponding to the hash
+     * for the given key
+     * @param {String} the key to hash to a bit position in the filter
+     * @returns {Boolean}
+     */
+    this.query = function(key) {
+        for (var i=0; i < this.k; i++) {
+            if (!this.get(this.hash(i, key, this.capacity))) {
+                return false;
+            }
+        }
+        return true;
+    };
+    
 };
 
 /**
@@ -9042,4 +9318,31 @@ module.exports.getBinarySearchTreeNode = function(key, data) {
  */
 module.exports.getBinarySearchTree = function() {
     return new module.exports.Scule.classes.BinarySearchTree();
+};
+
+/**
+ * Returns an instance of the {AtomicCounter} class
+ * @param {Integer} initial
+ * @returns {AtomicCounter}
+ */
+module.exports.getAtomicCounter = function(initial) {
+    return new module.exports.Scule.classes.AtomicCounter(initial);
+};
+
+/**
+ * Returns an instance of the {BitSet} class
+ * @param {Integer} capacity
+ * @returns {BitSet}
+ */
+module.exports.getBitSet = function(capacity) {
+    return new module.exports.Scule.classes.BitSet(capacity);
+};
+
+/**
+ * Returns an instance of the {BloomFilter} class
+ * @param {Integer} capacity
+ * @returns {BloomFilter}
+ */
+module.exports.getBloomFilter = function(capacity) {
+    return new module.exports.Scule.classes.BloomFilter(capacity);
 };

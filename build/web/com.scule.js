@@ -107,6 +107,7 @@ if (typeof console == 'undefined') {
     Scule.registerNamespace('datastructures', {
         constants:Scule.require('global').constants,
         classes:{},
+        variables: {},
         $f:Scule.require('global').functions
     });
 
@@ -1221,6 +1222,80 @@ if (typeof console == 'undefined') {
 (function() {
 
     "use strict";
+
+    Scule.datastructures.variables.fnv_hash = function (key, size) {
+        var hash  = 2166136261;
+        var prime = 16777619;
+        var len   = key.length;
+        for (var i=0; i < len; i++) {
+            hash = (hash ^ key.charCodeAt(i)) * prime;
+        }
+        hash += hash << 13;
+        hash ^= hash >> 7;
+        hash += hash << 3;
+        hash ^= hash >> 17;
+        hash += hash << 5;
+        if (hash < 0) {
+            hash = hash * -1;
+        }
+        return hash % size;
+    };
+
+    /**
+     * Hashes the provided string key to an integer value in the table range (djb2)
+     * @private
+     * @param {String} key the key to hash
+     * @returns {Number}
+     */
+    Scule.datastructures.variables.djb2_hash = function (key, size) {
+        var hash = 5381;
+        var len  = key.length;
+        var i    = 0;
+        for (i = 0; i < len; i++) {
+            hash = ((hash << 5) + hash) + key.charCodeAt(i);
+        }
+        if (hash < 0) {
+            hash = hash * -1;
+        }
+        return hash % size;
+    };
+
+    /**
+     * Hashes the provided string key to an integer value in the table range (jooat)
+     * @private
+     * @param {String} key the key to hash
+     * @returns {Number}
+     */
+    Scule.datastructures.variables.joaat_hash = function (key, size) {
+        var hash = 0;
+        var len  = key.length;
+        var i = 0;
+        for (i = 0; i < len; i++) {
+            hash += key.charCodeAt(i);
+            hash += (hash << 10);
+            hash ^= (hash >> 6);
+        }
+        hash += (hash << 3);
+        hash ^= (hash >> 11);
+        hash += (hash << 15);
+        if (hash < 0) {
+            hash = hash * -1;
+        }
+        return hash % size;
+    };
+
+    Scule.datastructures.variables.elf_hash = function (key, size) {
+        var h = 0, g;
+        for (var i=0; i < key.length; i++)
+        {
+            h = (h << 4) + key.charCodeAt(i);
+            if (g = h & 0xF0000000) {
+                h ^= g >> 24;
+            }
+            h &= ~g;
+        }
+        return h % size;        
+    };
 
     /**
      * Represents a singly linked list. The list is terminated by a null pointer.
@@ -2746,51 +2821,7 @@ if (typeof console == 'undefined') {
          */    
         this.table   = [];
 
-        /**
-         * Hashes the provided string key to an integer value in the table range (djb2)
-         * @private
-         * @param {String} key the key to hash
-         * @returns {Number}
-         */
-        this.djb2_hash = function(key) {
-            var hash = 5381;
-            var len  = key.length;
-            var i    = 0;
-            for (; i < len; i++) {
-                hash = ((hash << 5) + hash) + key.charCodeAt(i);
-            }
-            if (hash < 0) {
-                hash = hash * -1;
-            }
-            return hash%this.size;            
-        };
-
-        /**
-         * Hashes the provided string key to an integer value in the table range (jooat)
-         * @private
-         * @param {String} key the key to hash
-         * @returns {Number}
-         */
-        this.joaat_hash = function(key) {
-            var hash = 0;
-            var len  = key.length;
-            var i    = 0;
-            for (; i < len; i++)
-            {
-                hash += key.charCodeAt(i);
-                hash += (hash << 10);
-                hash ^= (hash >> 6);
-            }
-            hash += (hash << 3);
-            hash ^= (hash >> 11);
-            hash += (hash << 15);
-            if (hash < 0) {
-                hash = hash * -1;
-            }
-            return hash%this.size;        
-        };
-
-        this.hash = this.joaat_hash;
+        this.hash = Scule.datastructures.variables.djb2_hash;
 
         /**
          * Rebuilds the table
@@ -2833,7 +2864,7 @@ if (typeof console == 'undefined') {
          * @returns {Boolean}
          */
         this.put = function(key, value) {
-            var k = this.hash(key);
+            var k = this.hash(key, this.size);
             var b = this.bucket(k);
             var r = b.insert(key, value);
             if (r) {
@@ -2853,7 +2884,7 @@ if (typeof console == 'undefined') {
          * @returns {Boolean}
          */
         this.contains = function(key) {
-            var k = this.hash(key);
+            var k = this.hash(key, this.size);
             var b = this.bucket(k);
             return (b.search(key) !== null);        
         };
@@ -2866,7 +2897,7 @@ if (typeof console == 'undefined') {
          * @returns {Mixed}
          */
         this.get = function(key) {
-            var k = this.hash(key);
+            var k = this.hash(key, this.size);
             var b = this.bucket(k);
             var v = b.search(key);
             if (v === null) {
@@ -2892,7 +2923,7 @@ if (typeof console == 'undefined') {
          * @returns {Boolean}
          */
         this.remove = function(key) {
-            var k = this.hash(key);
+            var k = this.hash(key, this.size);
             var b = this.bucket(k);
             if (b.remove(key)) {
                 this.length--;
@@ -4348,6 +4379,73 @@ if (typeof console == 'undefined') {
     };
 
     /**
+     * Represents a counter
+     * @public
+     * @constructor
+     * @class {AtomicCounter}
+     * @param {Integer} initial the initial value for the counter - defaults to 0
+     * @returns {Void}
+     */
+    Scule.datastructures.classes.AtomicCounter = function(initial) {
+
+        if (initial === undefined) {
+            initial = 0;
+        }
+
+        if (!Scule.global.functions.isInteger(initial)) {
+            throw "Unable to initialize counter with non-integer value";
+        }
+
+        this.count = initial;
+
+        /**
+     * Increments the counter using the provided integer value. If not value is
+     * provided the counter is incremented by 1
+     * @public
+     * @param {Integer} the amount to increment the counter by
+     * @returns {Integer}
+     */
+        this.increment = function(value) {
+            if (value === undefined) {
+                value = 1;
+            }
+            if (!Scule.global.functions.isInteger(value)) {
+                throw "Unable to increment counter with non-integer value";
+            }
+            this.count += value;
+            return this.count;
+        };
+
+        /**
+     * Decrements the counter using the provided integer value. If not value is
+     * provided the counter is Decremented by 1
+     * @public
+     * @param {Integer} the amount to decrement the counter by
+     * @returns {Integer}
+     */
+        this.decrement = function(value) {
+            if (value === undefined) {
+                value = 1;
+            }
+            if (!Scule.global.functions.isInteger(value)) {
+                throw "Unable to decrement counter with non-integer value";
+            }
+            this.count -= value;
+            return this.count;        
+        };
+    
+        /**
+     * Returns the value of the counter
+     * @public
+     * @returns {Integer}
+     */
+        this.getCount = function() {
+            return this.count;
+        };
+
+    };
+
+    /**
      * Represents a binary search tree
      * @public
      * @constructor
@@ -4522,6 +4620,251 @@ if (typeof console == 'undefined') {
     };
 
     /**
+     * Represents a bit set (bit array)
+     * @public
+     * @see http://stackoverflow.com/questions/1436438/how-do-you-set-clear-and-toggle-a-single-bit-in-javascript
+     * @constructor
+     * @class {BitSet}
+     * @param {Integer} capacity the capacity of the bit set
+     * @returns {Void}
+     */
+    Scule.datastructures.classes.BitSet = function(capacity) {
+  
+        if (capacity === undefined || !Scule.global.functions.isInteger(capacity) || capacity <= 0) {
+            throw "Unable to initialize bitset with non-integer capacity";
+        }
+
+        this.capacity = capacity;
+        this.words = null;
+    
+        /**
+         * Fills the word array with zero bits
+         * @public
+         * @returns {void}
+         */    
+        this.zeroFill = function() {
+            this.words = [];
+            var b = Math.ceil(this.capacity / 32);
+            for (var i=0; i <= b; i++) {
+                this.words[i] = 0x00;
+            }
+        };
+    
+        /**
+         * Converts the provided bit address to an array and bit offset
+         * @public
+         * @returns {Object}
+         */    
+        this.indexToAddress = function(index) {
+            if (index < 0 || index >= this.capacity) {
+                throw "Index out of bounds";
+            }
+            if (index < 32) {
+                return {
+                    addr:0, 
+                    offs:index
+                };
+            }
+            var addr = Math.floor(index/32);
+            var offs = index%32;
+            return {
+                addr:addr, 
+                offs:offs
+            };
+        };
+    
+        /**
+         * Returns state of the bit at the given offset
+         * @public
+         * @param {Integer} the offset of the bit to check (e.g. 128 for the 128th bit)
+         * @returns {Boolean}
+         */    
+        this.get = function(index) {
+            var o = this.indexToAddress(index);
+            return ((this.words[o.addr] & (1 << o.offs)) != 0);
+        };
+
+        /**
+         * Sets the bit at the given offset to "on"
+         * @public
+         * @param {Integer} the offset of the bit to check (e.g. 128 for the 128th bit)
+         * @returns {Boolean}
+         */    
+        this.set = function(index) {
+            var o = this.indexToAddress(index);
+            this.words[o.addr] |= 0x01 << o.offs;
+        };
+
+        /**
+         * Sets the bit at the given offset to "off"
+         * @public
+         * @param {Integer} the offset of the bit to check (e.g. 128 for the 128th bit)
+         * @returns {Boolean}
+         */    
+        this.clear = function(index) {
+            var o = this.indexToAddress(index);
+            this.words[o.addr] &= ~(0x01 << o.offs);
+        };
+
+        /**
+         * Returns the bit capacity of the bit set
+         * @public
+         * @returns {Integer}
+         */
+        this.getLength = function() {
+            return this.capacity;
+        };
+
+        /**
+         * Returns a string representation of the bit set - e.g. 1 = 1000000
+         * @public
+         * @returns {String}
+         */
+        this.toString = function() {
+            var string = '';
+            for (var i=0; i < this.capacity; i++) {
+                string += (this.get(i) ? 1 : 0);
+            }
+            return string;
+        };
+
+        this.zeroFill();
+
+    };
+
+    /**
+     * Represents a bloom filter
+     * @public
+     * @see http://en.wikipedia.org/wiki/Bloom_Filter
+     * @constructor
+     * @class {BloomFilter}
+     * @extends {BitSet}
+     * @param {Integer} m capacity the capacity of the bit set
+     * @param {Integer} k the number of hash functions to implement
+     * @returns {Void}
+     */
+    Scule.datastructures.classes.BloomFilter = function(m, k) {
+        
+        if (m === undefined || !Scule.global.functions.isInteger(m) || m <= 0) {
+            throw "Unable to initialize bloom filter with non-integer m";
+        }    
+
+        if (k === undefined || !Scule.global.functions.isInteger(k) || k <= 0) {
+            k = Math.floor(m/Math.ceil(m/3));
+        }    
+
+        Scule.datastructures.classes.BitSet.call(this, m);
+    
+        this.k = k;
+        this.f = [];
+    
+        for (var i=0; i < this.k; i++) {
+            this.f.push([
+                Scule.global.functions.randomFromTo(0, 999999),
+                Scule.global.functions.randomFromTo(0, 999999)
+                ]);
+        }
+
+        this.hash = function(i, key, capacity) {
+            return Scule.datastructures.variables.fnv_hash(this.f[i][0] + key + this.f[i][1], capacity);
+        };
+
+        /**
+         * Adds a key to the filter
+         * @param {String} the key to hash to a bit position in the filter
+         * @returns {Void}
+         */
+        this.add = function(key) {
+            for (var i=0; i < this.k; i++) {
+                this.set(this.hash(i, key, this.capacity));
+            }
+        };
+
+        /**
+         * Queries to determine the state of the bit corresponding to the hash
+         * for the given key
+         * @param {String} the key to hash to a bit position in the filter
+         * @returns {Boolean}
+         */
+        this.query = function(key) {
+            for (var i=0; i < this.k; i++) {
+                if (!this.get(this.hash(i, key, this.capacity))) {
+                    return false;
+                }
+            }
+            return true;
+        };
+    
+    };
+
+    /**
+     * Represents a counter
+     * @public
+     * @constructor
+     * @class {AtomicCounter}
+     * @param {Integer} initial the initial value for the counter - defaults to 0
+     * @returns {Void}
+     */
+    Scule.datastructures.classes.AtomicCounter = function(initial) {
+
+        if (initial === undefined) {
+            initial = 0;
+        }
+
+        if (!Scule.global.functions.isInteger(initial)) {
+            throw "Unable to initialize counter with non-integer value";
+        }
+
+        this.count = initial;
+
+        /**
+         * Increments the counter using the provided integer value. If not value is
+         * provided the counter is incremented by 1
+         * @public
+         * @param {Integer} the amount to increment the counter by
+         * @returns {Integer}
+         */
+        this.increment = function(value) {
+            if (value === undefined) {
+                value = 1;
+            }
+            if (!Scule.global.functions.isInteger(value)) {
+                throw "Unable to increment counter with non-integer value";
+            }
+            this.count += value;
+            return this.count;
+        };
+
+        /**
+         * Decrements the counter using the provided integer value. If not value is
+         * provided the counter is Decremented by 1
+         * @public
+         * @param {Integer} the amount to decrement the counter by
+         * @returns {Integer}
+         */
+        this.decrement = function(value) {
+            if (value === undefined) {
+                value = 1;
+            }
+            if (!Scule.global.functions.isInteger(value)) {
+                throw "Unable to decrement counter with non-integer value";
+            }
+            this.count -= value;
+            return this.count;        
+        };
+    
+        /**
+         * Returns the value of the counter
+         * @public
+         * @returns {Integer}
+         */
+        this.getCount = function() {
+            return this.count;
+        };
+
+    };
+
+    /**
      * Returns an instance of the {LinkedList} class
      * @returns {LinkedList}
      */
@@ -4651,6 +4994,33 @@ if (typeof console == 'undefined') {
     Scule.getBinarySearchTree = function() {
         return new Scule.datastructures.classes.BinarySearchTree();
     };
+    
+    /**
+     * Returns an instance of the {AtomicCounter} class
+     * @param {Integer} initial
+     * @returns {AtomicCounter}
+     */
+    Scule.getAtomicCounter = function(initial) {
+        return new Scule.datastructures.classes.AtomicCounter(initial);
+    };
+
+    /**
+     * Returns an instance of the {BitSet} class
+     * @param {Integer} capacity
+     * @returns {BitSet}
+     */
+    Scule.getBitSet = function(capacity) {
+        return new Scule.datastructures.classes.BitSet(capacity);
+    };
+
+    /**
+     * Returns an instance of the {BloomFilter} class
+     * @param {Integer} capacity
+     * @returns {BloomFilter}
+     */
+    Scule.getBloomFilter = function(capacity) {
+        return new Scule.datastructures.classes.BloomFilter(capacity);
+    };    
 
 }());
 

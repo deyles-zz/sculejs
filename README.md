@@ -26,6 +26,7 @@ Data structures currently included in *SculeJS* are:
 * [Hash Table](http://en.wikipedia.org/wiki/Hash_Table "Hash Table")
 * [Binary Search Tree](http://en.wikipedia.org/wiki/Binary_Search_Tree "Binary Search Tree")
 * [B+ Tree](http://en.wikipedia.org/wiki/B%2B_tree "B+ Tree")
+* [Bloom Filter](http://en.wikipedia.org/wiki/Bloom_Filter "Bloom Filter")
 * [Linked List](http://en.wikipedia.org/wiki/Linked_List "Linked List")
 * [Doubly Linked List](http://en.wikipedia.org/wiki/Linked_List#Doubly_linked_list "Doubly Linked List")
 * [Caching Linked List](http://en.wikipedia.org/wiki/Linked_List "Caching Linked List")
@@ -33,6 +34,8 @@ Data structures currently included in *SculeJS* are:
 * [LIFO Stack](http://bit.ly/v0kKey "LIFO Stack")
 * [FIFO Stack](http://bit.ly/v0kKey "FIFO Stack")
 * [Queue](http://bit.ly/v0kKey "Queue")
+* Atomic Counter
+* [Bit Set](http://en.wikipedia.org/wiki/Bit_array "Bit Set")
 
 ## Where's the documentation?
 
