@@ -1,13 +1,22 @@
 {
-  "private":false,
-  "version":"0.0.2",
+  "private": false,
+  "version": "0.0.2",
   "name": "sculejs",
   "description": "Data structures for the web",
   "author": "Dan Eyles <dan@irlgaming.com>",
-  "repository" : {"type": "git", "url": "git@github.com:dan-eyles/sculejs.git"},
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:dan-eyles/sculejs.git"
+  },
   "engine": "node >= 0.8",
-  "dependencies":[],
+  "dependencies": {},
+  "main": "./lib/index.js",
   "scripts": {
-      "test":"expresso tests/*"
-  }
+    "test": "expresso tests/*"
+  },
+  "readmeFilename": "README.md",
+  "directories": {
+    "test": "tests"
+  },
+  "license": "BSD"
 }

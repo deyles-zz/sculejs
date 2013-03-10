@@ -25,9 +25,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-var md5    = require('../lib/com.jkm3.md5');
+var scule = require('../lib/index.js');
 
-exports['test MD5Hashing'] = function(beforeExit, assert) {
-    assert.equal(md5.hash('hello'), '5d41402abc4b2a76b9719d911017c592');
-    assert.equal((md5.hash('goodbye') == '5d41402abc4b2a76b9719d911017c592'), false);
+exports['test NPMRequire'] = function(beforeExit, assert) {
+    assert.ok(scule.db);
+    assert.ok(scule.datastructures);
+    assert.ok(scule.jsunit);
 };
