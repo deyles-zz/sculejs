@@ -260,19 +260,23 @@ exports['test Queries'] = function(beforeExit, assert) {
     collection.count({$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}, function(count) {
         var o = collection.findAll();
         var c = 0;
-        o.forEach(function(d) {
-            if(d.i > 50 || d.n < 40) {
+        for (var i=0; i < o.length; i++) {
+            var d = o[i];
+            if (d.i > 50 || d.n < 40) {
                 c++;
             }
-        });
+            if (c == 30) {
+                break;
+            }
+        }
         assert.equal(count, c);        
-        assert.equal(count, 10000);
+        assert.equal(count, 30);
     });
     timer.stopInterval();
 
     timer.startInterval("collection - {$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}");
     collection.count({$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}, function(count) {
-        assert.equal(count, 10000);
+        assert.equal(count, 30);
     });
     timer.stopInterval();
 

@@ -6073,6 +6073,12 @@ module.exports.Scule.classes.AbstractSyntaxTreeCompiler = function() {
             program.stopBlock();
         }
 
+        if(!loop) {
+            program.startBlock();
+            program.addInstruction('transpose', []);
+            program.stopBlock();
+        }
+
         program.startBlock();
         if('$sort' in conditions) {
             for(var k in conditions.$sort) {
@@ -6084,13 +6090,7 @@ module.exports.Scule.classes.AbstractSyntaxTreeCompiler = function() {
             program.addInstruction('limit', [conditions.$limit]);
         }
         program.stopBlock();
-        
-        if(!loop) {
-            program.startBlock();
-            program.addInstruction('transpose', []);
-            program.stopBlock();
-        }
-        
+                
         if(explain) {
             director.explainProgram();
         }
