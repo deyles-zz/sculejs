@@ -5935,13 +5935,17 @@
         }, function(count) {
             var o = collection.findAll();
             var c = 0;
-            o.forEach(function(d) {
-                if(d.i > 50 || d.n < 40) {
+            for (var i=0; i < o.length; i++) {
+                var d = o[i];
+                if (d.i > 50 || d.n < 40) {
                     c++;
                 }
-            });
+                if (c == 30) {
+                    break;
+                }
+            }
             JSUNIT.assertEquals(count, c);        
-            JSUNIT.assertEquals(count, 10000);
+            JSUNIT.assertEquals(count, 30);
         });
         timer.stopInterval();
 
@@ -5962,7 +5966,7 @@
             }, 
             $limit:30
         }, function(count) {
-            JSUNIT.assertEquals(count, 10000);
+            JSUNIT.assertEquals(count, 30);
         });
         timer.stopInterval();
 

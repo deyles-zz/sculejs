@@ -6198,7 +6198,7 @@ module.exports.Scule.classes.QueryCompiler = function() {
     this.compileQuery = function(query, conditions, collection) {
 
         module.exports.Scule.variables.line = 0;
-        var hash = md5.hash(JSON.stringify(query));
+        var hash = md5.hash(JSON.stringify(query) + JSON.stringify(conditions));
         if(this.cache.contains(hash)) {
             return this.cache.get(hash).toByteCode();
         }
@@ -6233,7 +6233,7 @@ module.exports.Scule.classes.QueryCompiler = function() {
     this.explainQuery = function(query, conditions, collection) {
 
         module.exports.Scule.variables.line = 0;
-        var hash = md5.hash(JSON.stringify(query));
+        var hash = md5.hash(JSON.stringify(query) + JSON.stringify(conditions));
         if(this.cache.contains(hash)) {
             this.cache.get(hash).explain();
             return;

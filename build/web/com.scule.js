@@ -7059,7 +7059,7 @@ if (typeof console == 'undefined') {
          */
         this.compileQuery = function(query, conditions, collection) {
 
-            var hash = Scule.md5.hash(JSON.stringify(query));
+            var hash = Scule.md5.hash(JSON.stringify(query) + JSON.stringify(conditions));
             if (this.cache.contains(hash)) {
                 return this.cache.get(hash).toByteCode();
             }
@@ -7093,10 +7093,18 @@ if (typeof console == 'undefined') {
          */
         this.explainQuery = function(query, conditions, collection) {
 
+            var hash = Scule.md5.hash(JSON.stringify(query) + JSON.stringify(conditions));
+            if(this.cache.contains(hash)) {
+                this.cache.get(hash).explain();
+                return;
+            }
+
             this.visitor.setCollection(collection);        
             var tree = this.parser.parseQuery(query);
             tree.accept(this.visitor);
             var program = this.compiler.compile(tree, conditions, collection, true);
+
+            this.cache.put(hash, program);
 
         };
 
