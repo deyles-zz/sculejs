@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Sculejs by dan-eyles</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Sculejs</h1>
+        <p>SculeJS - data structures for the web</p>
+
+        <p class="view"><a href="https://github.com/dan-eyles/sculejs">View the Project on GitHub <small>dan-eyles/sculejs</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/dan-eyles/sculejs/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/dan-eyles/sculejs/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/dan-eyles/sculejs">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>SculeJS</h1>
+
+<p><a href="https://travis-ci.org/dan-eyles/sculejs"><img src="https://travis-ci.org/dan-eyles/sculejs.png?branch=master" alt="Build Status"></a></p>
+
+<h2>What is SculeJS?</h2>
+
+<p><em>SculeJS</em> (from Minuscule - pronounced <strong>skyul</strong>) is a JavaScript library emulating the functionality of <a href="http://www.mongodb.org/">MongoDB</a>. It's also
+much more than that; <em>SculeJS</em> includes implementations of many general purpose data structures that can be used by developers in their day-to-day work.</p>
+
+<p>I originally built <a href="https://github.com/irlgaming/jsondb-public" title="JSONDB">JSONDB</a> for use in Titanium Appcelerator apps, but over time
+it became apparent that a similar system could be really useful for other stuff as well. <em>SculeJS</em> can run in your web browser, in a NodeJS 
+process, or even inside iOS and Android applications including a JavaScript runtime environment.</p>
+
+<p><em>SculeJS</em> provides a high-performance NoSQL database with the following features:</p>
+
+<ul>
+<li>Document-oriented storage</li>
+<li>Support for sparse B+tree and Hash indexes</li>
+<li>Fast in-place updates</li>
+<li>Rich document based queries</li>
+<li>Support for Map/Reduce operations</li>
+<li>Support for geo-locational queries using the $where and $near operators</li>
+</ul><p>Data structures currently included in <em>SculeJS</em> are:</p>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Hash_Table" title="Hash Map">Hash Map</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Hash_Table" title="Hash Table">Hash Table</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Binary_Search_Tree" title="Binary Search Tree">Binary Search Tree</a></li>
+<li><a href="http://en.wikipedia.org/wiki/B%2B_tree" title="B+ Tree">B+ Tree</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Bloom_Filter" title="Bloom Filter">Bloom Filter</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Linked_List" title="Linked List">Linked List</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Linked_List#Doubly_linked_list" title="Doubly Linked List">Doubly Linked List</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Linked_List" title="Caching Linked List">Caching Linked List</a></li>
+<li><a href="http://en.wikipedia.org/wiki/LRU_cache#Least_Recently_Used" title="LRU Cache">LRU Cache</a></li>
+<li><a href="http://bit.ly/v0kKey" title="LIFO Stack">LIFO Stack</a></li>
+<li><a href="http://bit.ly/v0kKey" title="FIFO Stack">FIFO Stack</a></li>
+<li><a href="http://bit.ly/v0kKey" title="Queue">Queue</a></li>
+<li>Atomic Counter</li>
+<li><a href="http://en.wikipedia.org/wiki/Bit_array" title="Bit Set">Bit Set</a></li>
+</ul><h2>Where's the documentation?</h2>
+
+<p>I do my best to keep the JSDoc annotation in the source up to date with changes, sometimes I miss things though. To generate a HTML version of the API reference for <em>SculeJS</em>
+clone a copy of the <a href="https://github.com/jsdoc3/jsdoc">jsdoc3 repository</a> and follow the instructions in the README.md file there.</p>
+
+<p>You should be able to generate JSDoc for <em>SculeJS</em> using the following commands (assuming the sculejs and jsdoc directories are at the same level):</p>
+
+<pre><code>$ cd jsdoc
+$ ./jsdoc ../sculejs/lib/*.js
+</code></pre>
+
+<p>If you have any specific questions about how to use <em>SculeJS</em> then head on over to the <a href="https://github.com/dan-eyles/sculejs/wiki">project wiki</a>.</p>
+
+<h2>Do you use any coding standards?</h2>
+
+<p>I run all core library code through <a href="http://jshint.com/">JSHint</a> as part of my (currently manual) build process. Building code for other platforms such as web and Titanium
+takes a little bit of manual fiddling, so certain portions don't pass. It all runs though, and all test cases are verified by running expresso before any commits to TRUNK.</p>
+
+<h2>How does it work?</h2>
+
+<p><em>SculeJS</em> stores collections of JavaScript objects in memory and uses a <a href="http://en.wikipedia.org/wiki/Virtual_machine" title="Virtual Machine">Hybrid Virtual Machine</a> to process query expressions.
+Using <em>SculeJS</em> to perform queries is actually pretty similar to using the MongoDB query shell - most operators are supported.</p>
+
+<p>Collections can be persisted to disk (using LocalStorage in the browser), or other storage mediums using custom storage managers. At the time of writing I'm working on
+support for <a href="http://www.w3.org/TR/IndexedDB/" title="IndexDB">IndexDB</a> and <a href="http://en.wikipedia.org/wiki/Web_SQL_Database" title="WebSQL">WebSQL</a> storage engines.</p>
+
+<h2>Can I contribute/donate/help in some way?</h2>
+
+<p>If you want to help out with developing <em>SculeJS</em> please take a look at the <a href="https://github.com/dan-eyles/sculejs/wiki/Guide-To-Contributing">contributor wiki guide</a>, I'd be happy to have some help. Donations aren't necessary - if you 
+use <em>SculeJS</em> and love it then tell your friends, just getting the word out would be a huge help.</p>
+
+<p>I have a full time job and maintain <em>SculeJS</em> in my spare time, so if I don't get to your tickets immediately please don't take it personally.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/dan-eyles">dan-eyles</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
