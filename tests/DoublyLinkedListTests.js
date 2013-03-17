@@ -124,6 +124,12 @@ exports['test DoublyLinkedListPrepend'] = function(beforeExit, assert) {
     list.prepend(-1);
     assert.equal(list.getLength(), 10);
     assert.equal(list.getHead().getElement(), -1);
+    list.trim();
+    assert.equal(list.getLength(), 9);
+    assert.equal(list.getHead().getElement(), -1);  
+    list.prepend(22);
+    assert.equal(list.getLength(), 10);
+    assert.equal(list.getHead().getElement(), 22);    
 };
 
 exports['test DoublyLinkedListSplit'] = function(beforeExit, assert) {

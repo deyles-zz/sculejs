@@ -28,78 +28,78 @@
 var sculedb = require('../lib/com.scule.db');
 var inst    = require('../lib/com.scule.instrumentation');
 
-//exports['test HashMapSize'] = function(beforeExit, assert) {
-//    var table = sculedb.Scule.$d.getHashMap(10);
-//    table.put('foo', 'bar');
-//    table.put('foo2', 'bar2');
-//    table.put('foo3', 'bar3');
-//    assert.equal(table.getLength(), 3);
-//    table.put('foo', 'bar4');
-//    assert.equal(table.getLength(), 3);
-//};
-//
-//exports['test HashMapClear'] = function(beforeExit, assert) {
-//    var table = sculedb.Scule.$d.getHashMap(10);
-//    table.put('foo1', 'bar1');
-//    table.put('foo2', 'bar2');
-//    table.put('foo3', 'bar3');
-//    table.clear();
-//    assert.equal(table.getLength(), 0);
-//};
-//
-//exports['test HashMapContains'] = function(beforeExit, assert) {
-//    var table = sculedb.Scule.$d.getHashMap(10);
-//    table.put('foo1', 'bar1');
-//    table.put('foo2', 'bar2');
-//    table.put('foo3', 'bar3');
-//    table.put(3, 'bar4');
-//    assert.equal(table.contains('foo2'), true);
-//    assert.equal(table.contains('foo4'), false);
-//    assert.equal(table.contains(3), true);
-//};
-//
-//exports['test HashMapGet'] = function(beforeExit, assert) {
-//    var table = sculedb.Scule.$d.getHashMap(10);
-//    table.put('foo', 'bar');
-//    table.put('foo2', 'bar2');
-//    table.put('foo3', 'bar3');
-//    table.put('foo', 'bar4');
-//    assert.equal(table.get('foo'), 'bar4');
-//    assert.equal(table.get('foo3'), 'bar3');
-//};
-//
-//exports['test HashMapRemove'] = function(beforeExit, assert) {
-//    var table = sculedb.Scule.$d.getHashMap(10);
-//    table.put('foo', 'bar');
-//    table.put('foo2', 'bar2');
-//    table.put('foo3', 'bar3');
-//    table.put(666, 'the devil!');
-//    table.remove('foo');
-//    assert.equal(table.contains('foo'), false);
-//    assert.equal(table.contains('foo2'), true);
-//    table.remove('foo2');
-//    assert.equal(table.getLength(), 2);
-//    table.remove('foo2');
-//    assert.equal(table.getLength(), 2);
-//    table.remove(666)
-//    assert.equal(table.getLength(), 1);
-//};
-//
-//exports['test HashMapGetKeys'] = function(beforeExit, assert) {
-//    var table = sculedb.Scule.$d.getHashMap(10);
-//    table.put('foo1', 'bar1');
-//    table.put('foo2', 'bar2');
-//    table.put('foo3', 'bar3');
-//    assert.equal(JSON.stringify(table.getKeys().sort()), JSON.stringify(['foo1','foo2','foo3'].sort()));
-//};
-//
-//exports['test HashMapGetValues'] = function(beforeExit, assert) {
-//    var table = sculedb.Scule.$d.getHashMap(10);
-//    table.put('foo1', 'bar1');
-//    table.put('foo2', 'bar2');
-//    table.put('foo3', 'bar3');
-//    assert.equal(JSON.stringify(table.getValues().sort()), JSON.stringify(['bar1','bar2','bar3'].sort()));
-//};
+exports['test HashMapSize'] = function(beforeExit, assert) {
+    var table = sculedb.Scule.$d.getHashMap(10);
+    table.put('foo', 'bar');
+    table.put('foo2', 'bar2');
+    table.put('foo3', 'bar3');
+    assert.equal(table.getLength(), 3);
+    table.put('foo', 'bar4');
+    assert.equal(table.getLength(), 3);
+};
+
+exports['test HashMapClear'] = function(beforeExit, assert) {
+    var table = sculedb.Scule.$d.getHashMap(10);
+    table.put('foo1', 'bar1');
+    table.put('foo2', 'bar2');
+    table.put('foo3', 'bar3');
+    table.clear();
+    assert.equal(table.getLength(), 0);
+};
+
+exports['test HashMapContains'] = function(beforeExit, assert) {
+    var table = sculedb.Scule.$d.getHashMap(10);
+    table.put('foo1', 'bar1');
+    table.put('foo2', 'bar2');
+    table.put('foo3', 'bar3');
+    table.put(3, 'bar4');
+    assert.equal(table.contains('foo2'), true);
+    assert.equal(table.contains('foo4'), false);
+    assert.equal(table.contains(3), true);
+};
+
+exports['test HashMapGet'] = function(beforeExit, assert) {
+    var table = sculedb.Scule.$d.getHashMap(10);
+    table.put('foo', 'bar');
+    table.put('foo2', 'bar2');
+    table.put('foo3', 'bar3');
+    table.put('foo', 'bar4');
+    assert.equal(table.get('foo'), 'bar4');
+    assert.equal(table.get('foo3'), 'bar3');
+};
+
+exports['test HashMapRemove'] = function(beforeExit, assert) {
+    var table = sculedb.Scule.$d.getHashMap(10);
+    table.put('foo', 'bar');
+    table.put('foo2', 'bar2');
+    table.put('foo3', 'bar3');
+    table.put(666, 'the devil!');
+    table.remove('foo');
+    assert.equal(table.contains('foo'), false);
+    assert.equal(table.contains('foo2'), true);
+    table.remove('foo2');
+    assert.equal(table.getLength(), 2);
+    table.remove('foo2');
+    assert.equal(table.getLength(), 2);
+    table.remove(666)
+    assert.equal(table.getLength(), 1);
+};
+
+exports['test HashMapGetKeys'] = function(beforeExit, assert) {
+    var table = sculedb.Scule.$d.getHashMap(10);
+    table.put('foo1', 'bar1');
+    table.put('foo2', 'bar2');
+    table.put('foo3', 'bar3');
+    assert.equal(JSON.stringify(table.getKeys().sort()), JSON.stringify(['foo1','foo2','foo3'].sort()));
+};
+
+exports['test HashMapGetValues'] = function(beforeExit, assert) {
+    var table = sculedb.Scule.$d.getHashMap(10);
+    table.put('foo1', 'bar1');
+    table.put('foo2', 'bar2');
+    table.put('foo3', 'bar3');
+    assert.equal(JSON.stringify(table.getValues().sort()), JSON.stringify(['bar1','bar2','bar3'].sort()));
+};
 
 exports['test HashMapLoadFactor'] = function(beforeExit, assert) {
     
@@ -126,38 +126,38 @@ exports['test HashMapLoadFactor'] = function(beforeExit, assert) {
     }    
     timer.stopInterval();
     
-//    timer.startInterval('HashTable.Insert');
-//    for(var i=0; i < 10000; i++) {
-//        table.put('foo' + i, {bar:i});
-//    }
-//    timer.stopInterval();   
-//    timer.startInterval('HashTable.Seek');
-//    for(var i=0; i < 10000; i++) {
-//        table.get('foo' + i);
-//    }    
-//    timer.stopInterval();
-//
-//    timer.startInterval('BPlusTree.Insert');
-//    for(var i=0; i < 10000; i++) {
-//        tree.insert('foo' + i, {bar:i});
-//    }
-//    timer.stopInterval();   
-//    timer.startInterval('BPlusTree.Seek');
-//    for(var i=0; i < 10000; i++) {
-//        tree.search('foo' + i);
-//    }    
-//    timer.stopInterval();
-//
-//    timer.startInterval('BTree.Insert');
-//    for(var i=0; i < 10000; i++) {
-//        btree.insert('foo' + i, {bar:i});
-//    }
-//    timer.stopInterval();   
-//    timer.startInterval('BTree.Seek');
-//    for(var i=0; i < 10000; i++) {
-//        btree.search('foo' + i);
-//    }    
-//    timer.stopInterval();
+    timer.startInterval('HashTable.Insert');
+    for(var i=0; i < 10000; i++) {
+        table.put('foo' + i, {bar:i});
+    }
+    timer.stopInterval();   
+    timer.startInterval('HashTable.Seek');
+    for(var i=0; i < 10000; i++) {
+        table.get('foo' + i);
+    }    
+    timer.stopInterval();
+
+    timer.startInterval('BPlusTree.Insert');
+    for(var i=0; i < 10000; i++) {
+        tree.insert('foo' + i, {bar:i});
+    }
+    timer.stopInterval();   
+    timer.startInterval('BPlusTree.Seek');
+    for(var i=0; i < 10000; i++) {
+        tree.search('foo' + i);
+    }    
+    timer.stopInterval();
+
+    timer.startInterval('BTree.Insert');
+    for(var i=0; i < 10000; i++) {
+        btree.insert('foo' + i, {bar:i});
+    }
+    timer.stopInterval();   
+    timer.startInterval('BTree.Seek');
+    for(var i=0; i < 10000; i++) {
+        btree.search('foo' + i);
+    }    
+    timer.stopInterval();
 
 
     timer.logToConsole();

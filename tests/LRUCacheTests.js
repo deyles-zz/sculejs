@@ -51,16 +51,38 @@ exports['test LRUCacheRequeue'] = function(beforeExit, assert) {
 };
 
 exports['test LRUCacheFunctionality'] = function(beforeExit, assert) {
-    var cache = sculedb.Scule.$d.getLRUCache(5);
-    cache.put(1, {foo:'bar1'});
-    cache.put(2, {foo:'bar2'});
-    cache.put(3, {foo:'bar3'});
-    cache.put(4, {foo:'bar4'});
-    cache.put(5, {foo:'bar5'});
-    cache.get(1);
-    assert.equal(JSON.stringify(cache.get(1)), JSON.stringify({foo:'bar1'}));
-    assert.equal(false, JSON.stringify(cache.get(1)) == JSON.stringify({foo:'bar2'}));
-    cache.put(6, {foo:'bar6'});
-    cache.put(7, {foo:'bar7'});
-    assert.equal(false, cache.contains(3));
+    try {
+        var cache = sculedb.Scule.$d.getLRUCache(5);
+        cache.put(1, {
+            foo:'bar1'
+        });
+        cache.put(2, {
+            foo:'bar2'
+        });
+        cache.put(3, {
+            foo:'bar3'
+        });
+        cache.put(4, {
+            foo:'bar4'
+        });
+        cache.put(5, {
+            foo:'bar5'
+        });
+        cache.get(1);
+        assert.equal(JSON.stringify(cache.get(1)), JSON.stringify({
+            foo:'bar1'
+        }));
+        assert.equal(false, JSON.stringify(cache.get(1)) == JSON.stringify({
+            foo:'bar2'
+        }));
+        cache.put(6, {
+            foo:'bar6'
+        });
+        cache.put(7, {
+            foo:'bar7'
+        });
+        assert.equal(false, cache.contains(3));
+    } catch (e) {
+        console.log(e);
+    }
 };
