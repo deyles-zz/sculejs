@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>SculeJS - Messaging example</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+        <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+        <script type="text/javascript" src="com.scule.js"></script>
+    </head>
+    <body>
+        <div id="data">
+
+        </div>
+        <script type="text/javascript">
+            var scope = {
+                intervals:{}
+            };
+            var $r = Scule.global.functions.randomFromTo;
+            function setupMessaging() {
+                scope.director = Scule.getMessagingDirector();
+                scope.director.bind('quotes', 'YHOO', /stock.ticker.YHOO/ig);
+                scope.director.bind('quotes', 'GOOG', /stock.ticker.GOOG/ig);
+                scope.director.bind('quotes', 'FB',   /stock.ticker.FB/ig);
+                scope.director.subscribe('YHOO', function(message) {
+                    $('#data').append('<div><strong>YHOO:</strong> ' + message.getBody().price + '</div>');
+                });
+                scope.director.subscribe('GOOG', function(message) {
+                    $('#data').append('<div><strong>GOOG:</strong> ' + message.getBody().price + '</div>');
+                });
+                scope.director.subscribe('FB', function(message) {
+                    $('#data').append('<div><strong>FB:</strong> ' + message.getBody().price + '</div>');
+                });                
+            };
+            $(document).ready(function() {
+                setupMessaging();
+                scope.intervals.YHOO = setInterval(function() { scope.director.publish('quotes', 'stock.ticker.YHOO', {price:$r(300, 600)}) }, $r(300, 600));
+                scope.intervals.GOOG = setInterval(function() { scope.director.publish('quotes', 'stock.ticker.GOOG', {price:$r(300, 600)}) }, $r(300, 600));
+                scope.intervals.FB   = setInterval(function() { scope.director.publish('quotes', 'stock.ticker.FB',   {price:$r(300, 600)}) }, $r(300, 600));
+                scope.intervals.end  = setTimeout(function() { 
+                    scope.director.unsubscribeAll('YHOO'); 
+                    scope.director.unsubscribeAll('GOOG');
+                    scope.director.unsubscribeAll('FB');
+                }, 5000);
+            });
+        </script>
+    </body>
+</html>

@@ -1986,6 +1986,9 @@ if (typeof console == 'undefined') {
          * @returns {Void}
          */
         this.unsubscribeAll = function(queueName) {
+            if (queueName === undefined) {
+                throw 'queue name is required';
+            }
             if (!this.queues.contains(queueName)) {
                 throw 'queue ' + queueName + ' does not exist';
             }
