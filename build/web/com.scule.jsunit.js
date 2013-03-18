@@ -47,18 +47,21 @@ var JSUNIT = {
  * @return void
  */
 JSUNIT.assert = function(caller, assertion, expected) {
+    var failed = false;
     if(assertion === expected) {
         JSUNIT.variables.output += '.';
         JSUNIT.variables.passed++;
     } else {
+        failed = true;
         JSUNIT.variables.output += 'F';  
         JSUNIT.variables.failed++;
     }
     JSUNIT.variables.assertions.push({
-        caller: caller.name,
-        callee: arguments.callee.caller.name,
+        caller:    caller.name,
+        callee:    arguments.callee.caller.name,
         assertion: assertion,
-        expected: expected
+        expected:  expected,
+        failed:    failed
     });
 };
 
@@ -154,9 +157,11 @@ JSUNIT.resetTests = function(filename) {
  * @param callback function
  * @return void
  */
-JSUNIT.runTests = function(callback) {
+JSUNIT.runTests = function(name, callback) {
 
+    JSUNIT.variables.name = name;
     JSUNIT.variables.assertions = [];
+    JSUNIT.variables.outputs = {};
     JSUNIT.variables.passed = 0;
     JSUNIT.variables.failed = 0;
 
@@ -167,7 +172,10 @@ JSUNIT.runTests = function(callback) {
             console.log('Running: ' + test.name);
         }
         test();
-        console.log(JSUNIT.variables.output);
+        if(!callback) {
+            console.log(JSUNIT.variables.output);
+        }
+        JSUNIT.variables.outputs[test.name] = JSUNIT.variables.output;
     });
     
     if(callback) {

@@ -183,6 +183,20 @@ if (typeof console == 'undefined') {
         $v:Scule.require('vm')
     });
 
+    Scule.registerNamespace('events', {
+        functions:{},
+        classes:{},
+        objects:{},
+        $d:Scule.require('datastructures')    
+    });
+
+    Scule.registerNamespace('messaging', {
+        functions:{},
+        classes:{},
+        objects:{},
+        $d:Scule.require('datastructures')    
+    });
+
 }());
 
 (function() {
@@ -1214,6 +1228,805 @@ if (typeof console == 'undefined') {
         return t(path.split('.'), object);
     };
 
+}());
+
+(function() {
+    
+    "use strict";
+    
+    /**
+     * Represents an "event"
+     * @access public
+     * @constructor
+     * @param {String} the event name
+     * @param {Mixed} the event payload
+     * @class {Event}
+     * @returns {Void}
+     */
+    Scule.events.classes.Event = function(name, body) {
+
+        /**
+         * @access private
+         * @type {String}
+         */
+        this.name = name;
+
+        /**
+         * @access private
+         * @type {Mixed}
+         */
+        this.body = body;
+
+        /**
+         * Returns the name of the event
+         * @access public
+         * @returns {String}
+         */
+        this.getName = function() {
+            return this.name;
+        };
+
+        /**
+         * Returns the body of the event
+         * @access public
+         * @returns {Mixed}
+         */
+        this.getBody = function() {
+            return this.body;
+        };
+
+    };
+
+    /**
+     * Represents an event emitter - used to propogate events
+     * @access public
+     * @constructor
+     * @class {EventEmitter}
+     * @returns {Void}
+     */
+    Scule.events.classes.EventEmitter = function() {
+
+        /**
+         * @access private
+         * @type {HashTable}
+         */
+        this.listeners = Scule.getHashTable();
+
+        /**
+         * Creates a bucket in the listener hash table corresponding to the provided
+         * name if one doesn't already exist
+         * @access private
+         * @param {String} the name of the bucket to create
+         * @returns {Void}
+         */
+        this.createBucket = function(name) {
+            if (!this.listeners.contains(name)) {
+                this.listeners.put(name, []);
+            }
+        };
+
+        /**
+         * Adds a listener for the named event - listeners can either be instances of
+         * the EventListener class or closures accepting a single parameter (the event)
+         * @access public
+         * @param {String} the name of the event to listen for
+         * @param {Function|EventListener} the listener for the event
+         * @returns {Void}
+         */
+        this.addEventListener = function(name, listener) {
+            if (!(listener instanceof Scule.events.classes.EventListener)) {
+                listener = new Scule.events.classes.EventListener(listener);
+            }
+            this.createBucket(name);
+            var bucket = this.listeners.get(name);
+            bucket.push(listener);
+        };
+
+        /**
+         * Removes the specified listener from the emitter
+         * @access public
+         * @param {String} the name of the event to listen for
+         * @param {Function|EventListener} the listener for the event
+         * @returns {Void}
+         */ 
+        this.removeEventListener = function(name, listener) {
+            this.createBucket(name);
+            if (listener instanceof Scule.events.classes.EventListener) {
+                listener = listener.getClosure();
+            }        
+            var bucket = this.listeners.get(name);
+            var newbucket = [];
+            for (var i=0; i < bucket.length; i++) {
+                if (bucket[i].getClosure() != listener) {
+                    newbucket.push(listener)
+                }
+            }
+            this.listeners.put(name, newbucket);
+        };
+
+        /**
+         * Removes all listeners for the named event
+         * @access public
+         * @returns {Void}
+         */
+        this.removeEventListeners = function(name) {
+            this.listeners.remove(name);
+        };
+
+        /**
+         * Propogates an event to all registered listeners
+         * @access public
+         * @param {String} the name of the event to listen for
+         * @param {Object|Event} the event to emit
+         * @returns {Void}
+         */
+        this.fireEvent = function(name, event) {
+            this.createBucket(name);
+            if (!(event instanceof Scule.events.classes.Event)) {
+                event = new Scule.events.classes.Event(name, event);
+            }
+            var bucket = this.listeners.get(name);
+            bucket.forEach(function(listener) {
+                listener.consume(event);
+            });
+        };
+
+    };
+
+    /**
+     * Represents an event listener
+     * @access public
+     * @constructor
+     * @param {Function} the handler for the event being listened to
+     * @returns {Void}
+     */
+    Scule.events.classes.EventListener = function(closure) {
+
+        /**
+         * @access private
+         * @type Function
+         */
+        this.closure = closure;
+
+        /**
+         * Consumes the provided event
+         * @access public
+         * @param {Event} the event to consume
+         * @returns {Void}
+         */
+        this.consume = function(event) {
+            this.closure(event);
+        };
+
+        /**
+         * Returns the closure encapsulated by the event listener
+         * @access public
+         * @returns {Function}
+         */
+        this.getClosure = function() {
+            return this.closure;
+        };
+
+    };
+
+    /**
+     * Returns a new event listener
+     * @access public
+     * @param {Function} closure the closure that acts as the listener
+     * @returns {EventListener}
+     */
+    Scule.getEventListener = function(closure) {
+        return new Scule.events.classes.EventListener(closure);
+    };
+
+    /**
+     * Returns a new EventEmitter
+     * @access public
+     * @returns {EventEmitter}
+     */
+    Scule.getEventEmitter = function() {
+        return new Scule.events.classes.EventEmitter();
+    };
+
+    /**
+     * Returns a new Event
+     * @access public
+     * @param {String} name
+     * @param {Mixed} body
+     * @returns {Event}
+     */
+    Scule.getEvent = function(name, body) {
+        return new Scule.events.classes.Event(name, body);
+    };    
+    
+}());
+
+(function() {
+    
+    "use strict";
+    
+    /**
+     * Represents a message with a routing key and payload
+     * @class {Message}
+     * @constructor
+     * @param {String} key the routing key for the message
+     * @param {Mixed} body the payload for the message
+     * @returns {Void}
+     */
+    Scule.messaging.classes.Message = function(key, body) {
+
+        /**
+         * @access private
+         * @type {String}
+         */
+        this.key = key;
+
+        /**
+         * @access private
+         * @type {Mixed}
+         */
+        this.body = body;
+
+        /**
+         * Returns the routing key for the message
+         * @access public
+         * @returns {String}
+         */
+        this.getKey = function() {
+            return this.key;
+        };
+
+        /**
+         * Returns the payload for the message
+         * @access public
+         * @returns {Mixed}
+         */
+        this.getBody = function() {
+            return this.body;
+        };
+
+    };
+
+    /**
+     * Represents a message queue
+     * @constructor
+     * @class {MessageQueue}
+     * @param {String} name the name of the queue
+     * @returns {Void}
+     */
+    Scule.messaging.classes.MessageQueue = function(name) {
+
+        /**
+         * @access public
+         * @type {String}
+         */
+        this.name        = name;
+
+        /**
+         * @access public
+         * @type {Array}
+         */
+        this.subscribers = [];
+
+        Scule.datastructures.classes.Queue.call(this);
+
+        /**
+         * Returns the name of the queue
+         * @returns {String}
+         */
+        this.getName = function() {
+            return this.name;
+        };
+
+        /**
+         * Adds a subscriber to the queue
+         * @param {MessageSubscriber} subscriber the subscriber to add
+         * @returns {Void}
+         */
+        this.addSubscriber = function(subscriber) {
+            this.subscribers.push(subscriber);
+        };
+
+        /**
+         * Return a list of all subscribers registered with the queue
+         * @returns {Array}
+         */
+        this.getSubscribers = function() {
+            return this.subscribers;
+        };
+
+        /**
+         * Removes all subscribers from the queue
+         * @returns {Void}
+         */
+        this.removeSubscribers = function() {
+            this.subscribers = [];
+        };
+
+    };
+
+    /**
+     * Represents a message exchange
+     * @class {MessageExchange}
+     * @constructor
+     * @param {String} name the name of the exchange
+     * @returns {Void}
+     */
+    Scule.messaging.classes.MessageExchange = function(name) {
+
+        /**
+         * @access private
+         * @type {String}
+         */
+        this.name = name;
+
+        /**
+         * @access private
+         * @type {HashTable}
+         */
+        this.queues = Scule.getHashTable(); 
+
+        /**
+         * Returns the name of the exchange
+         * @returns {String}
+         */
+        this.getName = function() {
+            return this.name;
+        };
+
+        /**
+         * binds a queue to the exchange
+         * @access public
+         * @param {MessageQueue} queue the queue to bind
+         * @param {String} routingKey the key to bind with
+         * @returns {Boolean}
+         * @throws {Exception}
+         */
+        this.addQueue = function(queue, routingKey) {
+            if (!(queue instanceof Scule.messaging.classes.MessageQueue)) {
+                throw 'provided object is not a messge queue';
+            }
+            if (this.queues.contains(queue.getName())) {
+                throw 'exchange ' + name + ' is already bound to queue ' + queue.getName();
+            }
+            this.queues.put(queue.getName(), queue);
+            this.addRoute(queue, routingKey);
+            return true;
+        };
+
+        /**
+         * Adds a route to the exchange - this is implemented by extending classes
+         * @access public
+         * @param {MessageQueue} queue the queue to create a route for
+         * @param {String} routingKey the routing key for the binding
+         * @returns {Boolean}
+         */
+        this.addRoute = function(queue, routingKey) {
+            return true;
+        };
+
+        /**
+         * Unbinds a queue from the exchange
+         * @access public
+         * @param {MessageQueue} queue the queue to unbind
+         * @returns {Boolean}
+         */
+        this.removeQueue = function(queue) {
+            if (this.queues.contains(queue.getName())) {
+                this.queues.remove(queue.getName());
+                this.removeRoute(queue);
+                return true;
+            }
+            return false;
+        };
+
+        /**
+         * Removes a route from the exchange
+         * @access public
+         * @param {MessageQueue} queue
+         * @returns {Boolean}
+         */
+        this.removeRoute = function(queue) {
+            return true;
+        };
+
+        /**
+         * Routes a message to the queues bound to the exchange
+         * @param {Message} message the message to route
+         * @returns {Void}
+         * @throws {Exception}
+         */
+        this.route = function(message) {
+            throw 'routing is not supported in abstract exchange class';
+        };
+
+    };
+
+    /**
+     * Represents a fan-out message exchange - messages are routed to all bound
+     * queues irrespective of their routing keys
+     * @class {FanOutMessageExchange}
+     * @constructor
+     * @extends MessageExchange
+     * @param {String} name the name of the exchange
+     * @returns {Void}
+     */
+    Scule.messaging.classes.FanOutMessageExchange = function(name) {
+
+        Scule.messaging.classes.MessageExchange.call(this, name);
+
+        /**
+         * Routes a message to the queues bound to the exchange
+         * @param {Message} message the message to route
+         * @returns {Void}
+         */
+        this.route = function(message) {
+            var __t   = this;
+            var names = this.queues.getKeys();
+            names.forEach(function(name) {
+                __t.queues.get(name).enqueue(message);
+            });
+        };
+
+    };
+
+    /**
+     * Represents a direct message exchange - messages are routed based on the routing
+     * key pattern provided when bindings are created
+     * @class {FanOutMessageExchange}
+     * @constructor
+     * @extends MessageExchange
+     * @param {String} name the name of the exchange
+     * @returns {Void}
+     */
+    Scule.messaging.classes.DirectMessageExchange = function(name) {
+
+        /**
+         * @access private
+         * @type {HashTable}
+         */
+        this.routes = Scule.getHashTable();
+
+        Scule.messaging.classes.MessageExchange.call(this, name);
+
+        /**
+         * Adds a route to the exchange - this is implemented by extending classes
+         * @access public
+         * @param {MessageQueue} queue the queue to create a route for
+         * @param {String} routingKey the routing key for the binding
+         * @returns {Boolean}
+         */    
+        this.addRoute = function(queue, routingKey) {
+            var key = Scule.md5.hash(routingKey.toString());
+            if (!this.routes.contains(key)) {
+                this.routes.put(key, {key:routingKey, queues:[]});
+            }
+            this.routes.get(key).queues.push(queue);
+        };
+
+        /**
+         * Removes a route from the exchange
+         * @access public
+         * @param {MessageQueue} queue
+         * @returns {Boolean}
+         */    
+        this.removeRoute = function(queue) {
+            var __t  = this;
+            var keys = this.routes.getKeys();
+            keys.forEach(function(key) {
+                var route = __t.routes.get(key);
+                var len   = route.queues.length;
+                while (len--) {
+                    if (route.queues[len] == queue) {
+                        route.queues.splice(len, 1);
+                    }
+                }
+            });
+        };    
+
+        /**
+         * Routes a message to the queues bound to the exchange
+         * @param {Message} message the message to route
+         * @returns {Void}
+         */    
+        this.route = function(message) {
+            var __t  = this;
+            var keys = this.routes.getKeys();
+            keys.forEach(function(key) {
+                var route = __t.routes.get(key);
+                if (!message.getKey().match(route.key)) {
+                    return;
+                }
+                for (var i=0; i < route.queues.length; i++) {
+                    route.queues[i].enqueue(message);
+                }            
+            });
+        };  
+
+    };
+
+    /**
+     * Represents a message channel - arbitrates bindings between queues and exchanges
+     * @class {MessageChannel}
+     * @constructor
+     * @returns {Void}
+     */
+    Scule.messaging.classes.MessageChannel = function() {
+
+        /**
+         * @access private
+         * @type {HashTable}
+         */
+        this.bindings = Scule.getHashTable();
+
+        /**
+         * Binds together a queue and an exchange
+         * @param {MessageExchange} exchange
+         * @param {MessageQueue} queue
+         * @param {String} routingKey
+         * @returns {Void}
+         */
+        this.bind = function(exchange, queue, routingKey) {
+            var key = exchange.getName() + ',' + queue.getName();
+            if (this.bindings.contains(key)) {
+                throw 'binding for ' + key + ' already exists';
+            }
+            this.bindings.put(key, {
+                exchange: exchange,
+                queue: queue
+            });
+            exchange.addQueue(queue, routingKey);
+        };
+
+        /**
+         * Destroys an existing binding between a queue and an exchange
+         * @param {MessageExchange} exchange
+         * @param {MessageQueue} queue
+         * @returns {Void}
+         */
+        this.unbind = function(exchange, queue) {
+            var key = exchange.getName() + ',' + queue.getName();
+            if (!this.bindings.contains(key)) {
+                throw 'binding for ' + key + ' does not exist';
+            }
+            var binding = this.bindings.get(key);
+            this.bindings.remove(key);
+            binding.exchange.removeQueue(binding.queue);
+        };
+
+    };
+
+    /**
+     * Represents a message subscriber - subscribers poll queues every 10 - 18 milliseconds
+     * and process them using the provided callback function
+     * @class {MessageSubscriber}
+     * @constructor
+     * @param {MessageQueue} queue
+     * @param {Function} callback
+     * @returns {Void}
+     */
+    Scule.messaging.classes.MessageSubscriber = function(queue, callback) {
+
+        /**
+         * @access private
+         * @type {MessageQueue}
+         */
+        this.queue    = queue;
+
+        /**
+         * @access private
+         * @type {Function}
+         */
+        this.callback = callback;
+
+        /**
+         * @access private
+         * @type {Interval}
+         */
+        this.interval = null;
+
+        /**
+         * Starts the subscriber interval - intervals have between 3 and 8 milliseconds
+         * of wobble, based on a random number created when creating the schedule
+         * @access public
+         * @returns {Void}
+         */
+        this.start = function() {
+            var __t = this;
+            this.interval = setInterval(function() {
+                var o = __t.queue.dequeue();
+                if (o) {
+                    __t.callback(o);
+                }
+            }, (10 + Scule.global.functions.randomFromTo(3, 8)));
+        };
+
+        /**
+         * Stops the subscriber interval
+         * @access public
+         * @returns {Void}
+         */
+        this.stop = function() {
+            clearInterval(this.interval);
+        };
+
+    };
+
+    /**
+     * A director that controls the relationships between exchanges, queues, channels,
+     * publishers and subscribers. This class also contains a lot of syntactic sugar
+     * to make managing message queues much easier.
+     * @class {MessagingDirector}
+     * @constructor
+     * @returns {Void}
+     */
+    Scule.messaging.classes.MessagingDirector = function() {
+
+        /**
+         * @access private
+         * @type {HashTable}
+         */
+        this.queues      = Scule.getHashTable();
+
+        /**
+         * @access private
+         * @type {HashTable}
+         */
+        this.exchanges   = Scule.getHashTable(); 
+
+        /**
+         * @access private
+         * @type {MessageChannel}
+         */
+        this.channel     = new Scule.messaging.classes.MessageChannel();
+
+        /**
+         * Creates a binding between a queue and an exchange, optionally using a routing key.
+         * If no exchange or queue exist correspond go the provided names they are automatically
+         * created. Attempting to create a binding on a fan-out exchange with a routing key
+         * will result in an exception.
+         * @access public
+         * @param {String} exchangeName
+         * @param {String} queueName
+         * @param {RegEx} routingKey
+         * @returns {Void}
+         * @throws {Exception}
+         */
+        this.bind = function(exchangeName, queueName, routingKey) {
+            if (routingKey !== undefined) {
+                this.bindDirect(exchangeName, queueName, routingKey);
+            } else {
+                this.bindFanOut(exchangeName, queueName);
+            }
+        };
+
+        this.bindDirect = function(exchangeName, queueName, routingKey) {
+            var exchange = null;
+            var queue    = null;
+            if (this.exchanges.contains(exchangeName)) {
+                exchange = this.exchanges.get(exchangeName);
+                if (!(exchange instanceof Scule.messaging.classes.DirectMessageExchange)) {
+                    throw 'unable to bind directly to a fan-out exchange';
+                }
+            } else {
+                exchange = new Scule.messaging.classes.DirectMessageExchange(exchangeName);
+                this.exchanges.put(exchangeName, exchange);
+            }
+            if (this.queues.contains(queueName)) {
+                queue = this.queues.get(queueName);
+            } else {
+                queue = new Scule.messaging.classes.MessageQueue(queueName);
+                this.queues.put(queueName, queue);
+            }
+            this.channel.bind(exchange, queue, routingKey);
+        };
+
+        this.bindFanOut = function(exchangeName, queueName) {
+            var exchange = null;
+            var queue    = null;
+            if (this.exchanges.contains(exchangeName)) {
+                exchange = this.exchanges.get(exchangeName);
+                if (!(exchange instanceof Scule.messaging.classes.FanOutMessageExchange)) {
+                    throw 'unable to bind to direct exchange without a routing key';
+                }
+            } else {
+                exchange = new Scule.messaging.classes.FanOutMessageExchange(exchangeName);
+                this.exchanges.put(exchangeName, exchange);
+            }
+            if (this.queues.contains(queueName)) {
+                queue = this.queues.get(queueName);
+            } else {
+                queue = new Scule.messaging.classes.MessageQueue(queueName);
+                this.queues.put(queueName, queue);
+            }
+            this.channel.bind(exchange, queue);        
+        };
+
+        /**
+         * Publishes a message to all subscribers via the provided exchange name
+         * @access public
+         * @param {String} exchangeName the exchange to send the message to
+         * @param {String} key the routing key for the message
+         * @param {Mixed} body the payload for the message
+         * @returns {Void}
+         * @throws {Exception}
+         */
+        this.publish = function(exchangeName, key, body) {
+            var message = new Scule.messaging.classes.Message(key, body);
+            if (!this.exchanges.contains(exchangeName)) {
+                throw 'exchange ' + exchangeName + ' does not exist';
+            }
+            var exchange = this.exchanges.get(exchangeName);
+            exchange.route(message);
+        };
+
+        /**
+         * Subscribes a listener to the given queue
+         * @access public
+         * @param {String} queueName the name of the queue to subscribe to
+         * @param {Function} callback the callback function to use as the subscriber
+         * @returns {Void}
+         * @throws {Exception}
+         */
+        this.subscribe = function(queueName, callback) {
+            if (!this.queues.contains(queueName)) {
+                throw 'queue ' + queueName + ' does not exist';
+            }
+            var queue      = this.queues.get(queueName);
+            var subscriber = new Scule.messaging.classes.MessageSubscriber(queue, callback);
+            queue.addSubscriber(subscriber);
+            subscriber.start();
+        };
+
+        /**
+         * Unsubscribes all subscribers for the given queue
+         * @access public
+         * @param {String} queueName the name of the queue to remove subscribers from
+         * @throws {Exception}
+         * @returns {Void}
+         */
+        this.unsubscribeAll = function(queueName) {
+            if (!this.queues.contains(queueName)) {
+                throw 'queue ' + queueName + ' does not exist';
+            }
+            var queue = this.queues.get(queueName);
+            var subscribers = queue.getSubscribers();
+            subscribers.forEach(function(subscriber) {
+                subscriber.stop();
+            });
+            queue.subscribers = [];
+        };
+
+    };
+
+    Scule.getMessage = function(name, body) {
+        return new Scule.messaging.classes.Message(name, body);
+    };
+
+    Scule.getMessageQueue = function(name) {
+        return new Scule.messaging.classes.MessageQueue(name);
+    };
+
+    Scule.getMessageExchange = function(name) {
+        return new Scule.messaging.classes.MessageExchange(name);
+    };
+
+    Scule.getFanOutMessageExchange = function(name) {
+        return new Scule.messaging.classes.FanOutMessageExchange(name);
+    };
+
+    Scule.getDirectMessageExchange = function(name, key) {
+        return new Scule.messaging.classes.DirectMessageExchange(name, key);
+    };
+
+    Scule.getMessageChannel = function() {
+        return new Scule.messaging.classes.MessageChannel();
+    };
+
+    Scule.getMessagingDirector = function() {
+        return new Scule.messaging.classes.MessagingDirector();
+    };    
+    
 }());
 
 /**
