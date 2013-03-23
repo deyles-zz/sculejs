@@ -31,4 +31,6 @@ exports['test NPMRequire'] = function(beforeExit, assert) {
     assert.ok(scule.db);
     assert.ok(scule.datastructures);
     assert.ok(scule.jsunit);
+    assert.ok(scule.events);
+    assert.ok(scule.messaging);
 };
