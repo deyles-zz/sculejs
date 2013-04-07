@@ -152,4 +152,6 @@ exports['test TraverseObject'] = function(beforeExit, assert) {
     result = sculedb.Scule.functions.traverseObject({e:{z:true}}, object);
     assert.equal('{"f":[11,12,23,33]}', JSON.stringify(result[1]));
     assert.equal(result[0], 'z');
+    result = sculedb.Scule.functions.traverseObject({e:{f:{'*':true}}}, object);
+    assert.equal('["*",[11,12,23,33]]', JSON.stringify(result));
 };

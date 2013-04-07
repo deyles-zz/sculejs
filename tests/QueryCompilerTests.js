@@ -28,6 +28,7 @@
 var sculedb = require('../lib/com.scule.db.parser');
 var db      = require('../lib/com.scule.db');
 var build   = require('../lib/com.scule.db.builder');
+var comp    = require('../lib/com.scule.query.interpreter');
 var inst    = require('../lib/com.scule.instrumentation');
 
 exports['test QueryTreeVisitor'] = function(beforeExit, assert) {
@@ -49,10 +50,20 @@ exports['test QueryTreeVisitor'] = function(beforeExit, assert) {
     collection.ensureHashIndex('d');
     
     var query = {
-        a:{$gt:2, $in:[4, 5, 7, 8, 9], $eq:666},
+        a:{
+            $gt:2, 
+            $in:[4, 5, 7, 8, 9], 
+            $eq:666
+        },
         b:3,
-        c:{$in:[2,1,3,9,7], $nin:['a', 'c', 'b', 10, 0, 'z']},
-        d:{$gt:10, $lte:240},
+        c:{
+            $in:[2,1,3,9,7], 
+            $nin:['a', 'c', 'b', 10, 0, 'z']
+        },
+        d:{
+            $gt:10, 
+            $lte:240
+        },
         foo:'bar'
     };
     
@@ -90,10 +101,20 @@ exports['test QueryTreeVisitor2'] = function(beforeExit, assert) {
     collection.ensureHashIndex('d');
     
     var query = {
-        a:{$gt:2, $in:[4, 5, 7, 8, 9], $eq:666},
+        a:{
+            $gt:2, 
+            $in:[4, 5, 7, 8, 9], 
+            $eq:666
+        },
         b:3,
-        c:{$in:[2,1,3,9,7], $nin:['a', 'c', 'b', 10, 0, 'z']},
-        d:{$gt:10, $lte:240},
+        c:{
+            $in:[2,1,3,9,7], 
+            $nin:['a', 'c', 'b', 10, 0, 'z']
+        },
+        d:{
+            $gt:10, 
+            $lte:240
+        },
         foo:'bar'
     };
     
@@ -124,10 +145,20 @@ exports['test QueryTreeVisitor3'] = function(beforeExit, assert) {
     collection.ensureHashIndex('d');
     
     var query = {
-        a:{$gt:2, $in:[4, 5, 7, 8, 9], $eq:666},
+        a:{
+            $gt:2, 
+            $in:[4, 5, 7, 8, 9], 
+            $eq:666
+        },
         b:3,
-        c:{$in:[2,1,3,9,7], $nin:['a', 'c', 'b', 10, 0, 'z']},
-        d:{$gt:10, $lte:240},
+        c:{
+            $in:[2,1,3,9,7], 
+            $nin:['a', 'c', 'b', 10, 0, 'z']
+        },
+        d:{
+            $gt:10, 
+            $lte:240
+        },
         foo:'bar'
     };
     
@@ -164,10 +195,19 @@ exports['test QueryCompiler'] = function(beforeExit, assert) {
     collection.ensureHashIndex('d');
     
     var query = {
-        a:{$gt:2, $in:[4, 5, 7, 8, 9]},
+        a:{
+            $gt:2, 
+            $in:[4, 5, 7, 8, 9]
+        },
         b:3,
-        c:{$in:[2,1,3,9,7], $nin:['a', 'c', 'b', 10, 0, 'z']},
-        d:{$gt:10, $lte:240},
+        c:{
+            $in:[2,1,3,9,7], 
+            $nin:['a', 'c', 'b', 10, 0, 'z']
+        },
+        d:{
+            $gt:10, 
+            $lte:240
+        },
         foo:'bar'
     };
 
@@ -211,3 +251,131 @@ exports['test QueryCompiler2'] = function(beforeExit, assert) {
     assert.equal(program[4][0], 0x00);
     
 };
+
+/*
+exports['test ElemMatch'] = function(beforeExit, assert) {
+
+
+    var e = {
+        isArray: function(o) {
+            return (Object.prototype.toString.call(o) === '[object Array]');
+        },
+        contains: function(o, key) {
+             return o.hasOwnProperty(key);
+        },
+        $eq: function(a, b) {
+            return a == b;
+        },
+        $gt: function(a, b) {
+            return a > b;
+        }
+    }
+
+    eval("var queryClosure = function(documents, engine) {\
+        var results   = [];\
+        var document  = null;\
+        documents.forEach(function(document) {\
+            if (!engine.$eq(document.foo, 3)) {\
+                return;\
+            }\
+            if (!engine.$gt(document.bar, 2)) {\
+                return;\
+            }\
+            results.push(document);\
+        });\
+        return results;\
+    }");
+
+//    var queryClosure = function(documents, engine) {
+//        var results = [];
+//        var o       = null;
+//        documents.forEach(function(o) {
+//            if (!engine.$eq(o.foo, 3)) {
+//                return;
+//            }
+//            if (!engine.$gt(o.bar, 2)) {
+//                return;
+//            }
+//            results.push(o);
+//        });
+//        return results;
+//    };
+
+    db.dropAll();
+    var collection = db.factoryCollection('scule+dummy://unittest');
+    collection.ensureHashIndex('foo,bar');
+    
+    var d = [];
+    for(var i=0; i < 1000; i++) {
+        var foo = (i%3 == 0) ? 3 : 1;
+        var bar = (i%2 == 0) ? 3 : 2;
+        d.push({foo: foo, bar: bar});
+        collection.save({foo: foo, bar: bar});
+    }
+
+    var t = inst.getTimer();
+
+    t.startInterval('query1');
+    var r1 = collection.find({foo:3, bar:{$gt:2}});
+    t.stopInterval('query1');
+
+    t.startInterval('query2');
+    var r2 = collection.find({foo:3, bar:{$gt:2}});
+    t.stopInterval('query2');
+
+    t.startInterval('closure');
+    var r3 = queryClosure(d, e);
+    t.stopInterval('closure');    
+    
+    t.logToConsole();
+    
+    console.log(r1.length);
+    console.log(r2.length);
+    console.log(r3.length);
+    
+};
+ */
+
+exports['test LOL'] = function(beforeExit, assert) {
+
+    var d = [];
+    for(var i=0; i < 1000000; i++) {
+        var foo = (i%3 == 0) ? 3 : 1;
+        var bar = (i%2 == 0) ? 3 : 2;
+        d.push({
+            foo: foo, 
+            bar: bar
+        });
+    }
+    
+    var engine = comp.getQueryEngine();
+    var interpreter = comp.getQueryCompiler();
+    
+    interpreter.explainQuery({
+        foo:{
+            $eq:1
+        }, 
+        bar:{
+            $gt:2
+        }
+    }, {$sort:['foo', -1]});    
+    
+    eval(interpreter.compileQuery({
+        foo:{
+            $eq:1
+        }, 
+        bar:{
+            $gt:2
+        }
+    }, {$sort:['foo', -1]}));
+    
+    var t = inst.getTimer();
+    
+    t.startInterval('closure');
+    var r2 = c(d, engine);
+    t.stopInterval('closure');    
+    t.logToConsole();
+   
+    console.log('len: ' + r2.length);
+   
+}
