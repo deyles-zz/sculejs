@@ -28,6 +28,7 @@
 var scule   = require('../lib/com.scule.db');
 
 exports['test Ticket6'] = function(beforeExit, assert) {
+    scule.dropAll();
     var collection = scule.factoryCollection('scule+dummy://test');
     for (var i=0; i < 100; i++) {
         collection.save({i: i});

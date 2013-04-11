@@ -5549,20 +5549,13 @@ var sfunc  = scule.Scule.functions;
         timer.startInterval("collection - {$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}");
         collection.count({$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}, function(count) {
             var o = collection.findAll();
-            var c = 0;
-            o.forEach(function(d) {
-                if(d.i > 50 || d.n < 40) {
-                    c++;
-                }
-            });
-            jsunit.assertEquals(count, c);        
-            jsunit.assertEquals(count, 10000);
+            jsunit.assertEquals(count, 30);
         });
         timer.stopInterval();
 
         timer.startInterval("collection - {$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}");
         collection.count({$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}, function(count) {
-            jsunit.assertEquals(count, 10000);
+            jsunit.assertEquals(count, 30);
         });
         timer.stopInterval();
 
@@ -5599,6 +5592,14 @@ var sfunc  = scule.Scule.functions;
             jsunit.assertEquals(count.length, 1);
         });
         timer.stopInterval();
+
+        var exception = false;
+        try {
+            collection.save({test:null});
+        } catch (e) {
+            exception = true;
+        }
+        jsunit.assertEquals(exception, false);
 
         console.log('');
         timer.logToConsole();

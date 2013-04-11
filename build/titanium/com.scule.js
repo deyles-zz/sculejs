@@ -7481,6 +7481,9 @@ module.exports.Scule.classes.Index = function() {
         }
         var id  = module.exports.Scule.functions.getObjectId(document, true);
         var key = this.generateIndexKey(document);
+        if (key.length == 0) {
+            return false;
+        }        
         this.structure.insert(key, document);
         var table = this.structure.search(key);
         this.leaves.put(id, {
@@ -8889,7 +8892,7 @@ module.exports.Scule.functions.unflattenObject = function(object) {
         }
         for(var key in object) {
             var o = object[key];
-            if(!module.exports.Scule.functions.isScalar(o) && ('$type' in object[key])) {
+            if(!module.exports.Scule.functions.isScalar(o) && o && ('$type' in o)) {
                 switch(o.$type) {
                     case 'date':
                         object[key] = new module.exports.Scule.classes.ObjectDate(o.sec, o.usec)

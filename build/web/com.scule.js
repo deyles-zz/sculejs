@@ -9219,6 +9219,9 @@ if (typeof console == 'undefined') {
             }
             var id  = Scule.global.functions.getObjectId(document, true);
             var key = this.generateIndexKey(document);
+            if (key.length == 0) {
+                return false;
+            }
             this.structure.insert(key, document);
             var table = this.structure.search(key);
             this.leaves.put(id, {
@@ -10635,7 +10638,7 @@ if (typeof console == 'undefined') {
             for (var key in object) {
                 if(object.hasOwnProperty(key)) {
                     var o = object[key];
-                    if (!Scule.global.functions.isScalar(o) && ('$type' in object[key])) {
+                    if (!Scule.global.functions.isScalar(o) && o && ('$type' in o)) {
                         switch(o.$type) {
                             case 'date':
                                 object[key] = new Scule.db.classes.ObjectDate(o.sec, o.usec);

@@ -5763,7 +5763,7 @@ function runAllTests() {
     }());
 
     (function() {
-    
+       
         function testQueries() {
 
             Scule.dropAll();
@@ -6193,7 +6193,14 @@ function runAllTests() {
             });
             timer.stopInterval();
 
-        // timer.logToConsole();
+            var exception = false;
+            try {
+                collection.save({test:null});
+            } catch (e) {
+                exception = true;
+            }
+            JSUNIT.assertEquals(false, exception);
+
         };
 
         (function() {
