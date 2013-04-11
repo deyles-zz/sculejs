@@ -334,8 +334,41 @@ exports['test ElemMatch'] = function(beforeExit, assert) {
     console.log(r3.length);
     
 };
- */
 
+exports['test Normalizer'] = function(beforeExit, assert) {
+
+    var normalizer = comp.getQueryNormalizer();
+    var query = {$or:{c:113, a:{$lt:14}}, foo:3, bar:{$lte:100, $gt:4}, a:11};
+    query = normalizer.normalize(query);
+    console.log(query);
+
+};
+*/
+
+exports['test Selector'] = function(beforeExit, assert) {
+
+    db.dropAll();
+    var collection = db.factoryCollection('scule+dummy://unittest');
+    collection.ensureHashIndex('a');
+    collection.ensureBTreeIndex('d', {order:1000});
+
+    for (var i=0; i < 100000; i++) {
+        collection.save({
+            a:i,
+            b:i+10,
+            c:i+30,
+            d:i+5
+        });
+    }
+
+    var selector = comp.getIndexSelector();
+    var o = selector.resolveIndices(collection, {d:{$gte:9000, $lt:9100}});
+
+    console.log(o);
+    
+};
+
+/*
 exports['test LOL'] = function(beforeExit, assert) {
 
     var d = [];
@@ -379,3 +412,4 @@ exports['test LOL'] = function(beforeExit, assert) {
     console.log('len: ' + r2.length);
    
 }
+*/
