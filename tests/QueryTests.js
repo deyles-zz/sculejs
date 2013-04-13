@@ -33,12 +33,7 @@ exports['test Queries'] = function(beforeExit, assert) {
     sculedb.dropAll();
     
     var timer = inst.getTimer();
-    var collection = sculedb.factoryCollection('scule+dummy://unittest');
-    
-    collection.ensureBTreeIndex('loc.lat', {order:1000});
-    collection.ensureBTreeIndex('i',       {order:1000});
-    collection.ensureBTreeIndex('n',       {order:1000});    
-    
+    var collection = sculedb.factoryCollection('scule+dummy://unittest');    
     collection.clear();    
     
     var k = 0;
@@ -75,6 +70,10 @@ exports['test Queries'] = function(beforeExit, assert) {
                 k = 0;
             }
     }
+
+    collection.ensureBTreeIndex('loc.lat', {order:1000});
+    collection.ensureBTreeIndex('i',       {order:1000});
+    collection.ensureBTreeIndex('n',       {order:1000});
 
     timer.startInterval("collection - {i:{$gte:5000}, n:{$lte:80}}");
     collection.count({i:{$gte:5000}, n:{$lte:80}}, {}, function(count) {
