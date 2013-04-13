@@ -56,7 +56,7 @@ takes a little bit of manual fiddling, so certain portions don't pass. It all ru
 
 ## How does it work?
 
-*SculeJS* stores collections of JavaScript objects in memory and uses a [Hybrid Virtual Machine](http://en.wikipedia.org/wiki/Virtual_machine "Virtual Machine") to process query expressions.
+*SculeJS* stores collections of JavaScript objects in memory and processes query expressions by compiling them to JavaScript before evaluating them against collection data.
 Using *SculeJS* to perform queries is actually pretty similar to using the MongoDB query shell - most operators are supported.
 
 Collections can be persisted to disk (using LocalStorage in the browser), or other storage mediums using custom storage managers. At the time of writing I'm working on

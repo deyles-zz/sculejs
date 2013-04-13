@@ -152,8 +152,8 @@ Ti.API.info('-----------------------------------------------');
 /**
  * all objects where i is greater than 50 or n is less than 40
  */
-timer.startInterval("scollection - {i:{$gt:50}, $or:{n:{$lt:40}}}");
-scollection.count({i:{$gt:50}, $or:{n:{$lt:40}}});
+timer.startInterval("scollection -{i:{$gt:50}, $or:[{n:{$lt:40}}]}");
+scollection.count({i:{$gt:50}, $or:[{n:{$lt:40}}]});
 timer.stopInterval();
 
 timer.logToConsole();
@@ -163,8 +163,8 @@ Ti.API.info('-----------------------------------------------');
 /**
  * all objects where i is greater than 50 or n is less than 40, sorted by i descending limiting results to 30
  */
-timer.startInterval("scollection - {i:{$gt:50}, $or:{n:{$lt:40}}}, {$sort:{i:-1}, $limit:30}");
-scollection.count({i:{$gt:50}, $or:{n:{$lt:40}}}, {$sort:{i:-1}, $limit:30});
+timer.startInterval("scollection - {i:{$gt:50}, $or:[{n:{$lt:40}]}, {$sort:{i:-1}, $limit:30}");
+scollection.count({i:{$gt:50}, $or:[{n:{$lt:40}}]}, {$sort:{i:-1}, $limit:30});
 timer.stopInterval();
 
 timer.logToConsole();
