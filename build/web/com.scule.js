@@ -7981,7 +7981,7 @@ if (typeof console == 'undefined') {
 
         /**
          * @private
-         * @type {VirtualMachine}
+         * @type {QueryInterpreter}
          */    
         this.interpreter = Scule.getQueryInterpreter();
 
