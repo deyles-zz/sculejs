@@ -233,6 +233,450 @@ function runAllTests() {
     }());
 
     (function() {
+       
+        function testQueryOperators() {
+
+            var engine = Scule.getQueryEngine();
+    
+            JSUNIT.assertEquals(true,  engine.$eq(1, 1));
+            JSUNIT.assertEquals(false, engine.$eq(2, 1));
+    
+            JSUNIT.assertEquals(false, engine.$ne(1, 1));
+            JSUNIT.assertEquals(true,  engine.$ne(2, 1));
+    
+            JSUNIT.assertEquals(true,  engine.$gt(2, 1));
+            JSUNIT.assertEquals(false, engine.$gt(-1, 1));
+
+            JSUNIT.assertEquals(true,  engine.$gte(2, 1));
+            JSUNIT.assertEquals(false, engine.$gte(-1, 1));
+            JSUNIT.assertEquals(true,  engine.$gte(2, 2));
+
+            JSUNIT.assertEquals(false, engine.$lt(2, 1));
+            JSUNIT.assertEquals(true,  engine.$lt(-1, 1));
+
+            JSUNIT.assertEquals(false, engine.$lte(2, 1));
+            JSUNIT.assertEquals(true,  engine.$lte(-1, 1));
+            JSUNIT.assertEquals(true,  engine.$lte(-1, -1));
+
+            JSUNIT.assertEquals(true,  engine.$in(1, [2, 3, 1, 4, 5]));
+            JSUNIT.assertEquals(false, engine.$in(-1, [2, 3, 1, 4, 5]));
+
+            JSUNIT.assertEquals(false, engine.$nin(1, [2, 3, 1, 4, 5]));
+            JSUNIT.assertEquals(true,  engine.$nin(-1, [2, 3, 1, 4, 5]));
+
+            JSUNIT.assertEquals(true,  engine.$size([1, 2, 3, 4, 5, 6], 6));
+            JSUNIT.assertEquals(false, engine.$size([1, 2, 3, 4, 5, 6], 9));
+            JSUNIT.assertEquals(true,  engine.$size({
+                foo:true, 
+                bar:true
+            }, 2));
+            JSUNIT.assertEquals(false, engine.$size({
+                foo:true, 
+                bar:true
+            }, 3));
+
+            JSUNIT.assertEquals(true,  engine.$exists('foo', true));
+            JSUNIT.assertEquals(false, engine.$exists('foo', false));
+
+            JSUNIT.assertEquals(true,  engine.$all([9, 8, 7, 1, 2, 0, 3], [1, 2, 3]));
+            JSUNIT.assertEquals(false, engine.$all([9, 8, 7, 1, 2, 0, 3], [1, 2, 3, 11]));
+    
+            JSUNIT.assertEquals(true,  engine.$elemMatch([{
+                a:0, 
+                b:1
+            }, {
+                a:1, 
+                b:2
+            }, {
+                a:2, 
+                b:3
+            }], function(o) {
+                return o.a == 1 && o.b == 2;
+            }));
+            JSUNIT.assertEquals(false, engine.$elemMatch([{
+                a:0, 
+                b:1
+            }, {
+                a:1, 
+                b:2
+            }, {
+                a:2, 
+                b:3
+            }], function(o) {
+                return o.a == 3 && o.b == 4;
+            }));
+
+            JSUNIT.assertEquals(true,  engine.$near({
+                lat:53, 
+                lon:-67
+            }, {
+                lat:53, 
+                lon:-67, 
+                distance:100
+            }));
+            JSUNIT.assertEquals(false, engine.$near({
+                lat:53, 
+                lon:-60
+            }, {
+                lat:53, 
+                lon:-67, 
+                distance:1000
+            }));
+
+            JSUNIT.assertEquals(true,  engine.$within({
+                lat:53, 
+                lon:-67
+            }, {
+                lat:53, 
+                lon:-67, 
+                distance:0
+            }));
+            JSUNIT.assertEquals(false, engine.$within({
+                lat:40, 
+                lon:-30
+            }, {
+                lat:53, 
+                lon:-67, 
+                distance:30
+            }));
+
+        };
+
+        function testUpdateOperators() {
+
+            var engine = Scule.getQueryEngine();
+            var o = null;
+    
+            // $set
+            o = {
+                a:1
+            };
+            engine.$set(engine.traverseObject('a', o), 3, false);
+            JSUNIT.assertEquals(o.a, 3);
+            engine.$set(engine.traverseObject('b', o), 3, false);
+            JSUNIT.assertEquals(false, ('b' in o));
+            engine.$set(engine.traverseObject('b', o), 3, true);
+            JSUNIT.assertEquals(o.b, 3);
+
+            // $unset
+            o = {
+                a:1
+            };
+            JSUNIT.assertEquals(true, ('a' in o));
+            engine.$unset(engine.traverseObject('a', o), 3, false);
+            JSUNIT.assertEquals(false, ('a' in o));
+
+            // $inc
+            o = {
+                a:1
+            };
+            engine.$inc(engine.traverseObject('a', o), null, false);
+            JSUNIT.assertEquals(o.a, 2);
+            engine.$inc(engine.traverseObject('b', o), 3, false);
+            JSUNIT.assertEquals(false, ('b' in o));
+            engine.$inc(engine.traverseObject('b', o), 3, true);
+            JSUNIT.assertEquals(o.b, 3);
+            engine.$inc(engine.traverseObject('b', o), 1, true);
+            JSUNIT.assertEquals(o.b, 4);
+            engine.$inc(engine.traverseObject('b', o), 2.5, true);
+            JSUNIT.assertEquals(o.b, 5);
+            engine.$inc(engine.traverseObject('b', o), -1, true);
+            JSUNIT.assertEquals(o.b, 4);
+
+            // $push
+            o = {
+                a:[]
+            };
+            engine.$push(engine.traverseObject('a', o), 'foo', false);
+            JSUNIT.assertEquals(o.a.length, 1);
+            JSUNIT.assertEquals(o.a[0], 'foo');
+            engine.$push(engine.traverseObject('a', o), 'bar', false);
+            JSUNIT.assertEquals(o.a.length, 2);
+            JSUNIT.assertEquals(o.a[0], 'foo');
+            JSUNIT.assertEquals(o.a[1], 'bar');
+            engine.$push(engine.traverseObject('b', o), 'foo', true);
+            JSUNIT.assertEquals(true, ('b' in o));
+            JSUNIT.assertEquals(o.b, 'foo');
+
+            // $pushall
+            o = {
+                a:[]
+            };
+            engine.$pushall(engine.traverseObject('a', o), ['foo', 'bar'], false);
+            JSUNIT.assertEquals(o.a.length, 2);
+            JSUNIT.assertEquals(o.a[0], 'foo');
+            JSUNIT.assertEquals(o.a[1], 'bar');
+            engine.$push(engine.traverseObject('b', o), ['foo1', 'bar1'], true);
+            JSUNIT.assertEquals(true, ('b' in o));
+            JSUNIT.assertEquals(o.b.length, 2);
+            JSUNIT.assertEquals(o.b[0], 'foo1');
+            JSUNIT.assertEquals(o.b[1], 'bar1');
+            engine.$push(engine.traverseObject('c', o), ['foo2'], true);
+            JSUNIT.assertEquals(true, ('c' in o));
+            JSUNIT.assertEquals(o.c.length, 1);
+            JSUNIT.assertEquals(o.c[0], 'foo2');
+
+            // $pop
+            o = {
+                a:['foo', 'bar', 'moo']
+            };
+            engine.$pop(engine.traverseObject('a', o), true, false);
+            JSUNIT.assertEquals(o.a.length, 2);
+            JSUNIT.assertEquals(o.a[0], 'foo');
+            JSUNIT.assertEquals(o.a[1], 'bar');
+            engine.$pop(engine.traverseObject('a', o), true, false);
+            JSUNIT.assertEquals(o.a.length, 1);
+            JSUNIT.assertEquals(o.a[0], 'foo');
+            engine.$pop(engine.traverseObject('a', o), true, false);
+            JSUNIT.assertEquals(o.a.length, 0);
+
+            // $pull
+            o = {
+                a:['foo', 'bar', 'moo', 'mah', 'moo']
+            };
+            engine.$pull(engine.traverseObject('a', o), 'moo', false);
+            JSUNIT.assertEquals(o.a.length, 3);
+            JSUNIT.assertEquals(o.a[0], 'foo');
+            JSUNIT.assertEquals(o.a[1], 'bar');
+            JSUNIT.assertEquals(o.a[2], 'mah');
+            engine.$pull(engine.traverseObject('a', o), 'bar', false);
+            JSUNIT.assertEquals(o.a.length, 2);
+            JSUNIT.assertEquals(o.a[0], 'foo');
+            JSUNIT.assertEquals(o.a[1], 'mah');
+            engine.$pull(engine.traverseObject('a', o), 'moo', false);
+            JSUNIT.assertEquals(o.a.length, 2);
+            JSUNIT.assertEquals(o.a[0], 'foo');
+            JSUNIT.assertEquals(o.a[1], 'mah');
+
+            // $pullall
+            o = {
+                a:['foo', 'bar', 'moo', 'mah', 'moo']
+            };
+            engine.$pullall(engine.traverseObject('a', o), ['moo', 'bar'], false);
+            JSUNIT.assertEquals(o.a.length, 2);
+            JSUNIT.assertEquals(o.a[0], 'foo');
+            JSUNIT.assertEquals(o.a[1], 'mah');
+            engine.$pullall(engine.traverseObject('a', o), ['foo', 'mah'], false);
+            JSUNIT.assertEquals(o.a.length, 0);
+
+        };
+
+        function testNormalizer() {
+
+            var normalizer = Scule.getQueryNormalizer();
+            var query = {
+                $or:[{
+                    c:113, 
+                    a:{
+                        $lt:14
+                    }
+                }], 
+                foo:3, 
+                bar:{
+                    $lte:100, 
+                    $gt:4
+                }, 
+                a:11
+            };
+            query = normalizer.normalize(query);
+            JSUNIT.assertEquals('{"a":{"$eq":11},"bar":{"$gt":4,"$lte":100},"foo":{"$eq":3},"$or":[{"a":{"$lt":14},"c":113}]}', JSON.stringify(query));
+
+        };
+
+        function testSelector() {
+
+            Scule.dropAll();
+            var collection = Scule.factoryCollection('scule+dummy://unittest');
+            collection.ensureHashIndex('a');
+            collection.ensureBTreeIndex('d', {
+                order:1000
+            });
+
+            for (var i=0; i < 100000; i++) {
+                collection.save({
+                    a:i,
+                    b:i+10,
+                    c:i+30,
+                    d:i+5
+                });
+            }
+
+            var selector = Scule.getIndexSelector();
+            var o = selector.resolveIndices(collection, {
+                d:{
+                    $gte:9000, 
+                    $lt:9100
+                }
+            });
+            JSUNIT.assertEquals(o.length, 100);
+    
+        };
+
+        function testQueryCompiler() {
+
+            var d = [];
+            for(var i=0; i < 100000; i++) {
+                var foo = (i%3 == 0) ? 3 : 1;
+                var bar = (i%2 == 0) ? 3 : 2;
+                d.push({
+                    foo: foo, 
+                    bar: bar
+                });
+            }
+    
+            var engine = Scule.getQueryEngine();
+            var interpreter = Scule.getQueryCompiler();
+    
+            eval(interpreter.compileQuery({
+                foo:{
+                    $eq:1
+                }, 
+                bar:{
+                    $gt:2
+                }
+            }, {
+                $sort:['foo', -1]
+            }));
+    
+            var t = Scule.getTimer();
+    
+            t.startInterval('closure');
+            var r2 = c(d, engine);
+            t.stopInterval('closure');    
+            //t.logToConsole();
+
+            JSUNIT.assertEquals(r2.length, 33333);
+
+        };
+
+        function testElemMatch() {
+    
+            var d = [];
+            for(var i=0; i < 100; i++) {
+                var foo = (i%3 == 0) ? 3 : 1;
+                var bar = (i%2 == 0) ? 3 : 2;
+                var o   = {
+                    foo: foo, 
+                    bar: bar,
+                    arr:[]
+                };
+                for(var j=0; j < 10; j++) {
+                    if (i%3 == 0) {
+                        o.arr.push({
+                            j: j,
+                            f: j%3
+                        });
+                    } else {
+                        o.arr.push({
+                            j: Math.floor(i/10)*2,
+                            f: j%2
+                        });                
+                    }
+                }
+                d.push(o);
+            }    
+    
+            var engine = Scule.getQueryEngine();
+            var interpreter = Scule.getQueryCompiler();
+    
+            eval(interpreter.compileQuery({
+                bar:{
+                    $eq:3
+                }, 
+                arr:{
+                    $elemMatch:{
+                        j:18, 
+                        f:0
+                    }
+                }
+            }));
+    
+            var t = Scule.getTimer();
+    
+            t.startInterval('closure');
+            var r = c(d, engine);
+            t.stopInterval('closure');    
+            //t.logToConsole();
+
+            JSUNIT.assertEquals(r.length, 3);
+    
+        };
+
+        function testUpdate() {
+    
+            var collection = Scule.factoryCollection('scule+dummy://unittest');
+            collection.clear();    
+    
+            for(var i=0; i < 10000; i++) {
+                var foo = (i%3 == 0) ? 3 : 1;
+                var bar = (i%2 == 0) ? 3 : 2;
+                var o   = {
+                    zoo: {
+                        elephant: true,
+                        giraffe: true
+                    },
+                    foo: foo, 
+                    bar: bar,
+                    arr:[]
+                };
+                for(var j=0; j < 10; j++) {
+                    if (i%3 == 0) {
+                        o.arr.push({
+                            j: j,
+                            f: j%3
+                        });
+                    } else {
+                        o.arr.push({
+                            j: Math.floor(i/10)*2,
+                            f: j%2
+                        });                
+                    }
+                }
+                collection.save(o);
+            }    
+    
+            var interpreter = Scule.getQueryInterpreter();
+            interpreter.update(collection, {
+                foo:3
+            }, {
+                'zoo.elephant':{
+                    $unset:true
+                }, 
+                bar:{
+                    $set:1
+                }, 
+                arr:{
+                    $push:'foo'
+                }
+            }, null, true);
+    
+            for (var key in collection.documents.table) {
+                o = collection.documents.table[key];
+                if (o.foo == 3) {
+                    JSUNIT.assertEquals(o.bar, 1);
+                    JSUNIT.assertEquals(o.arr[o.arr.length - 1], 'foo');
+                    JSUNIT.assertEquals(false, ('elephant' in o.zoo));
+                    JSUNIT.assertEquals(true, ('giraffe' in o.zoo));
+                }
+            }
+
+        };       
+
+        (function() {
+            JSUNIT.resetTests();
+            JSUNIT.addTest(testQueryOperators);
+            JSUNIT.addTest(testUpdateOperators);
+            JSUNIT.addTest(testNormalizer);
+            JSUNIT.addTest(testSelector);
+            JSUNIT.addTest(testQueryCompiler);
+            JSUNIT.addTest(testElemMatch);
+            JSUNIT.addTest(testUpdate);
+            JSUNIT.runTests('Query interpreter tests', Scule.tests.functions.renderTest);
+        }());    
+
+    }());
+
+    (function() {
     
         function testEvent() {
             var event = Scule.getEvent('test', {
@@ -3121,569 +3565,6 @@ function runAllTests() {
     }());
 
     (function() {
-    
-        function testQuerySymbol() {
-
-            var symbol = Scule.getQuerySymbol('foo', 8);
-            JSUNIT.assertEquals(symbol.getSymbol(), 'foo');
-            JSUNIT.assertEquals(symbol.getType(), 8);
-
-            symbol.setSymbol('bar');
-            symbol.setType(1);
-
-            JSUNIT.assertEquals(symbol.getSymbol(), 'bar');
-            JSUNIT.assertEquals(symbol.getType(), 1);
-            JSUNIT.assertFalse(symbol.hasChildren());
-
-            symbol.addChild(Scule.getQuerySymbol('foo', 8));
-
-            JSUNIT.assertTrue(symbol.hasChildren());
-            JSUNIT.assertEquals(symbol.getFirstChild(), symbol.getChild(0));
-
-            symbol.addChild(Scule.getQuerySymbol('foo1', 8));
-
-            JSUNIT.assertEquals(symbol.getFirstChild(), symbol.getChild(0));
-            JSUNIT.assertNotEquals(symbol.getFirstChild(), symbol.getChild(1));
-
-            symbol.addChild(Scule.getQuerySymbol('$and', 2));
-
-            JSUNIT.assertEquals(symbol.getChild(2).getType(), 2);
-            JSUNIT.assertEquals(symbol.getChild(2).getSymbol(), '$and');
-            JSUNIT.assertEquals(symbol.children.length, 3);
-
-            symbol.normalize();
-
-            JSUNIT.assertEquals(symbol.children.length, 2);
-        };
-
-        function testQueryTree() {
-
-            var tree = Scule.getQueryTree();
-
-            JSUNIT.assertEquals(tree.getRoot(), null);
-
-            var node = Scule.getQuerySymbol('foo', 8);
-            tree.setRoot(node);
-
-            JSUNIT.assertEquals(tree.getRoot(), node);
-
-            tree.getRoot().addChild(Scule.getQuerySymbol('$and', 2));
-
-            JSUNIT.assertTrue(tree.getRoot().hasChildren());
-
-            tree.normalize();
-
-            JSUNIT.assertFalse(tree.getRoot().hasChildren());
-        };
-
-        function testQueryParser() {
-
-            var parser = Scule.getQueryParser();
-            var tree   = parser.parseQuery({
-                a:1, 
-                b:2
-            });
-
-            JSUNIT.assertEquals(tree.getRoot().getType(), -1); // should be an expression
-
-            JSUNIT.assertEquals(tree.getRoot().getChild(0).getType(), 8);
-            JSUNIT.assertEquals(tree.getRoot().getChild(0).getSymbol(), 'a');
-            JSUNIT.assertEquals(tree.getRoot().getChild(1).getType(), 8);
-            JSUNIT.assertEquals(tree.getRoot().getChild(1).getSymbol(), 'b');
-
-            JSUNIT.assertEquals(tree.getRoot().getChild(0).getFirstChild().getType(), 1);
-            JSUNIT.assertEquals(tree.getRoot().getChild(0).getFirstChild().getSymbol(), '$eq');
-            JSUNIT.assertEquals(tree.getRoot().getChild(1).getFirstChild().getType(), 1);
-            JSUNIT.assertEquals(tree.getRoot().getChild(1).getFirstChild().getSymbol(), '$eq');    
-
-            JSUNIT.assertEquals(tree.getRoot().getChild(0).getFirstChild().getFirstChild().getType(), 9);
-            JSUNIT.assertEquals(tree.getRoot().getChild(0).getFirstChild().getFirstChild().getSymbol(), 1);
-            JSUNIT.assertEquals(tree.getRoot().getChild(1).getFirstChild().getFirstChild().getType(), 9);
-            JSUNIT.assertEquals(tree.getRoot().getChild(1).getFirstChild().getFirstChild().getSymbol(), 2); 
-
-        };
-
-        function testQueryParserNormalization() {
-
-            var parser = Scule.getQueryParser();
-            var tree   = parser.parseQuery({
-                a:1, 
-                b:2, 
-                $or:[{
-                    a:2, 
-                    b:3
-                }, {
-                    a:3, 
-                    b:4
-                }], 
-                $and:[{
-                    c:11
-                }, {
-                    $or:[{
-                        a:4, 
-                        b:5
-                    }, {
-                        a:5, 
-                        b:6
-                    }]
-                }, {
-                    $or:[{
-                        a:6, 
-                        b:7
-                    }, {
-                        a:7, 
-                        b:8
-                    }]
-                }]
-            });
-
-            JSUNIT.assertEquals(tree.getRoot().getType(), -1); // should be an expression
-
-            JSUNIT.assertEquals(tree.getRoot().getChild(0).getType(), 8);
-            JSUNIT.assertEquals(tree.getRoot().getChild(0).getSymbol(), 'a');
-            JSUNIT.assertEquals(tree.getRoot().getChild(1).getType(), 8);
-            JSUNIT.assertEquals(tree.getRoot().getChild(1).getSymbol(), 'b');
-            JSUNIT.assertEquals(tree.getRoot().getChild(2).getType(), 8);
-            JSUNIT.assertEquals(tree.getRoot().getChild(2).getSymbol(), 'c');
-
-            JSUNIT.assertEquals(tree.getRoot().getChild(0).getFirstChild().getType(), 1);
-            JSUNIT.assertEquals(tree.getRoot().getChild(0).getFirstChild().getSymbol(), '$eq');
-            JSUNIT.assertEquals(tree.getRoot().getChild(1).getFirstChild().getType(), 1);
-            JSUNIT.assertEquals(tree.getRoot().getChild(1).getFirstChild().getSymbol(), '$eq');    
-            JSUNIT.assertEquals(tree.getRoot().getChild(2).getFirstChild().getType(), 1);
-            JSUNIT.assertEquals(tree.getRoot().getChild(2).getFirstChild().getSymbol(), '$eq');
-
-            JSUNIT.assertEquals(tree.getRoot().getChild(0).getFirstChild().getFirstChild().getType(), 9);
-            JSUNIT.assertEquals(tree.getRoot().getChild(0).getFirstChild().getFirstChild().getSymbol(), 1);
-            JSUNIT.assertEquals(tree.getRoot().getChild(1).getFirstChild().getFirstChild().getType(), 9);
-            JSUNIT.assertEquals(tree.getRoot().getChild(1).getFirstChild().getFirstChild().getSymbol(), 2);
-            JSUNIT.assertEquals(tree.getRoot().getChild(2).getFirstChild().getFirstChild().getType(), 9);
-            JSUNIT.assertEquals(tree.getRoot().getChild(2).getFirstChild().getFirstChild().getSymbol(), 11);
-
-            JSUNIT.assertEquals(tree.getRoot().getChild(3).getType(), 2);
-            JSUNIT.assertEquals(tree.getRoot().getChild(3).children.length, 3);
-
-            tree.getRoot().getChild(3).children.forEach(function(child) {
-                JSUNIT.assertEquals(child.getType(), 2);
-                JSUNIT.assertEquals(child.getFirstChild().getType(), 2);
-                child.getFirstChild().children.forEach(function(subChild) {
-                    JSUNIT.assertEquals(subChild.getType(), 8);
-                    JSUNIT.assertEquals(subChild.getFirstChild().getType(), 1);
-                    JSUNIT.assertEquals(subChild.getFirstChild().getFirstChild().getType(), 9);
-                });
-            });
-        };
-
-        function testQueryParserNestingError() {
-
-            var parser = Scule.getQueryParser();
-
-            var flag = false;
-            try {
-                parser.parseQuery({
-                    a:1, 
-                    $and:[{
-                        b:2
-                    }]
-                });
-            } catch (e) {
-                flag = true;
-            }
-            JSUNIT.assertTrue(flag);
-
-            flag = false;
-            try {
-                parser.parseQuery({
-                    a:1, 
-                    $and:[{
-                        b:2
-                    },{
-                        c:2
-                    }]
-                });
-            } catch (e) {
-                flag = true;
-            }
-            JSUNIT.assertFalse(flag);
-
-            flag = false;
-            try {
-                parser.parseQuery({
-                    a:1, 
-                    $or:[{
-                        b:2
-                    }]
-                });
-            } catch (e) {
-                flag = true;
-            }
-            JSUNIT.assertTrue(flag);
-
-            flag = false;
-            try {
-                parser.parseQuery({
-                    a:1, 
-                    $and:[{
-                        b:2
-                    },{
-                        c:2
-                    },{
-                        $and:[{
-                            d:3
-                        },{
-                            e:4
-                        }]
-                    }]
-                });
-            } catch (e) {
-                flag = true;
-            }
-            JSUNIT.assertTrue(flag);    
-
-            flag = false;
-            try {
-                parser.parseQuery({
-                    a:1, 
-                    $and:[{
-                        b:2
-                    },{
-                        c:2
-                    },{
-                        $or:[{
-                            d:3
-                        },{
-                            e:4
-                        }]
-                    }]
-                });
-            } catch (e) {
-                flag = true;
-            }
-            JSUNIT.assertFalse(flag);
-
-            flag = false;
-            try {
-                parser.parseQuery({
-                    a:1, 
-                    $or:[{
-                        b:2
-                    },{
-                        c:2
-                    },{
-                        $or:[{
-                            d:3
-                        },{
-                            e:4
-                        }]
-                    }]
-                });
-            } catch (e) {
-                flag = true;
-            }
-            JSUNIT.assertTrue(flag);
-        };
-
-        (function() {
-            JSUNIT.resetTests();
-            JSUNIT.addTest(testQuerySymbol);
-            JSUNIT.addTest(testQueryTree);
-            JSUNIT.addTest(testQueryParser);
-            JSUNIT.addTest(testQueryParserNormalization);
-            JSUNIT.addTest(testQueryParserNestingError);
-            JSUNIT.runTests('Query tests', Scule.tests.functions.renderTest);
-        }());    
-    
-    }());
-
-    (function() {
-  
-        function testQueryTreeVisitor() {
-
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.ensureBTreeIndex('a,b', {
-                order:100
-            });
-            collection.ensureHashIndex('b');
-            collection.ensureHashIndex('foo', {});
-            collection.ensureBTreeIndex('a', {
-                order:100
-            });
-            collection.ensureHashIndex('c');
-            collection.ensureBTreeIndex('d', {
-                order:100
-            });
-
-            var query = {
-                a:{
-                    $gt:2, 
-                    $in:[4, 5, 7, 8, 9], 
-                    $eq:666
-                },
-                b:3,
-                c:{
-                    $in:[2,1,3,9,7], 
-                    $nin:['a', 'c', 'b', 10, 0, 'z']
-                },
-                d:{
-                    $gt:10, 
-                    $lte:240
-                },
-                foo:'bar'
-            };
-
-            var parser  = Scule.getQueryParser();
-            var visitor = Scule.getQueryTreeIndexSelectionVisitor(collection);
-            var tree = parser.parseQuery(query, {}, collection);
-            tree.accept(visitor);
-
-            JSUNIT.assertEquals(tree.getRoot().getChild(0).getSymbol(), 'd');
-            JSUNIT.assertEquals(tree.getRoot().getChild(0).getType(), 10);
-            JSUNIT.assertEquals(tree.getRoot().getChild(1).getSymbol(), 'a');
-            JSUNIT.assertEquals(tree.getRoot().getChild(1).getType(), 10);
-            JSUNIT.assertEquals(tree.getRoot().getChild(2).getSymbol(), 'foo');
-            JSUNIT.assertEquals(tree.getRoot().getChild(2).getType(), 10);
-            JSUNIT.assertEquals(tree.getRoot().getChild(3).getSymbol(), 'a,b');
-            JSUNIT.assertEquals(tree.getRoot().getChild(3).getType(), 10);
-
-        };
-
-        function testQueryTreeVisitor2() {
-
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.ensureBTreeIndex('a,b', {
-                order:100
-            });
-            collection.ensureHashIndex('b');
-            collection.ensureBTreeIndex('a', {
-                order:100
-            });
-            collection.ensureHashIndex('c');
-            collection.ensureBTreeIndex('d', {
-                order:100
-            });
-
-            var query = {
-                a:{
-                    $gt:2, 
-                    $in:[4, 5, 7, 8, 9], 
-                    $eq:666
-                },
-                b:3,
-                c:{
-                    $in:[2,1,3,9,7], 
-                    $nin:['a', 'c', 'b', 10, 0, 'z']
-                },
-                d:{
-                    $gt:10, 
-                    $lte:240
-                },
-                foo:'bar'
-            };
-
-            var parser  = Scule.getQueryParser();
-            var visitor = Scule.getQueryTreeIndexSelectionVisitor(collection);
-            var tree = parser.parseQuery(query, {}, collection);
-            tree.accept(visitor);
-
-            JSUNIT.assertEquals(tree.getRoot().getChild(0).getSymbol(), 'd');
-            JSUNIT.assertEquals(tree.getRoot().getChild(0).getType(), 10);
-            JSUNIT.assertEquals(tree.getRoot().getChild(1).getSymbol(), 'a');
-            JSUNIT.assertEquals(tree.getRoot().getChild(1).getType(), 10);
-            JSUNIT.assertEquals(tree.getRoot().getChild(2).getSymbol(), 'a,b');
-            JSUNIT.assertEquals(tree.getRoot().getChild(2).getType(), 10);
-
-        };
-
-        function testQueryTreeVisitor3() {
-
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.ensureBTreeIndex('d', {
-                order:100
-            });    
-            collection.ensureBTreeIndex('a', {
-                order:100
-            });
-
-            var query = {
-                a:{
-                    $gt:2, 
-                    $in:[4, 5, 7, 8, 9], 
-                    $eq:666
-                },
-                b:3,
-                c:{
-                    $in:[2,1,3,9,7], 
-                    $nin:['a', 'c', 'b', 10, 0, 'z']
-                },
-                d:{
-                    $gt:10, 
-                    $lte:240
-                },
-                foo:'bar'
-            };
-
-            var parser  = Scule.getQueryParser();
-            var visitor = Scule.getQueryTreeIndexSelectionVisitor(collection);
-            var tree = parser.parseQuery(query, {}, collection);
-            tree.accept(visitor);
-
-            JSUNIT.assertEquals(tree.getRoot().getChild(0).getSymbol(), 'a');
-            JSUNIT.assertEquals(tree.getRoot().getChild(0).getType(), 10);
-            JSUNIT.assertEquals(tree.getRoot().getChild(1).getSymbol(), 'a');
-            JSUNIT.assertEquals(tree.getRoot().getChild(1).getType(), 10);
-            JSUNIT.assertEquals(tree.getRoot().getChild(2).getSymbol(), 'd');
-            JSUNIT.assertEquals(tree.getRoot().getChild(2).getType(), 10);
-
-        };
-
-        function testQueryCompiler() {
-
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.ensureBTreeIndex('a,b', {
-                order:100
-            });
-            collection.ensureHashIndex('b');
-            collection.ensureHashIndex('foo', {});
-            collection.ensureBTreeIndex('a', {
-                order:100
-            });
-            collection.ensureHashIndex('c');
-            collection.ensureBTreeIndex('d', {
-                order:100
-            });
-
-            var query = {
-                a:{
-                    $gt:2, 
-                    $in:[4, 5, 7, 8, 9]
-                },
-                b:3,
-                c:{
-                    $in:[2,1,3,9,7], 
-                    $nin:['a', 'c', 'b', 10, 0, 'z']
-                },
-                d:{
-                    $gt:10, 
-                    $lte:240
-                },
-                foo:'bar'
-            };
-
-            var compiler = Scule.getQueryCompiler();
-            var program = compiler.compileQuery(query, {}, collection);
-            JSUNIT.assertEquals(program.length, 15);
-            JSUNIT.assertEquals(program[0][0], 0x1D);
-            JSUNIT.assertEquals(program[1][0], 0x1D);
-            JSUNIT.assertEquals(program[2][0], 0x1B);
-            JSUNIT.assertEquals(program[3][0], 0x1B);
-            JSUNIT.assertEquals(program[4][0], 0x23);
-            JSUNIT.assertEquals(program[5][0], 0x21);
-            JSUNIT.assertEquals(program[6][0], 0x27);
-            JSUNIT.assertEquals(program[14][0], 0x00);
-
-        };
-
-        function testQueryCompiler2() {
-
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.ensureBTreeIndex('a,b', {
-                order:100
-            });
-
-            var query = {
-                a:666,
-                b:3
-            };
-
-            var compiler = Scule.getQueryCompiler();    
-            var program = compiler.compileQuery(query, {}, collection);
-
-            JSUNIT.assertEquals(program.length, 5);
-            JSUNIT.assertEquals(program[0][0], 0x1B);
-            JSUNIT.assertEquals(program[1][0], 0x23);
-            JSUNIT.assertEquals(program[2][0], 0x21);
-            JSUNIT.assertEquals(program[3][0], 0x28);
-            JSUNIT.assertEquals(program[4][0], 0x00);
-        };
-
-        function testQueryCompilerSortLimit() {
-
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.ensureBTreeIndex('a,b', {
-                order:100
-            });
-            collection.ensureHashIndex('b');
-            collection.ensureHashIndex('foo', {});
-            collection.ensureBTreeIndex('a', {
-                order:100
-            });
-            collection.ensureHashIndex('c');
-            collection.ensureBTreeIndex('d', {
-                order:100
-            });
-
-            var query = {
-                a:{
-                    $gt:2, 
-                    $in:[4, 5, 7, 8, 9]
-                },
-                b:3,
-                c:{
-                    $in:[2,1,3,9,7], 
-                    $nin:['a', 'c', 'b', 10, 0, 'z']
-                },
-                d:{
-                    $gt:10, 
-                    $lte:240
-                },
-                foo:'bar'
-            };
-
-            var compiler = Scule.getQueryCompiler();
-
-        };
-
-        function testQueryCompilerOr() {
-
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.ensureHashIndex('a,b,c');
-            var query = {
-                a:{
-                    $in:[1,2,3,4,5]
-                }, 
-                b:10, 
-                c:99, 
-                $or:[{
-                    z:11
-                },{
-                    k:12
-                }]
-            };
-
-        };
-
-        (function() {
-            JSUNIT.resetTests();
-            JSUNIT.addTest(testQueryTreeVisitor);
-            JSUNIT.addTest(testQueryTreeVisitor2);
-            JSUNIT.addTest(testQueryTreeVisitor3);
-            JSUNIT.addTest(testQueryCompiler);
-            JSUNIT.addTest(testQueryCompiler2);
-            JSUNIT.addTest(testQueryCompilerSortLimit);
-            JSUNIT.addTest(testQueryCompilerOr);
-            JSUNIT.runTests('Query Compiler tests', Scule.tests.functions.renderTest);
-        }());
-
-    }());
-
-    (function() {
   
         function testObjectIdCreation() {
             var oid1 = Scule.getObjectId();
@@ -3722,1227 +3603,6 @@ function runAllTests() {
             JSUNIT.addTest(testObjectDateConstructorDefault);
             JSUNIT.addTest(testObjectDateConstructor);
             JSUNIT.runTests('ObjectDate tests', Scule.tests.functions.renderTest);
-        }());    
-    
-    }());
-
-    (function() {
-    
-        function testVirtualMachineExecuteInstruction() {
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-            machine.registerInstruction(0x42, function(vm, instruction) {
-                vm.stack.push(instruction[1][0])
-                vm.ipointer++;
-            });
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            machine.executeInstruction([0x42, ['lol']]);
-            JSUNIT.assertEquals(machine.stack.peek(), 'lol');
-            JSUNIT.assertEquals(machine.ipointer, 1);
-        };
-
-        function testVirtualMachineHaltInstruction() {
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-            machine.running = true;
-            machine.executeInstruction([0x00, []]);
-            JSUNIT.assertFalse(machine.running);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-        };
-
-        function testVirtualMachineBreakInstruction() {
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-            machine.running = true;
-            machine.executeInstruction([0x1A, []]);
-            JSUNIT.assertFalse(machine.running);
-            JSUNIT.assertEquals(machine.ipointer, 1);    
-        };
-
-        function testVirtualMachineStartInstruction() {
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-            machine.executeInstruction([0x24, []]);
-            JSUNIT.assertTrue(machine.running);
-            JSUNIT.assertEquals(machine.ipointer, 1);    
-        };
-
-        function testVirtualMachineScanInstruction() {
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.ensureBTreeIndex('a', {
-                order:100
-            });
-            for(var i=0; i < 1000; i++) {
-                collection.save({
-                    a:1,
-                    b:2,
-                    c:3
-                });
-            }    
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-            machine.executeInstruction([0x1C, [collection]]);
-            JSUNIT.assertEquals(machine.ipointer, 1); 
-            JSUNIT.assertEquals(machine.stack.peek().length, 1000);
-        };
-
-        function testVirtualMachineRangeInstruction() {
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.ensureBTreeIndex('a', {
-                order:100
-            });
-            for(var i=0; i < 1000; i++) {
-                var r = i%10;
-                collection.save({
-                    a:r,
-                    b:r,
-                    c:r
-                });
-            }    
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-            machine.executeInstruction([0x1D, [collection.indices[0], [3, 5, true, true]]]);
-            JSUNIT.assertEquals(machine.ipointer, 1); 
-            JSUNIT.assertEquals(machine.stack.peek().length, 300);
-        };
-
-        function testVirtualMachineFindInstruction() {
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.ensureHashIndex('a', {});
-            for(var i=0; i < 1000; i++) {
-                var r = i%10;
-                collection.save({
-                    a:r,
-                    b:r,
-                    c:r
-                });
-            }    
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-            machine.executeInstruction([0x1B, [collection.indices[0], 2]]);
-            JSUNIT.assertEquals(machine.ipointer, 1); 
-            JSUNIT.assertEquals(machine.stack.peek().length, 100);
-        };
-
-        function testVirtualMachineStoreInstruction() {
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.ensureHashIndex('a', {});
-            for(var i=0; i < 1000; i++) {
-                var r = i%10;
-                collection.save({
-                    a:r,
-                    b:r,
-                    c:r
-                });
-            }    
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-            machine.executeInstruction([0x1B, [collection.indices[0], 2]]);
-            JSUNIT.assertEquals(machine.ipointer, 1); 
-            JSUNIT.assertEquals(machine.stack.peek().length, 100);
-            machine.executeInstruction([0x21, []]);
-            JSUNIT.assertEquals(machine.ipointer, 2);
-            JSUNIT.assertEquals(machine.registers[0].length, 100);
-        };
-
-        function testVirtualMachineTransposeInstruction() {
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.ensureHashIndex('a', {});
-            for(var i=0; i < 1000; i++) {
-                var r = i%10;
-                collection.save({
-                    a:r,
-                    b:r,
-                    c:r
-                });
-            }    
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-            machine.executeInstruction([0x1B, [collection.indices[0], 2]]);
-            JSUNIT.assertEquals(machine.ipointer, 1); 
-            JSUNIT.assertEquals(machine.stack.peek().length, 100);
-            machine.executeInstruction([0x21, []]);
-            JSUNIT.assertEquals(machine.ipointer, 2);
-            JSUNIT.assertEquals(machine.registers[0].length, 100);
-            machine.executeInstruction([0x28, []]);
-            JSUNIT.assertEquals(machine.ipointer, 3);
-            JSUNIT.assertEquals(machine.result.length, 100);
-        };
-
-        function testVirtualMachineReadInstruction() {
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.ensureHashIndex('a', {});
-            for(var i=0; i < 1000; i++) {
-                var r = i%10;
-                collection.save({
-                    a:r,
-                    b:r,
-                    c:r
-                });
-            }    
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-            machine.executeInstruction([0x1B, [collection.indices[0], 2]]);
-            JSUNIT.assertEquals(machine.ipointer, 1); 
-            JSUNIT.assertEquals(machine.stack.peek().length, 100);
-            machine.executeInstruction([0x21, []]);
-            JSUNIT.assertEquals(machine.ipointer, 2);
-            JSUNIT.assertEquals(machine.registers[0].length, 100);
-            machine.executeInstruction([0x27, []]);
-            JSUNIT.assertEquals(machine.ipointer, 3);
-            JSUNIT.assertEquals(machine.dpointer, 1);
-            JSUNIT.assertEquals(machine.registers[1].a, 2);
-        };
-
-        function testVirtualMachineShiftInstruction() {
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.ensureHashIndex('a', {});
-            for(var i=0; i < 1000; i++) {
-                var r = i%10;
-                collection.save({
-                    a:r,
-                    b:r,
-                    c:r
-                });
-            }    
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-            machine.executeInstruction([0x1B, [collection.indices[0], 2]]);
-            JSUNIT.assertEquals(machine.ipointer, 1); 
-            JSUNIT.assertEquals(machine.stack.peek().length, 100);
-            machine.executeInstruction([0x21, []]);
-            JSUNIT.assertEquals(machine.ipointer, 2);
-            JSUNIT.assertEquals(machine.registers[0].length, 100);
-            machine.executeInstruction([0x27, []]);
-            JSUNIT.assertEquals(machine.ipointer, 3);
-            JSUNIT.assertEquals(machine.dpointer, 1);
-            JSUNIT.assertEquals(machine.registers[1].a, 2);
-            machine.stack.push(true);
-            machine.executeInstruction([0x20, []]);
-            JSUNIT.assertEquals(machine.ipointer, 4);
-            JSUNIT.assertEquals(machine.dpointer, 1);
-            JSUNIT.assertEquals(machine.registers[1], machine.result[machine.result.length - 1]);
-        };
-
-        function testVirtualMachineIntersectInstruction() {
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-    
-            var list1 = [];
-            var list2 = [];
-    
-            for(var i=0; i < 1000; i++) {
-                var o = {
-                    _id:Scule.getObjectId()
-                };
-                list1.push(o);
-                if(i%2 == 0) {
-                    list2.push(o);
-                }
-            }
-    
-            machine.running;
-            machine.stack.push(list1);
-            machine.stack.push(list2);
-            machine.executeInstruction([0x23, []]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertEquals(machine.dpointer, 0);
-            JSUNIT.assertEquals(machine.stack.peek().length, 500);
-        };
-
-        function testVirtualMachineAndInstruction() {
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-            machine.running;
-            machine.stack.push(true);
-            machine.stack.push(true);
-            machine.executeInstruction([0x01, [2]]);
-            JSUNIT.assertTrue(machine.stack.peek());
-            machine.stack.push(false);
-            machine.executeInstruction([0x01, [2]]);
-            JSUNIT.assertFalse(machine.stack.peek());    
-        };
-
-        function testVirtualMachineOrInstruction() {
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-            machine.running;
-            machine.stack.push(true);
-            machine.stack.push(true);
-            machine.executeInstruction([0x02, [2]]);
-            JSUNIT.assertTrue(machine.stack.peek());
-            machine.stack.push(false);
-            machine.executeInstruction([0x02, [2]]);
-            JSUNIT.assertTrue(machine.stack.peek());    
-        };
-
-        function testVirtualMachineGotoInstruction() {
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-            machine.running;
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            machine.executeInstruction([0x26, [42]]); 
-            JSUNIT.assertEquals(machine.ipointer, 42);
-        };
-
-        function testVirtualMachineJumpInstruction() {
-            var list = [];
-            for(var i=0; i < 100; i++) {
-                var o = {
-                    _id:Scule.getObjectId()
-                };
-                list.push(o);
-            }    
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-            machine.running;
-            machine.dpointer = 100;
-            machine.registers[0] = list;
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            machine.executeInstruction([0x25, [42]]); 
-            JSUNIT.assertEquals(machine.ipointer, 42);
-            machine.reset();
-            machine.running;
-            machine.dpointer = 50;
-            machine.registers[0] = list;
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            machine.executeInstruction([0x25, [42]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);    
-        };
-
-        function testVirtualMachineEqInstruction() {
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a: 1,
-                b: 2,
-                c: {
-                    d:3
-                }
-            };
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0xC, ['c.d', 3]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertTrue(machine.stack.peek());
-        };
-
-        function testVirtualMachineNeInstruction() {
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a: 1,
-                b: 2,
-                c: {
-                    d:3
-                }
-            };
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0xD, ['c.d', 3]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertFalse(machine.stack.peek());
-        };
-
-        function testVirtualMachineGtInstruction() {
-            var machine = Scule.getVirtualMachine();
-    
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a: 1,
-                b: 2,
-                c: {
-                    d:3
-                }
-            };
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0x07, ['c.d', 2]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertTrue(machine.stack.peek());
-
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a: 1,
-                b: 2,
-                c: {
-                    d:3
-                }
-            };
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0x07, ['c.d', 3]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertFalse(machine.stack.peek());    
-        };
-
-        function testVirtualMachineGteInstruction() {
-            var machine = Scule.getVirtualMachine();
-    
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a: 1,
-                b: 2,
-                c: {
-                    d:3
-                }
-            };
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0x08, ['c.d', 2]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertTrue(machine.stack.peek());
-
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a: 1,
-                b: 2,
-                c: {
-                    d:3
-                }
-            };
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0x08, ['c.d', 3]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertTrue(machine.stack.peek());    
-        };
-
-        function testVirtualMachineLtInstruction() {
-            var machine = Scule.getVirtualMachine();
-    
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a: 1,
-                b: 2,
-                c: {
-                    d:3
-                }
-            };
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0x05, ['c.d', 4]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertTrue(machine.stack.peek());
-
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a: 1,
-                b: 2,
-                c: {
-                    d:3
-                }
-            };
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0x05, ['c.d', 3]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertFalse(machine.stack.peek());    
-        };
-
-        function testVirtualMachineLteInstruction() {
-            var machine = Scule.getVirtualMachine();
-    
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a: 1,
-                b: 2,
-                c: {
-                    d:3
-                }
-            };
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0x06, ['c.d', 4]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertTrue(machine.stack.peek());
-
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a: 1,
-                b: 2,
-                c: {
-                    d:3
-                }
-            };
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0x06, ['c.d', 3]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertTrue(machine.stack.peek());    
-        };
-
-        function testVirtualMachineInInstruction() {
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a: 1,
-                b: 2,
-                c: {
-                    d:3
-                }
-            };
-            var table = Scule.getHashTable();
-            table.put(1, true);
-            table.put(3, true);
-            table.put(4, true);
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0xA, ['c.d', table]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertTrue(machine.stack.peek());
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a: 1,
-                b: 2,
-                c: {
-                    d:3
-                }
-            };
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0xA, ['c', table]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertFalse(machine.stack.peek());    
-        };
-
-        function testVirtualMachineNinInstruction() {
-            var machine = Scule.getVirtualMachine();
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a: 1,
-                b: 2,
-                c: {
-                    d:3
-                }
-            };
-            var table = Scule.getHashTable();
-            table.put(1, true);
-            table.put(3, true);
-            table.put(4, true);
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0xB, ['c.d', table]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertFalse(machine.stack.peek());
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a: 1,
-                b: 2,
-                c: {
-                    d:3
-                }
-            };
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0xB, ['c', table]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertTrue(machine.stack.peek());    
-        };
-
-        function testVirtualMachineSizeInstruction() {
-            var machine = Scule.getVirtualMachine();
-    
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a:[1, 2, 3, 4, 5, 6, 7]
-            };
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0xE, ['a', 7]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertTrue(machine.stack.peek());
-    
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a:[1, 2, 3, 4, 5, 6, 7]
-            };
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0xE, ['a', 5]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertFalse(machine.stack.peek());    
-        };
-
-        function testVirtualMachineExistsInstruction() {
-            var machine = Scule.getVirtualMachine();
-    
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a:[1, 2, 3, 4, 5, 6, 7]
-            };
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0xF, ['a', true]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertTrue(machine.stack.peek());
-    
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a:[1, 2, 3, 4, 5, 6, 7]
-            };
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0xF, ['c', true]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertFalse(machine.stack.peek());    
-        };
-
-        function testVirtualMachineAllInstruction() {
-            var machine = Scule.getVirtualMachine();
-            var table = Scule.getHashTable();
-            table.put('foo', true);
-            table.put('bar', true);
-    
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a:['foo', 'bar', 'poo']
-            };
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0x09, ['a', table]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertTrue(machine.stack.peek());
-    
-            table.put('lol');
-            machine.reset();
-            machine.running;
-            machine.registers[1] = {
-                a:['foo', 'bar', 'poo']
-            };
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            JSUNIT.assertTrue(machine.stack.isEmpty());
-            machine.executeInstruction([0x09, ['c']]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertFalse(machine.stack.peek());    
-        };
-
-        function testVirtualMachineLimitInstruction() {
-            var machine = Scule.getVirtualMachine();
-            for(var i=0; i < 1000; i++) {
-                machine.result.push({
-                    _id:Scule.getObjectId()
-                });
-            }
-            JSUNIT.assertEquals(machine.ipointer, 0);    
-            machine.executeInstruction([0x29, [97]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertEquals(machine.result.length, 97);
-        }
-
-        function testVirtualMachineSetInstruction() {
-            var machine = Scule.getVirtualMachine();
-            machine.registers[1] = {
-                _id:Scule.getObjectId(),
-                foo:'bar'
-            };
-    
-            machine.running = true;
-            machine.upsert  = false;
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            machine.executeInstruction([0x12, [{
-                foo:true
-            }, 'lol']]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertEquals(machine.registers[1].foo, 'lol');
-            machine.executeInstruction([0x12, [{
-                bar:true
-            }, 'foo']]);
-            JSUNIT.assertEquals(machine.ipointer, 2);
-            JSUNIT.assertFalse(('bar' in machine.registers[1]));
-
-            machine.reset();
-            machine.running = true;
-            machine.upsert  = true;
-            machine.registers[1] = {
-                _id:Scule.getObjectId(),
-                foo:'bar'
-            };    
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            machine.executeInstruction([0x12, [{
-                foo:true
-            }, 'lol']]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertEquals(machine.registers[1].foo, 'lol');
-            machine.executeInstruction([0x12, [{
-                bar:true
-            }, 'foo']]);
-            JSUNIT.assertEquals(machine.ipointer, 2);
-            JSUNIT.assertEquals(machine.registers[1].bar, 'foo');
-        };
-
-        function testVirtualMachineUnsetInstruction() {
-            var machine = Scule.getVirtualMachine();
-            machine.registers[1] = {
-                _id:Scule.getObjectId(),
-                foo:'bar'
-            };
-    
-            machine.running = true;
-            machine.upsert  = false;
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            machine.executeInstruction([0x13, [{
-                foo:true
-            }]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertFalse('foo' in machine.registers[1]);
-        };
-
-        function testVirtualMachineIncInstruction() {
-    
-            var machine = Scule.getVirtualMachine();
-            machine.registers[1] = {
-                _id:Scule.getObjectId(),
-                foo:'bar',
-                count:0
-            };
-    
-            machine.running = true;
-            machine.upsert  = false;
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            machine.executeInstruction([0x14, [{
-                foo:true
-            }, 2]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertEquals(machine.registers[1].foo, 'bar');
-            machine.executeInstruction([0x14, [{
-                count:true
-            }, 2]]);
-            JSUNIT.assertEquals(machine.ipointer, 2);
-            JSUNIT.assertEquals(machine.registers[1].count, 2);
-
-            machine.reset();
-            machine.registers[1] = {
-                _id:Scule.getObjectId(),
-                foo:'bar',
-                count:0
-            };
-    
-            machine.running = true;
-            machine.upsert  = true;
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            machine.executeInstruction([0x14, [{
-                count1:true
-            }, 66]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertEquals(machine.registers[1].count1, 66);
-    
-        };
-
-        function testVirtualMachineOPullInstruction() {
-            var machine = Scule.getVirtualMachine();
-            machine.registers[1] = {
-                _id:Scule.getObjectId(),
-                foo:'bar',
-                arr:['foo', 'bar', 'poo']
-            };
-            machine.running = true;
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            machine.executeInstruction([0x15, [{
-                arr:true
-            }, 'poo']]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar']));
-        };
-
-        function testVirtualMachineOPullAllInstruction() {
-            var machine = Scule.getVirtualMachine();
-            machine.registers[1] = {
-                _id:Scule.getObjectId(),
-                foo:'bar',
-                arr:['foo', 'bar', 'poo']
-            };
-            machine.running = true;
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            machine.executeInstruction([0x16, [{
-                arr:true
-            }, ['poo', 'foo']]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['bar']));
-        };
-
-        function testVirtualMachinePopInstruction() {
-            var machine = Scule.getVirtualMachine();
-            machine.registers[1] = {
-                _id:Scule.getObjectId(),
-                foo:'bar',
-                arr:['foo', 'bar', 'poo']
-            };
-            machine.running = true;
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            machine.executeInstruction([0x17, [{
-                arr:true
-            }]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar']));
-            machine.executeInstruction([0x17, [{
-                arr:true
-            }]]);
-            JSUNIT.assertEquals(machine.ipointer, 2);
-            JSUNIT.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo']));
-        };
-
-        function testVirtualMachineOPushInstruction() {
-            var machine = Scule.getVirtualMachine();
-            machine.registers[1] = {
-                _id:Scule.getObjectId(),
-                foo:'bar',
-                arr:['foo', 'bar', 'poo']
-            };
-            machine.running = true;
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            machine.executeInstruction([0x18, [{
-                arr:true
-            }, 'poo']]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar', 'poo', 'poo']));
-            machine.executeInstruction([0x18, [{
-                arr:true
-            }, 'poo2']]);
-            JSUNIT.assertEquals(machine.ipointer, 2);
-            JSUNIT.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar', 'poo', 'poo', 'poo2']));    
-        };
-
-        function testVirtualMachineOPushAllInstruction() {
-            var machine = Scule.getVirtualMachine();
-            machine.registers[1] = {
-                _id:Scule.getObjectId(),
-                foo:'bar',
-                arr:['foo', 'bar', 'poo']
-            };
-            machine.running = true;
-            JSUNIT.assertEquals(machine.ipointer, 0);
-            machine.executeInstruction([0x19, [{
-                arr:true
-            }, ['poo', 'foo']]]);
-            JSUNIT.assertEquals(machine.ipointer, 1);
-            JSUNIT.assertEquals(JSON.stringify(machine.registers[1].arr), JSON.stringify(['foo', 'bar', 'poo', 'poo', 'foo']));
-        };
-    
-
-        (function() {
-            JSUNIT.resetTests();
-            JSUNIT.addTest(testVirtualMachineExecuteInstruction);
-            JSUNIT.addTest(testVirtualMachineHaltInstruction);
-            JSUNIT.addTest(testVirtualMachineBreakInstruction);
-            JSUNIT.addTest(testVirtualMachineStartInstruction);
-            JSUNIT.addTest(testVirtualMachineScanInstruction);
-            JSUNIT.addTest(testVirtualMachineRangeInstruction);
-            JSUNIT.addTest(testVirtualMachineFindInstruction);
-            JSUNIT.addTest(testVirtualMachineStoreInstruction);
-            JSUNIT.addTest(testVirtualMachineTransposeInstruction);
-            JSUNIT.addTest(testVirtualMachineReadInstruction);
-            JSUNIT.addTest(testVirtualMachineShiftInstruction);
-            JSUNIT.addTest(testVirtualMachineIntersectInstruction);
-            JSUNIT.addTest(testVirtualMachineAndInstruction);
-            JSUNIT.addTest(testVirtualMachineOrInstruction);
-            JSUNIT.addTest(testVirtualMachineGotoInstruction);
-            JSUNIT.addTest(testVirtualMachineJumpInstruction);
-            JSUNIT.addTest(testVirtualMachineEqInstruction);
-            JSUNIT.addTest(testVirtualMachineNeInstruction);
-            JSUNIT.addTest(testVirtualMachineGtInstruction);
-            JSUNIT.addTest(testVirtualMachineGteInstruction);
-            JSUNIT.addTest(testVirtualMachineLtInstruction);
-            JSUNIT.addTest(testVirtualMachineLteInstruction);
-            JSUNIT.addTest(testVirtualMachineInInstruction);
-            JSUNIT.addTest(testVirtualMachineNinInstruction);
-            JSUNIT.addTest(testVirtualMachineSizeInstruction);
-            JSUNIT.addTest(testVirtualMachineExistsInstruction);
-            JSUNIT.addTest(testVirtualMachineAllInstruction);
-            JSUNIT.addTest(testVirtualMachineLimitInstruction);
-            JSUNIT.addTest(testVirtualMachineSetInstruction);
-            JSUNIT.addTest(testVirtualMachineUnsetInstruction);
-            JSUNIT.addTest(testVirtualMachineIncInstruction);
-            JSUNIT.addTest(testVirtualMachineOPullInstruction);
-            JSUNIT.addTest(testVirtualMachineOPullAllInstruction);
-            JSUNIT.addTest(testVirtualMachinePopInstruction);
-            JSUNIT.addTest(testVirtualMachineOPushInstruction);
-            JSUNIT.addTest(testVirtualMachineOPushAllInstruction);
-            JSUNIT.runTests('Virtual Machine tests', Scule.tests.functions.renderTest);
-        }());    
-    
-    }());
-
-    (function() {
-    
-        function testVirtualMachineSimpleMutation() {
-
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            var timer      = Scule.getTimer();
-
-            timer.startInterval('InsertDocuments');
-            for(var i=0; i < 100000; i++) {
-                var a = [];
-                var r = Scule.global.functions.randomFromTo(2, 5);
-                for(var j=0; j < r; j++) {
-                    a.push(j);
-                }
-                collection.save({
-                    a:Scule.global.functions.randomFromTo(1, 10),
-                    b:Scule.global.functions.randomFromTo(1, 10),
-                    c:Scule.global.functions.randomFromTo(1, 10),
-                    d:Scule.global.functions.randomFromTo(1, 10),
-                    e:Scule.global.functions.randomFromTo(1, 10),
-                    f:a
-                });
-            }
-            timer.stopInterval();
-
-            timer.startInterval('CreateIndexes');
-            collection.ensureBTreeIndex('a,b', {
-                order:5000
-            });
-            timer.stopInterval();
-
-            var result   = null;
-            var mutate   = null;
-            var program  = null;
-            var machine  = Scule.getVirtualMachine();
-            var compiler = Scule.getQueryCompiler();
-
-            timer.startInterval('CompileQuery');
-            program = compiler.compileQuery({
-                a:3, 
-                b:4
-            }, {}, collection);
-            mutate  = compiler.compileMutate({
-                $set:{
-                    foo:'bar'
-                }
-            }, collection);
-            timer.stopInterval();
-            timer.startInterval('ExecuteQuery');
-            result = machine.execute(program, mutate, true);
-            timer.stopInterval();
-            // timer.logToConsole();
-
-            result.forEach(function(o) {
-                JSUNIT.assertEquals(o.foo, 'bar');
-            });
-
-        };
-
-        (function() {
-            JSUNIT.resetTests();
-            JSUNIT.addTest(testVirtualMachineSimpleMutation);
-            JSUNIT.runTests('Virtual Machine tests', Scule.tests.functions.renderTest);
-        }());    
-    
-    }());
-
-    (function() {
-    
-        function testVirtualMachine() {
-
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.save({
-                a:1,
-                b:2,
-                c:3,
-                d:4,
-                e:5,
-                tags:['foo1', 'foo2', 'foo3', 'foo4']
-            });
-
-            var table1 = Scule.getHashTable();
-            table1.put('foo2', true);
-            table1.put('foo4', true);
-
-            var table2 = Scule.getHashTable();
-            table2.put(1, true);
-            table2.put(2, true);
-            table2.put(3, true);
-            table2.put(4, true);
-
-            var table3 = Scule.getHashTable();
-            table3.put(11, true);
-            table3.put(12, true);
-            table3.put(13, true);
-            table3.put(14, true);
-
-            var program = [
-            [0x1C, [collection]], // scan           0
-            [0x1A, []], // break point              1 
-            [0x23, []], // union                    2
-            [0x1A, []], // break point              3
-            [0x21, []], // store                    4
-            [0x1A, []], // break point              5
-            [0x27, []], // read                     6
-            [0x1A, []], // break point              7
-            [0xC,  ['a', 1]], // eq                 8
-            [0x1A, []], // break point              9
-            [0xD,  ['e', 7]], // ne                 10
-            [0x1A, []], // break point              11
-            [0x07, ['b', 1]], // gt                 12
-            [0x1A, []], // break point              13
-            [0x05, ['b', 3]], // lt                 14
-            [0x1A, []], // break point              15
-            [0x08, ['c', 1]], // gte                16
-            [0x1A, []], // break point              17
-            [0x06, ['c', 4]], // lte                18
-            [0x1A, []], // break point              19
-            [0xA,  ['d', table2]], // in            20
-            [0x1A, []], // break point              21
-            [0xB,  ['d', table3]], // nin           22
-            [0x1A, []], // break point              23
-            [0x09, ['tags', table1]], // all        24
-            [0x1A, []], // break point              25
-            [0xE,  ['tags', 4]], // size            26
-            [0x1A, []], // break point              27
-            [0xF,  ['e', true]], // exists          28
-            [0x1A, []], // break point              29
-            [0x01, [11]], // and                    30
-            [0x1A, []], // break point              31
-            [0x20, []], // shift                    32
-            [0x1A, []], // break point              33
-            [0x25, [36]], // jump                   34
-            [0x26, [6]], // goto                    35
-            [0x00, []] // halt                      36
-            ];
-
-            var machine = Scule.getVirtualMachine();
-            machine.execute(program);
-
-            // scan
-            JSUNIT.assertEquals(machine.stack.getLength(), 1);
-            machine.resume();
-
-            // union
-            JSUNIT.assertEquals(machine.stack.getLength(), 1);
-            machine.resume();
-
-            // store
-            JSUNIT.assertEquals(machine.stack.getLength(), 0);
-            JSUNIT.assertEquals(machine.registers[0].length, 1);
-            machine.resume();
-
-            // read
-            JSUNIT.assertEquals(machine.stack.getLength(), 0);
-            JSUNIT.assertNotEquals(machine.registers[1], null);
-            machine.resume();
-
-            // eq
-            JSUNIT.assertEquals(machine.stack.getLength(), 1);
-            JSUNIT.assertTrue(machine.stack.peek());
-            machine.resume();
-
-            // ne
-            JSUNIT.assertEquals(machine.stack.getLength(), 2);
-            JSUNIT.assertTrue(machine.stack.peek());
-            machine.resume();
-
-            // gt
-            JSUNIT.assertEquals(machine.stack.getLength(), 3);
-            JSUNIT.assertTrue(machine.stack.peek());
-            machine.resume();
-
-            // lt
-            JSUNIT.assertEquals(machine.stack.getLength(), 4);
-            JSUNIT.assertTrue(machine.stack.peek());
-            machine.resume();
-
-            // gte
-            JSUNIT.assertEquals(machine.stack.getLength(), 5);
-            JSUNIT.assertTrue(machine.stack.peek());
-            machine.resume();
-
-            // lte
-            JSUNIT.assertEquals(machine.stack.getLength(), 6);
-            JSUNIT.assertTrue(machine.stack.peek());
-            machine.resume();    
-
-            // in
-            JSUNIT.assertEquals(machine.stack.getLength(), 7);
-            JSUNIT.assertTrue(machine.stack.peek());
-            machine.resume();
-
-            // nin
-            JSUNIT.assertEquals(machine.stack.getLength(), 8);
-            JSUNIT.assertTrue(machine.stack.peek());
-            machine.resume();
-
-            // all
-            JSUNIT.assertEquals(machine.stack.getLength(), 9);
-            JSUNIT.assertTrue(machine.stack.peek());
-            machine.resume();
-
-            // size
-            JSUNIT.assertEquals(machine.stack.getLength(), 10);
-            JSUNIT.assertTrue(machine.stack.peek());
-            machine.resume();
-
-            // exists
-            JSUNIT.assertEquals(machine.stack.getLength(), 11);
-            JSUNIT.assertTrue(machine.stack.peek());
-            machine.resume();    
-
-            // and
-            JSUNIT.assertEquals(machine.stack.getLength(), 1);
-            JSUNIT.assertTrue(machine.stack.peek());
-            machine.resume();
-
-            // shift
-            JSUNIT.assertEquals(machine.result.length, 1);
-            JSUNIT.assertEquals(machine.stack.getLength(), 0);
-
-        };
-
-        function testVirtualMachineSimpleSelection() {
-
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.ensureBTreeIndex('a', {
-                order:1000
-            });
-            collection.ensureBTreeIndex('b', {
-                order:1000
-            });
-
-            for(var i=0; i < 10000; i++) {
-                var a = [];
-                var r = Scule.global.functions.randomFromTo(2, 5);
-                for(var j=0; j < r; j++) {
-                    a.push(j);
-                }
-                collection.save({
-                    a:Scule.global.functions.randomFromTo(1, 10),
-                    b:Scule.global.functions.randomFromTo(1, 10),
-                    c:Scule.global.functions.randomFromTo(1, 10),
-                    d:Scule.global.functions.randomFromTo(1, 10),
-                    e:Scule.global.functions.randomFromTo(1, 10),
-                    f:a
-                });
-            }
-
-            var result;
-            var program  = null;
-            var machine  = Scule.getVirtualMachine();
-            var compiler = Scule.getQueryCompiler();
-            var timer    = Scule.getTimer();
-
-            timer.startInterval('CompileQuery');
-            program = compiler.compileQuery({
-                a:3, 
-                b:4
-            }, {
-                $limit:10, 
-                $sort:{
-                    e:1
-                }
-            }, collection);
-            timer.stopInterval();
-            timer.startInterval('ExecuteQuery');
-            result = machine.execute(program);
-            timer.stopInterval();
-            // timer.logToConsole();
-
-            machine.reset();
-            timer.startInterval('CompileQuery');
-            program = compiler.compileQuery({
-                a:3, 
-                b:4
-            }, {
-                $limit:10, 
-                $sort:{
-                    e:1
-                }
-            }, collection);
-            timer.stopInterval();
-            timer.startInterval('ExecuteQuery');
-            result = machine.execute(program);
-            timer.stopInterval();
-        // timer.logToConsole();
-
-        };
-
-        function testVirtualMachineSelection() {
-
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            for(var i=0; i < 300; i++) {
-                var a = [];
-                var r = Scule.global.functions.randomFromTo(2, 5);
-                for(var j=0; j < r; j++) {
-                    a.push(j);
-                }
-                collection.save({
-                    a:Scule.global.functions.randomFromTo(1, 10),
-                    b:Scule.global.functions.randomFromTo(1, 10),
-                    c:Scule.global.functions.randomFromTo(1, 10),
-                    d:Scule.global.functions.randomFromTo(1, 10),
-                    e:Scule.global.functions.randomFromTo(1, 10),
-                    f:a
-                });
-            }
-
-            var program  = null;
-            var result   = null;
-            var machine  = Scule.getVirtualMachine();
-            var compiler = Scule.getQueryCompiler();
-            var timer    = Scule.getTimer();
-
-            timer.startInterval('ManualQuery');
-            var count = 0;
-            var o = collection.findAll();
-            o.forEach(function(document) {
-                if(document.a == 3 && document.c > 4 && document.c <= 10) {
-                    count++;
-                }
-            });
-            timer.stopInterval();
-
-            machine.reset();
-            timer.startInterval('CompileQuery');
-            program  = compiler.compileQuery({
-                a:3, 
-                c:{
-                    $gt:4, 
-                    $lte:10
-                }
-            }, {}, collection);
-            timer.stopInterval();
-            timer.startInterval('ExecuteQuery');
-            result   = machine.execute(program);
-            timer.stopInterval();
-            // timer.logToConsole();
-        
-            JSUNIT.assertEquals(count, result.length);
-        };
-
-        (function() {
-            JSUNIT.resetTests();
-            JSUNIT.addTest(testVirtualMachine);
-            JSUNIT.addTest(testVirtualMachineSelection);
-            JSUNIT.addTest(testVirtualMachineSimpleSelection);
-            JSUNIT.runTests('Virtual Machine tests', Scule.tests.functions.renderTest);
         }());    
     
     }());
@@ -5681,89 +4341,7 @@ function runAllTests() {
     }());
 
     (function() {
-  
-        function testGeoQueriesWithin() {
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            for(var i=0; i < 5000; i++) {
-                var r = i%10;
-                collection.save({
-                    a: {
-                        b:r
-                    },
-                    loc:{
-                        lat:Scule.global.functions.randomFromTo(-90, 90),
-                        lon:Scule.global.functions.randomFromTo(-70, 70)
-                    },
-                    bar:'foo'+r,
-                    arr: [r, r+1, r+2, r+3],
-                    scl: r
-                });
-            }
-            collection.find({
-                'loc':{
-                    $near:{
-                        lat:53, 
-                        lon:-67, 
-                        distance:1000
-                    }
-                }
-            }, {}, function(o) {
-                o.forEach(function(document) {
-                    JSUNIT.assertTrue('_meta' in document);
-                    JSUNIT.assertLessThanEqualTo(document._meta.distance, 1000);
-                });
-            });
-        };
 
-        function testGeoQueriesNear() {
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.ensureIndex(Scule.global.constants.INDEX_TYPE_BTREE, 'a.b', {
-                order:100
-            });
-            for(var i=0; i < 5000; i++) {
-                var r = i%10;
-                collection.save({
-                    a: {
-                        b:r
-                    },
-                    loc:{
-                        lat:Scule.global.functions.randomFromTo(-90, 90),
-                        lon:Scule.global.functions.randomFromTo(-180, 180)
-                    },           
-                    bar:'foo'+r,
-                    arr: [r, r+1, r+2, r+3],
-                    scl: r
-                });
-            }
-            collection.find({
-                'loc':{
-                    $within:{
-                        lat:53, 
-                        lon:-67, 
-                        distance:10
-                    }
-                }
-            }, {}, function(o) {
-                o.forEach(function(document) {
-                    JSUNIT.assertTrue('_meta' in document);
-                    JSUNIT.assertLessThanEqualTo(document._meta.distance, 10);
-                });
-            });
-        };
-
-        (function() {
-            JSUNIT.resetTests();
-            JSUNIT.addTest(testGeoQueriesWithin);
-            JSUNIT.addTest(testGeoQueriesNear);
-            JSUNIT.runTests('Geo-Spatial Query tests', Scule.tests.functions.renderTest);
-        }());
-
-    }());
-
-    (function() {
-       
         function testQueries() {
 
             Scule.dropAll();

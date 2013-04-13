@@ -28,6 +28,7 @@
 var scule   = require('../lib/com.scule.db');
 
 exports['test Ticket6'] = function(beforeExit, assert) {
+
     scule.dropAll();
     var collection = scule.factoryCollection('scule+dummy://test');
     for (var i=0; i < 100; i++) {
@@ -45,8 +46,8 @@ exports['test Ticket6'] = function(beforeExit, assert) {
   
     o = collection.find({}, {$skip:5, $limit:10, $sort:{i:-1}});
     assert.equal(10, o.length);
-    assert.equal(o[0].i, 94);
-    assert.equal(o[9].i, 85);
+    assert.equal(o[0].i, 14);
+    assert.equal(o[9].i, 5);
 
     o = collection.find({}, {$skip:100});
     assert.equal(o.length, 0);
