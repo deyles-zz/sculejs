@@ -272,6 +272,7 @@ exports['test QueryCompiler'] = function(beforeExit, assert) {
 
 };
 
+/*
 exports['test Interpreter'] = function(beforeExit, assert) {
     
     db.dropAll();
@@ -330,6 +331,7 @@ exports['test Interpreter'] = function(beforeExit, assert) {
     t.logToConsole();
 
 };
+*/
 
 exports['test ElemMatch'] = function(beforeExit, assert) {
     
