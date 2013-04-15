@@ -5633,8 +5633,20 @@ module.exports.Scule.classes.DBRef = function(ref, id) {
 
 };
 
+/**
+ * Normalizes SculeJS query expressions
+ * @public
+ * @constructor
+ * @class {QueryNormalizer}
+ * @returns {Void}
+ */
 module.exports.Scule.classes.QueryNormalizer = function() {
 
+    /**
+     * Normalizes a query expression to expand $eq, $or and $elemMatch clauses
+     * @param {Object} query the query expression to normalize
+     * @returns {Object}
+     */
     this.normalize = function(query) {
         var normalize = function(o) {
             for (var key in o) {
@@ -5659,8 +5671,20 @@ module.exports.Scule.classes.QueryNormalizer = function() {
 
 };
 
+/**
+ * Selects and resolves the appropriate indices for a query against a given collection
+ * @public
+ * @constructor
+ * @class {IndexSelector}
+ * @returns {Void}
+ */
 module.exports.Scule.classes.IndexSelector = function() {
 
+    /**
+     * Selects and resolves the appropriate indices for a query against a given collection
+     * @param {Collection} collection the collection to resolve indices against
+     * @param {Object} query the query to analyze
+     */
     this.resolveIndices = function (collection, query) {
         var containers = this.selectIndices(collection, query);
         if (!containers || !containers.selected) {
@@ -5846,16 +5870,41 @@ module.exports.Scule.classes.IndexSelector = function() {
 
 };
 
+/**
+ * Contains the core logic for SculeJS query evaluation and execution
+ * @public
+ * @constructor
+ * @class {QueryEngine}
+ * @returns {Void}
+ */
 module.exports.Scule.classes.QueryEngine = function() {
 
+    /**
+     * A wrapper around the core SculeJS traverse function
+     * @param {String} k the key to search for
+     * @param {Object} o the object to search
+     * @return {Object}
+     */
     this.traverse = function (k , o) {
         return module.exports.Scule.functions.traverse(k, o);
     };
 
+    /**
+     * A wrapper around the core SculeJS traverseObject function
+     * @param {String} k the key to search for
+     * @param {Object} o the object to search
+     * @return {Object}
+     */
     this.traverseObject = function(k, o) {
         return module.exports.Scule.functions.traverseObject(module.exports.Scule.functions.parseAttributes(k), o);
     };
 
+    /**
+     * Updates the indices for a given collection and document
+     * @param {Object} document the document to update indices for
+     * @param {Collection} collection the collection update indices for
+     * @return {Void}
+     */
     this.updateIndexes = function (document, collection) {
         collection.indices.forEach(function (index) {
             index.remove(document);
@@ -6087,12 +6136,36 @@ module.exports.Scule.classes.QueryEngine = function() {
     
 };
 
+/**
+ * Compiles query expressions to JavaScript and evaluates them against collections
+ * @public
+ * @constructor
+ * @class {QueryCompiler}
+ * @returns {Void}
+ */
 module.exports.Scule.classes.QueryCompiler = function() {
 
+    /**
+     * @access private
+     * @type {HashTable}
+     */
     this.cache      = module.exports.getHashTable();
+    
+    /**
+     * @access private
+     * @type {QueryEngine}
+     */        
     this.engine     = new module.exports.Scule.classes.QueryEngine();
+    
+    /**
+     * @access private
+     * @type {QueryNormalizer}
+     */        
     this.normalizer = new module.exports.Scule.classes.QueryNormalizer();
 
+    /**
+     * @access private
+     */    
     this.compileConditions = function(conditions) {
         var source = '';
         for (var key in conditions) {
@@ -6117,7 +6190,10 @@ module.exports.Scule.classes.QueryCompiler = function() {
         }
         return source;
     };
-    
+
+    /**
+     * @access private
+     */    
     this.compileClauseList = function(queries) {
         var __t  = this;
         var ors = [];
@@ -6137,6 +6213,9 @@ module.exports.Scule.classes.QueryCompiler = function() {
         return ors.join(' || ');
     };
 
+    /**
+     * @access private
+     */    
     this.compileExpressions = function(query) {
         query = this.normalizer.normalize(query);
         var ands = [];
@@ -6146,6 +6225,9 @@ module.exports.Scule.classes.QueryCompiler = function() {
         return ands;
     };
 
+    /**
+     * @access private
+     */    
     this.compileQueryClauses = function(key, subQuery) {
         var clauses = [];
         for (var operator in subQuery) {
@@ -6176,7 +6258,10 @@ module.exports.Scule.classes.QueryCompiler = function() {
         }
         return clauses;
     };    
-    
+
+    /**
+     * @access private
+     */    
     this.compileUpdateClauses = function(key, subQuery, upsert) {
         var clauses = [];
         for (var operator in subQuery) {
@@ -6188,6 +6273,13 @@ module.exports.Scule.classes.QueryCompiler = function() {
         return clauses;
     };
     
+    /**
+     * Compiles the provided update expression to JavaScript and returns the 
+     * source as a {String}
+     * @param {Object} query the query to evaluate
+     * @param {Boolean} upsert a flag indicating whether or not the engine should upsert
+     * @returns {String}
+     */    
     this.compileUpdate = function(query, upsert) {
 
         var hash = md5.hash(JSON.stringify(query));
@@ -6217,6 +6309,13 @@ module.exports.Scule.classes.QueryCompiler = function() {
 
     };
     
+    /**
+     * Compiles the provided query expression to JavaScript and returns the 
+     * source as a {String}
+     * @param {Object} query the query to evaluate
+     * @param {Object} conditions the conditions for the query
+     * @returns {String}
+     */        
     this.compileQuery = function(query, conditions) {
         
         query      = this.normalizer.normalize(query);
@@ -6278,12 +6377,24 @@ module.exports.Scule.classes.QueryCompiler = function() {
         
     };
 
+    /**
+     * Prints the generated JavaScript code for the query to the console
+     * @param {Object} query the query to evaluate
+     * @param {Object} conditions the conditions for the query
+     * @returns {String}
+     */
     this.explainQuery = function(query, conditions) {
         var source = this.compileQuery(query, conditions);
         console.log(source);
         return source;
     };
 
+    /**
+     * Prints the generated JavaScript code for the update to the console
+     * @param {Object} query the query to evaluate
+     * @param {Boolean} upsert a flag indicating whether or not the engine should upsert
+     * @returns {String}
+     */
     this.explainUpdate = function(query, upsert) {
         var source = this.compileUpdate(query, upsert);
         console.log(source);
@@ -6292,11 +6403,26 @@ module.exports.Scule.classes.QueryCompiler = function() {
 
 };
 
+/**
+ * An interpreter that wraps around {QueryCompiler} and provides utility functions
+ * @public
+ * @constructor
+ * @class {QueryInterpreter}
+ * @returns {Void}
+ */
 module.exports.Scule.classes.QueryInterpreter = function() {
 
     this.indexer  = new module.exports.Scule.classes.IndexSelector();
     this.compiler = new module.exports.Scule.classes.QueryCompiler();
 
+    /**
+     * Interprets and evaluates a SculeJS query expression
+     * @param {Collection} collection The collection to evaluate the query against
+     * @param {Object} query the query object
+     * @param {Object} conditions the conditions for the quer
+     * @param {Boolean} explain a boolean flag indicating whether or not to explain the query or evaluate it
+     * @returns {Array}
+     */
     this.interpret = function(collection, query, conditions, explain) {
         if (explain) {
             return this.compiler.explainQuery(query, conditions);
@@ -6307,6 +6433,15 @@ module.exports.Scule.classes.QueryInterpreter = function() {
         return c(o, module.exports.Scule.objects.engine);
     };
 
+    /**
+     * Interprets and evaluates a SculeJS query expression along with updates
+     * @param {Collection} collection The collection to evaluate the query against
+     * @param {Object} query the query object
+     * @param {Object} updates the updates to run against the query results
+     * @param {Object} conditions the conditions for the quer
+     * @param {Boolean} explain a boolean flag indicating whether or not to explain the query or evaluate it
+     * @returns {Array}
+     */
     this.update = function(collection, query, updates, conditions, upsert, explain) {
         var o = this.interpret(collection, query, conditions, explain);
         if (explain) {
@@ -7066,13 +7201,13 @@ module.exports.Scule.functions.parseCollectionURL = function(url) {
 
 /**
  * @public
- * @type Function
+ * @type {Function}
  */
 module.exports.Scule.objects.core.collections.factory = new module.exports.Scule.classes.CollectionFactory();
 
 /**
  * @public
- * @type Function
+ * @type {Function}
  */
 module.exports.Scule.objects.engine = new module.exports.Scule.classes.QueryEngine();
 
@@ -7406,22 +7541,42 @@ module.exports.getBloomFilter = function(capacity) {
     return new module.exports.Scule.classes.BloomFilter(capacity);
 };
 
+/**
+ * Returns an instance of the {QueryNormalizer} class
+ * @returns {QueryNormalizer}
+ */
 module.exports.getQueryNormalizer = function() {
     return new module.exports.Scule.classes.QueryNormalizer();
 };
 
+/**
+ * Returns an instance of the {IndexSelector} class
+ * @returns {IndexSelector}
+ */
 module.exports.getIndexSelector = function() {
     return new module.exports.Scule.classes.IndexSelector();
 };
 
+/**
+ * Returns an instance of the {QueryEngine} class
+ * @returns {QueryEngine}
+ */
 module.exports.getQueryEngine = function() {
     return new module.exports.Scule.classes.QueryEngine();
 };
 
+/**
+ * Returns an instance of the {QueryCompiler} class
+ * @returns {QueryCompiler}
+ */
 module.exports.getQueryCompiler = function() {
     return new module.exports.Scule.classes.QueryCompiler();
 };
 
+/**
+ * Returns an instance of the {QueryInterpreter} class
+ * @returns {QueryInterpreter}
+ */
 module.exports.getQueryInterpreter = function() {
     return new module.exports.Scule.classes.QueryInterpreter();
 };
