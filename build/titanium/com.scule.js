@@ -4933,6 +4933,9 @@ module.exports.Scule.classes.Index = function() {
         }
         var id  = module.exports.Scule.functions.getObjectId(document, true);
         var key = this.generateIndexKey(document);
+        if (key.length == 0) {
+            return false;
+        }
         this.structure.insert(key, document);
         var table = this.structure.search(key);
         this.leaves.put(id, {
@@ -6079,7 +6082,7 @@ module.exports.Scule.classes.QueryEngine = function() {
         }        
     };
     
-    this.$pullall = function (struct, value, upsert) {
+    this.$pullAll = function (struct, value, upsert) {
         var leaf = struct[0];
         var o    = struct[1];
         if (leaf in o && module.exports.Scule.functions.isArray(o[leaf])) {
@@ -6111,7 +6114,7 @@ module.exports.Scule.classes.QueryEngine = function() {
         var leaf = struct[0];
         var o    = struct[1];
         if (!(leaf in o) && upsert) {
-            o[leaf] = value;
+            o[leaf] = [value];
         } else {
             if (module.exports.Scule.functions.isArray(o[leaf])) {
                 o[leaf].push(value);   
@@ -6119,17 +6122,19 @@ module.exports.Scule.classes.QueryEngine = function() {
         }        
     };
     
-    this.$pushall = function (struct, value, upsert) {
+    this.$pushAll = function (struct, value, upsert) {
         var leaf = struct[0];
         var o    = struct[1];
         if (!(leaf in o) && upsert) {
-            o[leaf] = value;
+            o[leaf] = value.slice(0);
         } else {
             if (!module.exports.Scule.functions.isArray(value)) {
                 throw 'the $pushAll operator requires an associated array as an operand';
             }            
             if (module.exports.Scule.functions.isArray(o[leaf])) {
-                o[leaf] = o[leaf].concat(value);   
+                value.forEach(function(v) {
+                    o[leaf].push(v)
+                });
             }
         }        
     };
@@ -6263,12 +6268,12 @@ module.exports.Scule.classes.QueryCompiler = function() {
      * @access private
      */    
     this.compileUpdateClauses = function(key, subQuery, upsert) {
+        if (!this.engine.hasOwnProperty(key)) {
+            return;
+        }        
         var clauses = [];
-        for (var operator in subQuery) {
-            if (!this.engine.hasOwnProperty(operator)) {
-                continue;
-            }
-            clauses.push('\t\tengine.' + operator + '(engine.traverseObject(' + JSON.stringify(key) + ', o), ' + JSON.stringify(subQuery[operator]) + ', ' + JSON.stringify(upsert) + ');');                
+        for (var operand in subQuery) {
+            clauses.push('\t\tengine.' + key + '(engine.traverseObject(' + JSON.stringify(operand) + ', o), ' + JSON.stringify(subQuery[operand]) + ', ' + JSON.stringify(upsert) + ');');                
         }
         return clauses;
     };
@@ -6793,6 +6798,11 @@ module.exports.Scule.classes.Collection = function(name) {
      */
     this.save = function(document, callback) {
         module.exports.Scule.functions.unflattenObject(document);
+        if (document.hasOwnProperty('_id')) {
+            if (!(document._id instanceof module.exports.Scule.classes.ObjectId)) {
+                document._id = new module.exports.Scule.classes.ObjectId(document._id);
+            }
+        }        
         this.documents.put(module.exports.Scule.functions.getObjectId(document, true), document);
         for(var i=0; i < this.indices.length; i++) {
             this.indices[i].remove(document);

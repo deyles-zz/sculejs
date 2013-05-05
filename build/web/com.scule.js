@@ -44,8 +44,6 @@ if (typeof console == 'undefined') {
  */
 (function() {
 
-    "use strict";
-
     /**
      * Registers a namespace with the Scule module
      * @param namespace String
@@ -176,8 +174,6 @@ if (typeof console == 'undefined') {
 }());
 
 (function() {
-
-    "use strict";
 
     /*
      * A JavaScript implementation of the Secure Hash Algorithm, SHA-1, as defined
@@ -474,8 +470,6 @@ if (typeof console == 'undefined') {
 
 (function(){
     
-    "use strict";
-    
     /*!
      * Joseph Myer's md5() algorithm wrapped in a self-invoked function to prevent
      * global namespace polution, modified to hash unicode characters as UTF-8.
@@ -669,8 +663,6 @@ if (typeof console == 'undefined') {
  * Global functions
  */
 (function() {
-
-    "use strict";
 
     /**
      * Given a map, extracts all key => value pairs where the value is true
@@ -1219,8 +1211,6 @@ if (typeof console == 'undefined') {
 
 (function() {
     
-    "use strict";
-    
     /**
      * Represents an "event"
      * @access public
@@ -1429,8 +1419,6 @@ if (typeof console == 'undefined') {
 }());
 
 (function() {
-    
-    "use strict";
     
     /**
      * Represents a message with a routing key and payload
@@ -2026,8 +2014,6 @@ if (typeof console == 'undefined') {
  * Datastructures
  */
 (function() {
-
-    "use strict";
 
     Scule.datastructures.variables.fnv_hash = function (key, size) {
         var hash  = 2166136261;
@@ -5835,8 +5821,6 @@ if (typeof console == 'undefined') {
  */
 (function() {
 
-    "use strict";
-
     /**
      * A simple timer for instrumenting intervals during program execution
      * @public
@@ -6057,8 +6041,13 @@ if (typeof console == 'undefined') {
         this.normalize = function(query) {
             var normalize = function(o) {
                 for (var key in o) {
-                    if (Scule.global.functions.isScalar(o[key]) || o[key] instanceof RegExp) {
+                    if (Scule.global.functions.isScalar(o[key]) 
+                        || o[key] instanceof RegExp
+                        || o[key] instanceof Scule.db.classes.ObjectId) {
                         var v = o[key];
+                        if (v instanceof Scule.db.classes.ObjectId) {
+                            v = o[key].toString();
+                        }                        
                         delete o[key];
                         o[key] = {
                             $eq:v
@@ -6358,7 +6347,7 @@ if (typeof console == 'undefined') {
          * @param {Collection} collection the collection update indices for
          * @return {Void}
          */
-        this.updateIndexes = function (document, collection) {
+        this.updateIndices = function (document, collection) {
             collection.indices.forEach(function (index) {
                 index.remove(document);
                 index.index(document);
@@ -6532,7 +6521,7 @@ if (typeof console == 'undefined') {
             }        
         };
     
-        this.$pullall = function (struct, value, upsert) {
+        this.$pullAll = function (struct, value, upsert) {
             var leaf = struct[0];
             var o    = struct[1];
             if (leaf in o && Scule.global.functions.isArray(o[leaf])) {
@@ -6564,7 +6553,7 @@ if (typeof console == 'undefined') {
             var leaf = struct[0];
             var o    = struct[1];
             if (!(leaf in o) && upsert) {
-                o[leaf] = value;
+                o[leaf] = [value];
             } else {
                 if (Scule.global.functions.isArray(o[leaf])) {
                     o[leaf].push(value);   
@@ -6572,17 +6561,19 @@ if (typeof console == 'undefined') {
             }        
         };
     
-        this.$pushall = function (struct, value, upsert) {
+        this.$pushAll = function (struct, value, upsert) {
             var leaf = struct[0];
             var o    = struct[1];
             if (!(leaf in o) && upsert) {
-                o[leaf] = value;
+                o[leaf] = value.slice(0);
             } else {
                 if (!Scule.global.functions.isArray(value)) {
                     throw 'the $pushAll operator requires an associated array as an operand';
                 }            
                 if (Scule.global.functions.isArray(o[leaf])) {
-                    o[leaf] = o[leaf].concat(value);   
+                    value.forEach(function(v) {
+                        o[leaf].push(v);
+                    });
                 }
             }        
         };
@@ -6716,12 +6707,12 @@ if (typeof console == 'undefined') {
          * @access private
          */        
         this.compileUpdateClauses = function(key, subQuery, upsert) {
+            if (!this.engine.hasOwnProperty(key)) {
+                return;
+            }        
             var clauses = [];
-            for (var operator in subQuery) {
-                if (!this.engine.hasOwnProperty(operator)) {
-                    continue;
-                }
-                clauses.push('\t\tengine.' + operator + '(engine.traverseObject(' + JSON.stringify(key) + ', o), ' + JSON.stringify(subQuery[operator]) + ', ' + JSON.stringify(upsert) + ');');                
+            for (var operand in subQuery) {
+                clauses.push('\t\tengine.' + key + '(engine.traverseObject(' + JSON.stringify(operand) + ', o), ' + JSON.stringify(subQuery[operand]) + ', ' + JSON.stringify(upsert) + ');');                
             }
             return clauses;
         };
@@ -6752,7 +6743,7 @@ if (typeof console == 'undefined') {
             }
         
             closure     += updates.join('\n');
-            closure     += '\n\t\tengine.updateIndexes(o, collection);\n';
+            closure     += '\n\t\tengine.updateIndices(o, collection);\n';
             closure     += '\t});\n'
             closure     += '\treturn objects;\n';
             closure     += '}\n';
@@ -6956,8 +6947,6 @@ if (typeof console == 'undefined') {
 }());
 
 (function() {
-    
-    "use strict";
     
     /**
      * Represents a "bucketed" hash table, entries are added to the bucket corresponding to the provided key.
@@ -8468,6 +8457,11 @@ if (typeof console == 'undefined') {
          */
         this.save = function(document, callback) {
             Scule.db.functions.unflattenObject(document);
+            if (document.hasOwnProperty('_id')) {
+                if (!(document._id instanceof Scule.db.classes.ObjectId)) {
+                    document._id = new Scule.db.classes.ObjectId(document._id);
+                }
+            }
             this.documents.put(Scule.global.functions.getObjectId(document, true), document);
             for (var i=0; i < this.indices.length; i++) {
                 this.indices[i].remove(document);

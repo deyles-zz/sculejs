@@ -290,6 +290,11 @@ exports['test Queries'] = function(beforeExit, assert) {
         });
         assert.equal(count.length, c);        
         assert.equal(count.length, 91);
+        o = collection.find({n:10, s:'Steve'});
+        o.forEach(function(d) {
+            assert.equal(d.n, 10);
+            assert.equal(d.s, 'Steve');
+        });
     });
     timer.stopInterval();
 
@@ -304,12 +309,21 @@ exports['test Queries'] = function(beforeExit, assert) {
         });
         assert.equal(count.length, c);         
         assert.equal(count.length, 1);
+        o = collection.find({i:10});
+        o.forEach(function(d) {
+            assert.equal(d.foo[d.foo.length - 1], 'bar3');
+        });
     });
     timer.stopInterval();
 
     timer.startInterval("collection - {i:10}, {$pushAll:{foo:['bar3', 'bar4']}}");
     collection.update({i:10}, {$pushAll:{foo:['bar3', 'bar4']}}, {}, false, function(count) {
         assert.equal(count.length, 1);
+        o = collection.find({i:10});
+        o.forEach(function(d) {
+            assert.equal(d.foo[d.foo.length - 1], 'bar4');
+            assert.equal(d.foo[d.foo.length - 2], 'bar3');
+        });        
     });
     timer.stopInterval();
 

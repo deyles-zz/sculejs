@@ -26,12 +26,11 @@
  */
 
 var db      = require('../lib/com.scule.db');
-var comp    = require('../lib/com.scule.query.interpreter');
 var inst    = require('../lib/com.scule.instrumentation');
 
 exports['test QueryOperators'] = function(beforeExit, assert) {
 
-    var engine = comp.getQueryEngine();
+    var engine = db.getQueryEngine();
     
     assert.equal(true,  engine.$eq(1, 1));
     assert.equal(false, engine.$eq(2, 1));
@@ -83,7 +82,7 @@ exports['test QueryOperators'] = function(beforeExit, assert) {
 
 exports['test UpdateOperators'] = function(beforeExit, assert) {
 
-    var engine = comp.getQueryEngine();
+    var engine = db.getQueryEngine();
     var o = null;
     
     // $set
@@ -129,13 +128,13 @@ exports['test UpdateOperators'] = function(beforeExit, assert) {
     assert.equal(true, ('b' in o));
     assert.equal(o.b, 'foo');
 
-    // $pushall
+    // $pushAll
     o = {a:[]};
-    engine.$pushall(engine.traverseObject('a', o), ['foo', 'bar'], false);
+    engine.$pushAll(engine.traverseObject('a', o), ['foo', 'bar'], false);
     assert.equal(o.a.length, 2);
     assert.equal(o.a[0], 'foo');
     assert.equal(o.a[1], 'bar');
-    engine.$push(engine.traverseObject('b', o), ['foo1', 'bar1'], true);
+    engine.$pushAll(engine.traverseObject('b', o), ['foo1', 'bar1'], true);
     assert.equal(true, ('b' in o));
     assert.equal(o.b.length, 2);
     assert.equal(o.b[0], 'foo1');
@@ -173,20 +172,20 @@ exports['test UpdateOperators'] = function(beforeExit, assert) {
     assert.equal(o.a[0], 'foo');
     assert.equal(o.a[1], 'mah');
 
-    // $pullall
+    // $pullAll
     o = {a:['foo', 'bar', 'moo', 'mah', 'moo']};
-    engine.$pullall(engine.traverseObject('a', o), ['moo', 'bar'], false);
+    engine.$pullAll(engine.traverseObject('a', o), ['moo', 'bar'], false);
     assert.equal(o.a.length, 2);
     assert.equal(o.a[0], 'foo');
     assert.equal(o.a[1], 'mah');
-    engine.$pullall(engine.traverseObject('a', o), ['foo', 'mah'], false);
+    engine.$pullAll(engine.traverseObject('a', o), ['foo', 'mah'], false);
     assert.equal(o.a.length, 0);
 
 };
 
 exports['test Normalizer'] = function(beforeExit, assert) {
 
-    var normalizer = comp.getQueryNormalizer();
+    var normalizer = db.getQueryNormalizer();
     var query = {
         $or:[{
             c:113, 
@@ -224,7 +223,7 @@ exports['test Selector'] = function(beforeExit, assert) {
         });
     }
 
-    var selector = comp.getIndexSelector();
+    var selector = db.getIndexSelector();
     var o = selector.resolveIndices(collection, {
         d:{
             $gte:9000, 
@@ -247,8 +246,8 @@ exports['test QueryCompiler'] = function(beforeExit, assert) {
         });
     }
     
-    var engine = comp.getQueryEngine();
-    var interpreter = comp.getQueryCompiler();
+    var engine = db.getQueryEngine();
+    var interpreter = db.getQueryCompiler();
     
     eval(interpreter.compileQuery({
         foo:{
@@ -271,67 +270,6 @@ exports['test QueryCompiler'] = function(beforeExit, assert) {
     assert.equal(r2.length, 33333);
 
 };
-
-/*
-exports['test Interpreter'] = function(beforeExit, assert) {
-    
-    db.dropAll();
-    
-    var t = inst.getTimer();
-    var collection = db.factoryCollection('scule+dummy://unittest');
-    
-//    collection.ensureHashIndex('foo');
-//    collection.ensureBTreeIndex('bar', {
-//        order:10000
-//    });    
-    
-    collection.clear();    
-    
-    for(var i=0; i < 10000; i++) {
-        var foo = (i%3 == 0) ? 3 : 1;
-        var bar = (i%2 == 0) ? 3 : 2;
-        collection.save({
-            foo: foo, 
-            bar: bar
-        });
-    }
-
-    for (var i=0; i < 10; i++) {
-        t.startInterval('interpreter');
-        var interpreter = comp.getQueryInterpreter();
-        interpreter.interpret(collection, {
-            foo:{
-                $eq:1
-            }, 
-            bar:{
-                $gt:2
-            }
-        }, {
-            $sort:['foo', -1]
-        });
-        t.stopInterval('interpreter');
-    }
-    
-    for (var i=0; i < 10; i++) {
-        t.startInterval('vm');
-        var interpreter = comp.getQueryInterpreter();
-        collection.find({
-            foo:{
-                $eq:1
-            }, 
-            bar:{
-                $gt:2
-            }
-        }, {
-            $sort:['foo', -1]
-        });
-        t.stopInterval('vm');    
-    }    
-    
-    t.logToConsole();
-
-};
-*/
 
 exports['test ElemMatch'] = function(beforeExit, assert) {
     
@@ -360,8 +298,8 @@ exports['test ElemMatch'] = function(beforeExit, assert) {
         d.push(o);
     }    
     
-    var engine = comp.getQueryEngine();
-    var interpreter = comp.getQueryCompiler();
+    var engine = db.getQueryEngine();
+    var interpreter = db.getQueryCompiler();
     
     eval(interpreter.compileQuery({bar:{$eq:3}, arr:{$elemMatch:{j:18, f:0}}}));
     
@@ -409,8 +347,8 @@ exports['test Update'] = function(beforeExit, assert) {
         collection.save(o);
     }    
     
-    var interpreter = comp.getQueryInterpreter();
-    interpreter.update(collection, {foo:3}, {'zoo.elephant':{$unset:true}, bar:{$set:1}, arr:{$push:'foo'}}, null, true);
+    var interpreter = db.getQueryInterpreter();
+    interpreter.update(collection, {foo:3}, {$unset:{'zoo.elephant':true}, $set:{bar:1, lol:'bar2'}, $push:{arr:'foo', arr2:'bar'}}, null, true);
     
     for (var key in collection.documents.table) {
         o = collection.documents.table[key];
@@ -419,6 +357,8 @@ exports['test Update'] = function(beforeExit, assert) {
             assert.equal(o.arr[o.arr.length - 1], 'foo');
             assert.equal(false, ('elephant' in o.zoo));
             assert.equal(true, ('giraffe' in o.zoo));
+            assert.equal('bar2', o.lol);
+            assert.equal('bar', o.arr2[0]);
         }
     }
 

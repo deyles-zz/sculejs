@@ -3870,11 +3870,7 @@ var sfunc  = scule.Scule.functions;
 
         timer.startInterval("collection - {$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}");
         collection.count({$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}, function(count) {
-<<<<<<< HEAD
-            var o = collection.findAll();
-=======
             var o = collection.findAll();        
->>>>>>> ticket_7
             jsunit.assertEquals(count, 30);
         });
         timer.stopInterval();
@@ -3931,9 +3927,57 @@ var sfunc  = scule.Scule.functions;
         timer.logToConsole();
     };
 
+        function testTicket14a() {
+
+            scule.dropAll();
+            var collection = scule.factoryCollection('scule+dummy://unittest');
+            collection.clear();
+
+            for (var i=0; i < 1000; i++) {
+                collection.save({
+                    _id:i, 
+                    index:i, 
+                    remainder:(i%10)
+                });
+            }
+
+            collection.update({_id:500}, {$set:{index:1909, foo:'bar'}}, {}, true);
+            collection.commit();
+
+            var o = collection.findOne(500);    
+            
+            jsunit.assertEquals(1909, o.index);
+            jsunit.assertEquals('bar', o.foo);
+            jsunit.assertEquals(500, o._id.id);
+
+        };
+
+        function testTicket14b() {
+
+            scule.dropAll();
+            var collection = scule.factoryCollection('scule+dummy://unittest');
+            collection.clear();
+
+            collection.save({
+                _id: 1, 
+                a: 10
+            });
+
+            collection.update({_id:1}, {$set:{a:20, b:50}}, {}, true);
+            collection.commit();
+
+            var o = collection.findOne(1);
+            jsunit.assertEquals(1, o._id.id);
+            jsunit.assertEquals(20, o.a);
+            jsunit.assertEquals(50, o.b);
+
+        };
+
     (function() {
         jsunit.resetTests();
         jsunit.addTest(testQueries);
+        jsunit.addTest(testTicket14a);
+        jsunit.addTest(testTicket14b);
         jsunit.runTests();
     }());
 

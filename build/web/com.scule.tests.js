@@ -396,22 +396,22 @@ function runAllTests() {
             JSUNIT.assertEquals(o.a[1], 'bar');
             engine.$push(engine.traverseObject('b', o), 'foo', true);
             JSUNIT.assertEquals(true, ('b' in o));
-            JSUNIT.assertEquals(o.b, 'foo');
+            JSUNIT.assertEquals(o.b[0], 'foo');
 
-            // $pushall
+            // $pushAll
             o = {
                 a:[]
             };
-            engine.$pushall(engine.traverseObject('a', o), ['foo', 'bar'], false);
+            engine.$pushAll(engine.traverseObject('a', o), ['foo', 'bar'], false);
             JSUNIT.assertEquals(o.a.length, 2);
             JSUNIT.assertEquals(o.a[0], 'foo');
             JSUNIT.assertEquals(o.a[1], 'bar');
-            engine.$push(engine.traverseObject('b', o), ['foo1', 'bar1'], true);
+            engine.$pushAll(engine.traverseObject('b', o), ['foo1', 'bar1'], true);
             JSUNIT.assertEquals(true, ('b' in o));
             JSUNIT.assertEquals(o.b.length, 2);
             JSUNIT.assertEquals(o.b[0], 'foo1');
             JSUNIT.assertEquals(o.b[1], 'bar1');
-            engine.$push(engine.traverseObject('c', o), ['foo2'], true);
+            engine.$pushAll(engine.traverseObject('c', o), ['foo2'], true);
             JSUNIT.assertEquals(true, ('c' in o));
             JSUNIT.assertEquals(o.c.length, 1);
             JSUNIT.assertEquals(o.c[0], 'foo2');
@@ -448,15 +448,15 @@ function runAllTests() {
             JSUNIT.assertEquals(o.a[0], 'foo');
             JSUNIT.assertEquals(o.a[1], 'mah');
 
-            // $pullall
+            // $pullAll
             o = {
                 a:['foo', 'bar', 'moo', 'mah', 'moo']
             };
-            engine.$pullall(engine.traverseObject('a', o), ['moo', 'bar'], false);
+            engine.$pullAll(engine.traverseObject('a', o), ['moo', 'bar'], false);
             JSUNIT.assertEquals(o.a.length, 2);
             JSUNIT.assertEquals(o.a[0], 'foo');
             JSUNIT.assertEquals(o.a[1], 'mah');
-            engine.$pullall(engine.traverseObject('a', o), ['foo', 'mah'], false);
+            engine.$pullAll(engine.traverseObject('a', o), ['foo', 'mah'], false);
             JSUNIT.assertEquals(o.a.length, 0);
 
         };
@@ -636,19 +636,7 @@ function runAllTests() {
             }    
     
             var interpreter = Scule.getQueryInterpreter();
-            interpreter.update(collection, {
-                foo:3
-            }, {
-                'zoo.elephant':{
-                    $unset:true
-                }, 
-                bar:{
-                    $set:1
-                }, 
-                arr:{
-                    $push:'foo'
-                }
-            }, null, true);
+            interpreter.update(collection, {foo:3}, {$unset:{'zoo.elephant':true}, $set:{bar:1, lol:'bar2'}, $push:{arr:'foo', arr2:'bar'}}, null, true);
     
             for (var key in collection.documents.table) {
                 o = collection.documents.table[key];
@@ -4736,6 +4724,11 @@ function runAllTests() {
                 });
                 JSUNIT.assertEquals(count.length, c);        
                 JSUNIT.assertEquals(count.length, 91);
+                o = collection.find({i:{$lte:90}});
+                o.forEach(function(d) {
+                    JSUNIT.assertEquals(10, d.n);
+                    JSUNIT.assertEquals('Steve', d.s);
+                });
             });
             timer.stopInterval();
 
@@ -4756,6 +4749,10 @@ function runAllTests() {
                 });
                 JSUNIT.assertEquals(count.length, c);         
                 JSUNIT.assertEquals(count.length, 1);
+                var o = collection.find({i:10});
+                o.forEach(function(d) {
+                    JSUNIT.assertEquals('bar3', d.foo[d.foo.length - 1]);
+                });                
             });
             timer.stopInterval();
 
@@ -4768,6 +4765,11 @@ function runAllTests() {
                 }
             }, {}, false, function(count) {
                 JSUNIT.assertEquals(count.length, 1);
+                var o = collection.find({i:10});
+                o.forEach(function(d) {
+                    JSUNIT.assertEquals('bar4', d.foo[d.foo.length - 1]);
+                    JSUNIT.assertEquals('bar3', d.foo[d.foo.length - 2]);
+                });
             });
             timer.stopInterval();
 
@@ -4781,12 +4783,60 @@ function runAllTests() {
 
         };
 
+        function testTicket14a() {
+
+            var collection = Scule.factoryCollection('scule+dummy://test', {
+                secret:'mysecretkey'
+            });
+
+            for (var i=0; i < 1000; i++) {
+                collection.save({
+                    _id:i, 
+                    index:i, 
+                    remainder:(i%10)
+                });
+            }
+
+            collection.update({_id:500}, {$set:{index:1909, foo:'bar'}}, {}, true);
+            collection.commit();
+
+            var o = collection.findOne(500);    
+            
+            JSUNIT.assertEquals(1909, o.index);
+            JSUNIT.assertEquals('bar', o.foo);
+            JSUNIT.assertEquals(500, o._id.id);
+
+        };
+
+        function testTicket14b() {
+
+            var collection = Scule.factoryCollection('scule+dummy://test', {
+                secret:'mysecretkey'
+            });
+            collection.clear();
+            collection.save({
+                _id: 1, 
+                a: 10
+            });
+
+            collection.update({_id:1}, {$set:{a:20, b:50}}, {}, true);
+            collection.commit();
+
+            var o = collection.findOne(1);
+            JSUNIT.assertEquals(1, o._id.id);
+            JSUNIT.assertEquals(20, o.a);
+            JSUNIT.assertEquals(50, o.b);
+
+        };
+
         (function() {
             JSUNIT.resetTests();
             JSUNIT.addTest(testQueries);
+            JSUNIT.addTest(testTicket14a);
+            JSUNIT.addTest(testTicket14b);
             JSUNIT.runTests('Query tests', Scule.tests.functions.renderTest);
         }());    
-    
+       
     }());
 
 };
