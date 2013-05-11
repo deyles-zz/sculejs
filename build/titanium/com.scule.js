@@ -5653,8 +5653,11 @@ module.exports.Scule.classes.QueryNormalizer = function() {
     this.normalize = function(query) {
         var normalize = function(o) {
             for (var key in o) {
-                if (module.exports.Scule.functions.isScalar(o[key]) || o[key] instanceof RegExp) {
+                if (module.exports.Scule.functions.isScalar(o[key]) || o[key] instanceof RegExp || o[key] instanceof module.exports.Scule.classes.ObjectId) {
                     var v = o[key];
+                    if (v instanceof module.exports.Scule.classes.ObjectId) {
+                        v = o[key].toString();
+                    }
                     delete o[key];
                     o[key] = {
                         $eq:v
@@ -6324,7 +6327,7 @@ module.exports.Scule.classes.QueryCompiler = function() {
     this.compileQuery = function(query, conditions) {
         
         query      = this.normalizer.normalize(query);
-        
+
         var hash = md5.hash(JSON.stringify(query) + JSON.stringify(conditions));
         if(this.cache.contains(hash)) {
             return this.cache.get(hash);
