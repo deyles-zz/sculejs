@@ -5432,11 +5432,13 @@ module.exports.Scule.classes.TitaniumDiskStorageEngine = function(configuration)
         var file = Titanium.Filesystem.getFile(this.configuration.path, name + '.json');
         if(file.exists()) {
             var o = JSON.parse(file.read());
-            if(this.crypto.verifyObjectSignature(o, this.configuration.secret, o._salt) == false) {
-                Ti.App.fireEvent("SculeDataTampered", {
-                    filename: name
-                });
-                return false;
+            if(o._version > 2) {
+	            if(this.crypto.verifyObjectSignature(o, this.configuration.secret, o._salt) == false) {
+	                Ti.App.fireEvent("SculeDataTampered", {
+	                    filename: name
+	                });
+	                return false;
+	            }
             }
             delete o._sig;
             if(callback) {
@@ -6488,7 +6490,7 @@ module.exports.Scule.classes.Collection = function(name) {
      * @private
      * @type {Number}
      */    
-    this.version    = 2.0;
+    this.version    = 3.0;
     
     /**
      * @private
