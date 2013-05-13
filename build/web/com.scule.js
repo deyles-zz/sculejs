@@ -7906,11 +7906,17 @@ if (typeof console == 'undefined') {
         this.read = function(name, callback) {
             var data = localStorage.getItem('__scule_collection__' + name);
             if (!data) {
+                /*
                 throw JSON.stringify({
                     event:'SculeLocalStorageError',
                     message:'Unable to load collection from local storage',
                     collection:this.configuration.collection
                 });
+                */
+               if (callback) {
+                   callback(o);
+               }
+               return;
             }
             var o = JSON.parse(data);
             if (this.crypto.verifyObjectSignature(o, this.configuration.secret, o._salt) === false) {
@@ -8923,11 +8929,12 @@ if (typeof console == 'undefined') {
     /**
      * Creates a new Collection instance corresponding to the provided name and using the provided storage engine
      * @param {String} name the name of the collection to load
+     * @param {Object} configuration the configuration for the collection storage engine
      * @returns {Collection}
      * @throws {Exception}
      */
-    Scule.factoryCollection = function(name) {
-        return Scule.db.objects.core.collections.factory.getCollection(name);
+    Scule.factoryCollection = function(name, configuration) {
+        return Scule.db.objects.core.collections.factory.getCollection(name, configuration);
     };
 
     /**

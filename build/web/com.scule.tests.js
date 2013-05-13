@@ -4204,6 +4204,29 @@ function runAllTests() {
             JSUNIT.assertEquals(collection.getLength(), 0);
         };
 
+        function testCollectionFactory2() {
+            Scule.dropAll();
+            var collection = Scule.factoryCollection('scule+local://collection', {secret:'test'});
+            collection.ensureIndex(Scule.global.constants.INDEX_TYPE_BTREE, 'a.b', {
+                order:100
+            });
+            collection.clear();
+            for(var i=0; i < 1000; i++) {
+                var r = i%10;
+                collection.save({
+                    a: {
+                        b:r
+                    },
+                    bar:'foo'+r,
+                    arr: [r, r+1, r+2, r+3],
+                    scl: r
+                });
+            }
+            JSUNIT.assertEquals(collection.getLength(), 1000);
+            JSUNIT.assertTrue(collection.getLastInsertId() !== null);
+            collection.commit();
+        };
+
         function testCollectionMerge() {
             Scule.dropAll();
             var collection1 = Scule.factoryCollection('scule+dummy://unittest1');
@@ -4242,6 +4265,7 @@ function runAllTests() {
         (function() {
             JSUNIT.resetTests();
             JSUNIT.addTest(testCollectionFactory);
+            JSUNIT.addTest(testCollectionFactory2);
             JSUNIT.addTest(testCollectionMerge);
             JSUNIT.runTests('Collection tests', Scule.tests.functions.renderTest);
         }());

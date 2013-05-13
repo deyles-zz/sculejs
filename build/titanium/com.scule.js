@@ -7277,8 +7277,8 @@ module.exports.registerCollectionPlugin = function(name, plugin) {
  * @returns {Collection}
  * @throws {Exception}
  */
-module.exports.factoryCollection = function(name) {
-    return module.exports.Scule.objects.core.collections.factory.getCollection(name);
+module.exports.factoryCollection = function(name, configuration) {
+    return module.exports.Scule.objects.core.collections.factory.getCollection(name, configuration);
 };
 
 /**

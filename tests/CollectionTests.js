@@ -31,6 +31,7 @@ exports['test CollectionFactory'] = function(beforeExit, assert) {
     sculedb.dropAll();
     var collection = sculedb.factoryCollection('scule+dummy://unittest');
     collection.ensureIndex(sculedb.Scule.$c.INDEX_TYPE_BTREE, 'a.b', {order:100});
+    collection.clear();
     for(var i=0; i < 1000; i++) {
         var r = i%10;
         collection.save({
@@ -48,10 +49,33 @@ exports['test CollectionFactory'] = function(beforeExit, assert) {
     assert.equal(collection.getLength(), 0);
 };
 
+exports['test CollectionFactoryDisk'] = function(beforeExit, assert) {
+    sculedb.dropAll();
+    var collection = sculedb.factoryCollection('scule+nodejs://collection', {secret:'test', path:'/tmp'});
+    collection.ensureIndex(sculedb.Scule.$c.INDEX_TYPE_BTREE, 'a.b', {order:100});
+    collection.clear();
+    for(var i=0; i < 1000; i++) {
+        var r = i%10;
+        collection.save({
+           a: {
+               b:r
+           },
+           bar:'foo'+r,
+           arr: [r, r+1, r+2, r+3],
+           scl: r
+        });
+    }
+    assert.equal(1000, collection.getLength());
+    assert.isNotNull(collection.getLastInsertId());
+    collection.commit();
+};
+
 exports['test CollectionMerge'] = function(beforeExit, assert) {
     sculedb.dropAll();
     var collection1 = sculedb.factoryCollection('scule+dummy://unittest1');
-    var collection2 = sculedb.factoryCollection('scule+dummy://unittest2');    
+    var collection2 = sculedb.factoryCollection('scule+dummy://unittest2');  
+    collection1.clear();
+    collection2.clear();
     for(var i=0; i < 1000; i++) {
         var r = i%10;
         var o = {
