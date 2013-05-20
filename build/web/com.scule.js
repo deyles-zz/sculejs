@@ -7824,7 +7824,7 @@ if (typeof console == 'undefined') {
                 var object = {
                     _sig: null,
                     _salt: Scule.sha1.hash((new Date()).getTime() + ''),
-                    _version: 2.0,
+                    _version: 3.0,
                     _name: name,
                     _objects: {}
                 };
@@ -7905,27 +7905,25 @@ if (typeof console == 'undefined') {
          */
         this.read = function(name, callback) {
             var data = localStorage.getItem('__scule_collection__' + name);
+            var o    = {};
             if (!data) {
-                /*
-                throw JSON.stringify({
-                    event:'SculeLocalStorageError',
-                    message:'Unable to load collection from local storage',
-                    collection:this.configuration.collection
-                });
-                */
-               if (callback) {
-                   callback(o);
-               }
-               return;
+                o = {
+                    _sig: null,
+                    _salt: Scule.sha1.hash((new Date()).getTime() + ''),
+                    _version: 3.0,
+                    _name: name,
+                    _objects: {}
+                };
+            } else {
+                o = JSON.parse(data);
+                if (this.crypto.verifyObjectSignature(o, this.configuration.secret, o._salt) === false) {
+                    throw JSON.stringify({
+                        event:'SculeDataTampered', 
+                        filename:this.configuration.collection
+                    });
+                }
+                delete o._sig;
             }
-            var o = JSON.parse(data);
-            if (this.crypto.verifyObjectSignature(o, this.configuration.secret, o._salt) === false) {
-                throw JSON.stringify({
-                    event:'SculeDataTampered', 
-                    filename:this.configuration.collection
-                });
-            }
-            delete o._sig;
             if (callback) {
                 callback(o);  
             }
@@ -8146,7 +8144,7 @@ if (typeof console == 'undefined') {
          * @private
          * @type {Number}
          */    
-        this.version     = 2.0;
+        this.version     = 3.0;
 
         /**
          * @private

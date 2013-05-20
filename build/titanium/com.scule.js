@@ -60,6 +60,7 @@ module.exports = {
             }
         },        
         variables:{
+            SimulatedMacAddress:null,
             line:0,
             inst:0,            
             lineNo:-1,
@@ -666,6 +667,12 @@ module.exports.Scule.functions.trim = function(value) {
  * @returns {Integer}
  */
 module.exports.Scule.functions.getMACAddress = function() {
+    if(!Titanium.Platform.macaddress) {
+        if(!module.exports.Scule.variables.SimulatedMacAddress) {
+            module.exports.Scule.variables.SimulatedMacAddress = (new Date()).getTime().toString().substring(9, 11) + '' + module.exports.Scule.functions.randomFromTo(100, 999);
+        }
+        return module.exports.Scule.variables.SimulatedMacAddress;
+    }
     return Titanium.Platform.macaddress;
 };
 
@@ -5350,7 +5357,7 @@ module.exports.Scule.classes.MemoryStorageEngine = function(configuration) {
             var object = {
                 _sig: null,
                 _salt: sha1.hash((new Date()).getTime() + ''),
-                _version: 2.0,
+                _version: 3.0,
                 _name: name,
                 _objects: {}
             };
@@ -5432,13 +5439,11 @@ module.exports.Scule.classes.TitaniumDiskStorageEngine = function(configuration)
         var file = Titanium.Filesystem.getFile(this.configuration.path, name + '.json');
         if(file.exists()) {
             var o = JSON.parse(file.read());
-            if(o._version > 2) {
-	            if(this.crypto.verifyObjectSignature(o, this.configuration.secret, o._salt) == false) {
-	                Ti.App.fireEvent("SculeDataTampered", {
-	                    filename: name
-	                });
-	                return false;
-	            }
+            if(this.crypto.verifyObjectSignature(o, this.configuration.secret, o._salt) == false) {
+                Ti.App.fireEvent("SculeDataTampered", {
+                    filename: name
+                });
+                return false;
             }
             delete o._sig;
             if(callback) {
@@ -5447,6 +5452,90 @@ module.exports.Scule.classes.TitaniumDiskStorageEngine = function(configuration)
             return o;
         }
         return false;
+    };
+    
+};
+
+/**
+ * A disk based storage engine for web broswers that support the LocalStorage standard
+ * @public
+ * @constructor
+ * @class {LocalStorageStorageEngine}
+ * @param {Object} configuration the configuration parameters for the storage engine instance
+ * @extends {StorageEngine}
+ * @returns {Void}
+ */
+module.exports.Scule.classes.LocalStorageStorageEngine = function (configuration) {
+    
+    module.exports.Scule.classes.StorageEngine.call(this, configuration);
+   
+    this.setCryptographyProvider(new module.exports.Scule.classes.SimpleCryptographyProvider());
+    
+    if (!window || (!('localStorage' in window) && (window.localStorage !== null))) {
+        throw JSON.stringify({
+            event:'SculeLocalStorageError',
+            message:'Local storage is not available on this device'
+        });
+    }
+
+    /**
+     * Writes data to storage
+     * @public
+     * @param {String} name the name of the file to write data to
+     * @param {Object} object the data to write
+     * @param {Function} callback the callback to execute once writing to storage is complete
+     * @returns {Void}
+     */ 
+    this.write = function (name, object, callback) {
+        if (!object._salt) {
+            object._salt = sha1.hash((new Date()).getTime() + '');
+        }
+        try {
+            object._sig = this.crypto.signObject(object, this.configuration.secret, object._salt);
+            localStorage.setItem('__scule_collection__' + name, JSON.stringify(object));
+            if (callback) {
+                callback(object);
+            }
+        } catch (e) {
+            throw JSON.stringify({
+                event:'SculeLocalStorageError',
+                message:'Storage quota exceeded for origin',
+                collection:this.configuration.collection
+            });           
+        }
+    };
+
+    /**
+     * Reads data from storage
+     * @public
+     * @param {String} name the name of the file to read data from
+     * @param {Function} callback the callback to execute one reading from storage is complete
+     * @returns {Object}
+     */
+    this.read = function (name, callback) {
+        var data = localStorage.getItem('__scule_collection__' + name);
+        var o    = {};
+        if (!data) {
+            o = {
+                _sig: null,
+                _salt: sha1.hash((new Date()).getTime() + ''),
+                _version: 3.0,
+                _name: name,
+                _objects: {}
+            };
+        } else {
+            o = JSON.parse(data);
+            if (this.crypto.verifyObjectSignature(o, this.configuration.secret, o._salt) === false) {
+                throw JSON.stringify({
+                    event:'SculeDataTampered', 
+                    filename:this.configuration.collection
+                });
+            }
+            delete o._sig;
+        }
+        if (callback) {
+            callback(o);  
+        }
     };
     
 };
@@ -5655,11 +5744,8 @@ module.exports.Scule.classes.QueryNormalizer = function() {
     this.normalize = function(query) {
         var normalize = function(o) {
             for (var key in o) {
-                if (module.exports.Scule.functions.isScalar(o[key]) || o[key] instanceof RegExp || o[key] instanceof module.exports.Scule.classes.ObjectId) {
+                if (module.exports.Scule.functions.isScalar(o[key]) || o[key] instanceof RegExp) {
                     var v = o[key];
-                    if (v instanceof module.exports.Scule.classes.ObjectId) {
-                        v = o[key].toString();
-                    }
                     delete o[key];
                     o[key] = {
                         $eq:v
@@ -6329,7 +6415,7 @@ module.exports.Scule.classes.QueryCompiler = function() {
     this.compileQuery = function(query, conditions) {
         
         query      = this.normalizer.normalize(query);
-
+        
         var hash = md5.hash(JSON.stringify(query) + JSON.stringify(conditions));
         if(this.cache.contains(hash)) {
             return this.cache.get(hash);
@@ -6663,7 +6749,7 @@ module.exports.Scule.classes.Collection = function(name) {
             }
             for(var ky in o._objects) {
                 var document = o._objects[ky];
-                module.exports.Scule.functions.unflattenObject(o._objects[ky]);
+                module.exports.Scule.functions.unflattenObject(document);
                 self.documents.put(module.exports.Scule.functions.getObjectId(document, true), document);
                 for(var i=0; i < self.indices.length; i++) {
                     self.indices[i].index(document);
@@ -7268,6 +7354,7 @@ module.exports.registerCollectionPlugin = function(name, plugin) {
  */
 (function() {
     module.exports.registerStorageEngine('titanium', module.exports.Scule.classes.TitaniumDiskStorageEngine);
+    module.exports.registerStorageEngine('local', module.exports.Scule.classes.LocalStorageStorageEngine);
     module.exports.registerStorageEngine('memory', module.exports.Scule.classes.MemoryStorageEngine);
     module.exports.registerStorageEngine('dummy', module.exports.Scule.classes.DummyStorageEngine);
     module.exports.registerCollectionPlugin('scule', module.exports.Scule.classes.Collection);    
@@ -7279,8 +7366,8 @@ module.exports.registerCollectionPlugin = function(name, plugin) {
  * @returns {Collection}
  * @throws {Exception}
  */
-module.exports.factoryCollection = function(name, configuration) {
-    return module.exports.Scule.objects.core.collections.factory.getCollection(name, configuration);
+module.exports.factoryCollection = function(name) {
+    return module.exports.Scule.objects.core.collections.factory.getCollection(name);
 };
 
 /**
