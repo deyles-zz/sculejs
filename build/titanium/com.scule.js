@@ -5744,7 +5744,9 @@ module.exports.Scule.classes.QueryNormalizer = function() {
     this.normalize = function(query) {
         var normalize = function(o) {
             for (var key in o) {
-                if (module.exports.Scule.functions.isScalar(o[key]) || o[key] instanceof RegExp) {
+                if (module.exports.Scule.functions.isScalar(o[key]) 
+                    || o[key] instanceof RegExp 
+                    || o[key] instanceof module.exports.Scule.classes.ObjectId) {
                     var v = o[key];
                     delete o[key];
                     o[key] = {
