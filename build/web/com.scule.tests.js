@@ -4853,11 +4853,37 @@ function runAllTests() {
 
         };
 
+        function testTicket22() {
+
+            Scule.dropAll();
+            var collection = Scule.factoryCollection('scule+dummy://test', {
+                secret:'mysecretkey'
+            });
+            collection.clear();
+            
+            for (var i=0; i < 1000; i++) {
+                collection.save({a:'test' + i});
+            }
+
+            var i;
+            for (i=0; i < 100; i++) {
+                JSUNIT.assertEquals(111, collection.count({a:/test[1]/g}));
+            }
+            for (i=0; i < 100; i++) {
+                JSUNIT.assertEquals(333, collection.count({a:/test[1-3]/g}));
+            }
+            for (i=0; i < 100; i++) {
+                JSUNIT.assertEquals(100, collection.count({a:/test([1-9][0-9]?$|100$)/g}));
+            }
+
+        };
+
         (function() {
             JSUNIT.resetTests();
             JSUNIT.addTest(testQueries);
             JSUNIT.addTest(testTicket14a);
             JSUNIT.addTest(testTicket14b);
+            JSUNIT.addTest(testTicket22);
             JSUNIT.runTests('Query tests', Scule.tests.functions.renderTest);
         }());    
        

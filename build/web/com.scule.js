@@ -6726,7 +6726,7 @@ if (typeof console == 'undefined') {
          */  
         this.compileUpdate = function(query, upsert) {
 
-            var hash = Scule.md5.hash(JSON.stringify(query));
+            var hash = Scule.md5.hash(this.serializeQuery(query));
             if(this.cache.contains(hash)) {
                 return this.cache.get(hash);
             }        
@@ -6754,6 +6754,30 @@ if (typeof console == 'undefined') {
         };
   
         /**
+         * Serializes the provided query expression to a JSON string
+         * @param {Object} query the query to serialize
+         * @returns {String}
+         */
+        this.serializeQuery = function(query) {
+            var o = Scule.global.functions.cloneObject(query);
+            var serialize = function(o) {
+                for (var key in o) {
+                    if (o[key] instanceof RegExp) {
+                        o[key] = o[key].source;
+                    } else if (o[key] instanceof Scule.db.classes.ObjectId) {
+                        o[key] = o[key].toString();
+                    } else {
+                        if (!Scule.global.functions.isScalar(o[key])) {
+                            serialize(o[key]);
+                        }
+                    }
+                }
+            }
+            serialize(o);
+            return JSON.stringify(o);
+        };  
+  
+        /**
          * Compiles the provided query expression to JavaScript and returns the 
          * source as a {String}
          * @param {Object} query the query to evaluate
@@ -6764,7 +6788,7 @@ if (typeof console == 'undefined') {
         
             query = this.normalizer.normalize(query);
         
-            var hash = Scule.md5.hash(JSON.stringify(query) + JSON.stringify(conditions));
+            var hash = Scule.md5.hash(this.serializeQuery(query) + this.serializeQuery(conditions));
             if(this.cache.contains(hash)) {
                 return this.cache.get(hash);
             }        

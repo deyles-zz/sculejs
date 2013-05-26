@@ -3973,6 +3973,29 @@ var sfunc  = scule.Scule.functions;
 
         };
 
+        function testTicket22() {
+
+            scule.dropAll();
+            var collection = scule.factoryCollection('scule+dummy://unittest');
+            collection.clear();
+            
+            for (var i=0; i < 1000; i++) {
+                collection.save({a:'test' + i});
+            }
+
+            var i;
+            for (i=0; i < 100; i++) {
+                jsunit.assertEquals(111, collection.count({a:/test[1]/g}));
+            }
+            for (i=0; i < 100; i++) {
+                jsunit.assertEquals(333, collection.count({a:/test[1-3]/g}));
+            }
+            for (i=0; i < 100; i++) {
+                jsunit.assertEquals(100, collection.count({a:/test([1-9][0-9]?$|100$)/g}));
+            }
+
+        };
+
     (function() {
         jsunit.resetTests();
         jsunit.addTest(testQueries);
