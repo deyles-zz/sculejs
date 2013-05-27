@@ -36,10 +36,10 @@ exports['test Ticket22'] = function(beforeExit, assert) {
     for (var i=0; i < 1000; i++) {
         collection.save({a:'test' + i});
     }
-        
+       
     var i, count;
     for (i=0; i < 100; i++) {
-        count = collection.count({a:/test[1]/g});
+        count = collection.count({a:/test[1]/ig});
         assert.equal(111, count);
     }
     for (i=0; i < 100; i++) {

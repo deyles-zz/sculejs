@@ -213,7 +213,7 @@ module.exports.Scule.functions.cloneObject = function(o) {
     for(var a in o) {
         if(typeof(o[a]) == "object") {
             if(o[a] instanceof RegExp) {
-                c[a] = new RegExp(o[a].source);
+                c[a] = new RegExp(o[a].toString());
             } else {
                 c[a] = module.exports.Scule.functions.cloneObject(o[a]);
             }
@@ -6416,9 +6416,7 @@ module.exports.Scule.classes.QueryCompiler = function() {
         var o = module.exports.Scule.functions.cloneObject(query);
         var serialize = function(o) {
             for (var key in o) {
-                if (o[key] instanceof RegExp) {
-                    o[key] = o[key].source;
-                } else if (o[key] instanceof module.exports.Scule.classes.ObjectId) {
+                if (o[key] instanceof module.exports.Scule.classes.ObjectId || o[key] instanceof RegExp) {
                     o[key] = o[key].toString();
                 } else {
                     if (!module.exports.Scule.functions.isScalar(o[key])) {

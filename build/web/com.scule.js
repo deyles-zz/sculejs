@@ -735,7 +735,7 @@ if (typeof console == 'undefined') {
         for (var a in o) {
             if (typeof(o[a]) == "object") {
                 if (o[a] instanceof RegExp) {
-                    c[a] = new RegExp(o[a].source);
+                    c[a] = new RegExp(o[a].toString());
                 } else {
                     c[a] = Scule.global.functions.cloneObject(o[a]);
                 }
@@ -6762,9 +6762,7 @@ if (typeof console == 'undefined') {
             var o = Scule.global.functions.cloneObject(query);
             var serialize = function(o) {
                 for (var key in o) {
-                    if (o[key] instanceof RegExp) {
-                        o[key] = o[key].source;
-                    } else if (o[key] instanceof Scule.db.classes.ObjectId) {
+                    if (o[key] instanceof Scule.db.classes.ObjectId || o[key] instanceof RegExp) {
                         o[key] = o[key].toString();
                     } else {
                         if (!Scule.global.functions.isScalar(o[key])) {
