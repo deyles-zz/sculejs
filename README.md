@@ -4,17 +4,16 @@
 
 ## What is SculeJS?
 
-*SculeJS* (from Minuscule - pronounced **skyul**) is a JavaScript library emulating the functionality of [MongoDB](http://www.mongodb.org/). It's also
+*SculeJS* (from Minuscule - pronounced **skyul**) is a fully featured DBMS written in JavaScript that emulates the functionality of [MongoDB](http://www.mongodb.org/). It's also
 much more than that; *SculeJS* includes implementations of many general purpose data structures that can be used by developers in their day-to-day work.
 
 I originally built [JSONDB](https://github.com/irlgaming/jsondb-public "JSONDB") for use in Titanium Appcelerator apps, but over time
 it became apparent that a similar system could be really useful for other stuff as well. *SculeJS* can run in your web browser, in a NodeJS 
 process, or even inside iOS and Android applications including a JavaScript runtime environment.
 
-*SculeJS* provides a high-performance NoSQL database with the following features:
+*SculeJS* provides a high-performance NoSQL database management system with the following features:
 
 * Document-oriented storage
-* Support for sparse B+tree and Hash indexes
 * Fast in-place updates
 * Rich document based queries
 * Support for Map/Reduce operations
