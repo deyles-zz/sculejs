@@ -6117,7 +6117,7 @@ module.exports.Scule.classes.Collection = function(name) {
         var self   = this;
         var results = this.find(query, conditions);
         results.forEach(function(o) {
-            self.documents.remove(module.exports.Scule.functions.getObjectId(o));
+            self.documents.remove(o);
         });
         if (callback) {
             callback(results);
