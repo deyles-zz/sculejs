@@ -44,10 +44,6 @@ var sha1 = {
 module.exports = {
     Scule:{
         constants:{
-            INDEX_TYPE_BTREE: 0,     // the type code for b+tree indices
-            INDEX_TYPE_RTREE: 1,
-            INDEX_TYPE_HASH: 2,      // the type code for hash indices
-            INDEX_TYPE_CLUSTERED: 3, // the type code for clustered indices
             ID_FIELD: '_id',         // the global key for ObjectId attributes
             REF_FIELD:'_ref',        // the global key for DBRef attributes
             OBJECT_WILDCARD: '*'
@@ -4484,646 +4480,6 @@ module.exports.Scule.classes.TimerInterval = function(tag) {
 };
 
 /**
- * Represents a "bucketed" hash table, entries are added to the bucket corresponding to the provided key.
- * Buckets are keyed by ObjectId.
- * @public
- * @extends {HashTable}
- * @class {HashBucketTable}
- * @constructor
- */
-module.exports.Scule.classes.HashBucketTable = function() {
-  
-    module.exports.Scule.classes.HashTable.call(this);
-
-    /**
-     * Adds a new entry corresponding to the bucket corresponding to the provided key
-     * @public
-     * @param {Mixed} key the key to insert
-     * @param {Mixed} value the value corresponding to the provided key
-     * @returns {Boolean}
-     */
-    this.insert = function(key, value) {
-        var table;
-        if(!this.contains(key)) {
-            table = new module.exports.Scule.classes.HashTable();
-            table.put(module.exports.Scule.functions.getObjectId(value), value);
-            this.put(key, table);
-        } else {
-            table = this.get(key);
-            table.put(module.exports.Scule.functions.getObjectId(value), value);
-        }
-        return true;
-    };
-
-};
-
-/**
- * A B+plus tree leaf node that hashes entries by their ObjectId value
- * @public
- * @constructor
- * @param {BPlusTreeHashingLeafNode|Null} left the left sibling of the node
- * @param {BPlusTreeHashingLeafNode|Null} right the right sibling of the node
- * @returns {Void}
- * @extends {BPlusTreeLeafNode}
- */
-module.exports.Scule.classes.BPlusTreeHashingLeafNode = function(left, right) {
-  
-    module.exports.Scule.classes.BPlusTreeLeafNode.call(this, left, right);
-
-    /**
-     * Inserts a key/value pair into the data for the node
-     * @public
-     * @param {Mixed} key the key to insert
-     * @param {Mixed} value the value corresponding to the provided key
-     * @returns {null|Object}
-     */
-    this.insert = function(key, value) {
-        var table;
-        var index = this.indexSearch(key);
-        if(index == this.data.length) {
-            table = new module.exports.Scule.classes.HashTable();
-            table.put(module.exports.Scule.functions.getObjectId(value, true), value);
-            this.data.push({
-                key:key, 
-                value:table
-            });
-        } else {
-            var element = this.data[index];
-            if(element.key == key) {
-                element.value.put(module.exports.Scule.functions.getObjectId(value, true), value);
-            } else if(element.key < key) {
-                table = new module.exports.Scule.classes.HashTable();
-                table.put(module.exports.Scule.functions.getObjectId(value, true), value);                
-                this.data.splice(index + 1, 0, {
-                    key:key, 
-                    value:table
-                });
-            } else {
-                table = new module.exports.Scule.classes.HashTable();
-                table.put(module.exports.Scule.functions.getObjectId(value, true), value);
-                this.data.splice(index, 0, {
-                    key:key, 
-                    value:table
-                });               
-            }
-        }
-        if(table) {
-            this.lookup.put(key, {
-                key:key, 
-                value:table
-            });           
-        }
-        return this.split();
-    };
-
-    /**
-     * If the node data length has exceeded the block size this function will divide it into two new nodes
-     * connected by a junction and identified by a key
-     * @public
-     * @returns {Null|Object}
-     */
-    this.split = function() {
-        if(this.data.length <= this.order) {
-            return null;
-        }
-        var middle = Math.floor(this.data.length / 2);
-
-        var left = new module.exports.Scule.classes.BPlusTreeHashingLeafNode(this.getLeft());
-        left.setOrder(this.getOrder());
-        left.setMergeThreshold(this.getMergeThreshold());
-        left.data = this.data.splice(0, middle);
-        
-        var right = new module.exports.Scule.classes.BPlusTreeHashingLeafNode(null, this.getRight());
-        right.setOrder(this.getOrder());
-        right.setMergeThreshold(this.getMergeThreshold());
-        right.data = this.data.splice(0, middle + 1);
-
-        left.setRight(right);
-        if(this.getLeft()) {
-            this.getLeft().setRight(left);
-        }
-        
-        right.setLeft(left);
-        if(this.getRight()) {
-            this.getRight().setLeft(right);
-        }
-        
-        return {
-            left:left, 
-            key:right.data[0].key, 
-            right:right
-        };
-    };
-
-    /**
-     * Returns a range of values from the node (and siblints) between min and max
-     * @public
-     * @param {Mixed} min the minimum value for the range
-     * @param {Mixed} max the maxmium value for the range
-     * @param {Boolean} includeMin a boolean indicating whether or not to include the minimum bound in the range result
-     * @param {Boolean} includeMax a boolean indicating whether or not to include the maximum bound in the range result
-     * @returns {Array}
-     */
-    this.range = function(min, max, includeMin, includeMax) {
-        if(includeMax === undefined) {
-            includeMax = false;
-        }
-        if(includeMin === undefined) {
-            includeMin = false;
-        }
-        if(min === undefined) {
-            min = null;
-        }
-        if(max === undefined) {
-            max = null;
-        }
-        var curr  = this;
-        var rng = null;
-        if(includeMin && includeMax) {
-            rng = function(min, max, key, range, value) {
-                if(min === null) {
-                    if(key <= max) {
-                        range = range.concat(value);
-                    }
-                } else if(max === null) {
-                    if(key >= min) {
-                        range = range.concat(value);
-                    }
-                } else {
-                    if(key >= min && key <= max) {
-                        range = range.concat(value);
-                    }
-                }
-                return range;
-            };
-        } else if(includeMin) {
-            rng = function(min, max, key, range, value) {
-                if(min === null) {
-                    if(key < max) {
-                        range = range.concat(value);
-                    }
-                } else if(max === null) {
-                    if(key >= min) {
-                        range = range.concat(value);
-                    }
-                } else {
-                    if(key >= min && key < max) {
-                        range = range.concat(value);
-                    }
-                }
-                return range;
-            };
-        } else { // includeMax
-            rng = function(min, max, key, range, value) {
-                if(min === null) {
-                    if(key <= max) {
-                        range = range.concat(value);
-                    }
-                } else if(max === null) {
-                    if(key > min) {
-                        range = range.concat(value);
-                    }
-                } else {
-                    if(key > min && key <= max) {
-                        range = range.concat(value);
-                    }
-                }
-                return range;
-            };            
-        }
-
-        var range = [];
-            outer:
-            while(curr) {
-                var data  = curr.data;
-                var left  = curr.indexSearch(min);
-                var right = (max === null || max === undefined) ? (data.length - 1) : curr.indexSearch(max);
-                if(right >= data.length) {
-                    right = data.length - 1;
-                }
-                if(left <= data.length) {
-                    for(var i=left; i <= right; i++) {
-                        if(max !== null && data[i].key > max) {
-                            break outer;
-                        }
-                        range = rng(min, max, data[i].key, range, data[i].value.getValues());
-                    }
-                }
-                curr = curr.getRight();
-            }
-        return range;
-    };
-
-    /**
-     * Returns an array based representation of the node object
-     * @public
-     * @returns {Array}
-     */
-    this.toArray = function() {
-        var o = {
-            type:'hashing-leaf'
-        };
-        for(var i=0; i < this.data.length; i++) {
-            o[i + ':' + this.data[i].key] = this.data[i].value;
-        }
-        return o;
-    };
-
-};
-
-/**
- * A B+tree with leaf nodes that hash added entries by their ObjectId value
- * @see http://en.wikipedia.org/wiki/B+Tree
- * @public
- * @constructor
- * @param {Number} order the branching factor for the tree
- * @param {Number} threshold the merge threshold for the tree
- * @returns {Void}
- * @extends {BPlusTree}
- */
-module.exports.Scule.classes.BPlusHashingTree = function(order, threshold) {
-    
-    module.exports.Scule.classes.BPlusTree.call(this, order, threshold);
-    
-    /**
-     * @type {BPlusTreeHashingLeafNode}
-     * @private
-     */
-    this.root = new module.exports.Scule.classes.BPlusTreeHashingLeafNode();
-    this.root.setOrder(this.order);
-    this.root.setMergeThreshold(this.threshold);    
-    
-    /**
-     * Resets the root node for the tree to a new instance of {BPlusTreeHashingLeafNode}
-     * @public
-     * @returns {Void}
-     */
-    this.clear = function() {
-        this.root = new module.exports.Scule.classes.BPlusTreeHashingLeafNode();
-        this.root.setOrder(this.order);
-        this.root.setMergeThreshold(this.threshold);        
-    };    
-    
-};
-
-/**
- * Abstract index implementation - all other index types should descend from this class
- * @see http://en.wikipedia.org/wiki/Database_index
- * @public
- * @abstract
- * @constructor
- * @class {Index}
- * @returns {Void}
- */
-module.exports.Scule.classes.Index = function() {
-    
-    /**
-     * @type {Object}
-     * @private
-     */
-    this.attributes = {};
-    
-    /**
-     * @type {HashTable}
-     * @private
-     */
-    this.astrings   = new module.exports.Scule.classes.HashTable();
-    
-    /**
-     * @type {HashTable}
-     * @private
-     */    
-    this.leaves     = new module.exports.Scule.classes.HashTable();
-    
-    /**
-     * @type {Mixed}
-     * @private
-     */
-    this.structure  = null;
-    
-    /**
-     * @type {Mixed}
-     * @private
-     */    
-    this.type       = null;
-    
-    /**
-     * Sets the attributes to be indexed on Objects within this index. Attributes should be provided
-     * as an object with keys mapping to the Object keys to index.
-     * @public
-     * @param {Object} attributes the attributes to set on the index
-     * @returns {Void}
-     */
-    this.setAttribtues = function(attributes) {
-        this.attributes = attributes;
-        this.attributes = module.exports.Scule.functions.sortObjectKeys(this.attributes);
-    };
-    
-    /**
-     * Parses an index attribute descriptor string or array of descriptor strings to build the index attributes
-     * @public
-     * @param {Mixed} attributes the attribute string(s) to parse
-     * @returns {Void}
-     */
-    this.parseAttributes = function(attributes) {
-        this.populateAttributeStrings(attributes);
-        this.attributes = module.exports.Scule.functions.parseAttributes(attributes);
-        this.attributes = module.exports.Scule.functions.sortObjectKeys(this.attributes);
-    };
-    
-    /**
-     * Populates the attribute strings
-     * @public
-     * @param {Mixed} attributes populates the attribute strings for the given attributes
-     * @returns {Void}
-     */
-    this.populateAttributeStrings = function(attributes) {
-        var self = this;
-        if(!module.exports.Scule.functions.isArray(attributes)) {
-            attributes = attributes.split(',');
-        }
-        attributes.forEach(function(attr) {
-            self.astrings.put(attr, true);
-        });        
-    };
-    
-    /**
-     * Resets the attributes for the index, this also clears the index
-     * @public
-     * @returns {Void}
-     */
-    this.resetAttributes = function() {
-        this.attributes = {};
-        this.clear();
-    };
-    
-    /**
-     * Returns the type for the index - type values are defined in the constants for Scule
-     * @public
-     * @returns {Number}
-     */
-    this.getType = function() {
-        return this.type;
-    };
-    
-    /**
-     * Returns the name of the index
-     * @public
-     * @returns {String}
-     */
-    this.getName = function() {
-        return this.astrings.getKeys().sort().join(',');
-    };
-    
-    /**
-     * Determines whether or not the provided attributes applies to this index
-     * @public
-     * @param {Array} attributes the attributes to validate
-     * @param {Boolean} range whether or not the attributes are part of a range query
-     * @returns {boolean|Object}
-     */
-    this.applies = function(attributes, range) {
-        if(range && this.getType() == module.exports.Scule.constants.INDEX_TYPE_HASH) {
-            return false;
-        }
-        if(attributes.length < this.astrings.getLength()) {
-            return false;
-        }
-        var matches = {
-            $partial:false, 
-            $none:true,
-            $range:range,
-            $attr:{},
-            $index:this
-        };
-        var self = this;
-        attributes.forEach(function(attr) {
-            if(self.astrings.contains(attr)) {
-                matches.$attr[attr] = true;
-                matches.$none = false;
-            } else {
-                if(!matches.$partial) {
-                    matches.$partial = true;
-                }
-                matches.$attr[attr] = false;
-            }
-        });
-        if(matches.$none) {
-            return false;
-        }
-        return matches;
-    };
-    
-    /**
-     * Generates a key for the index using the provided document and index attributes
-     * @public
-     * @param {Object} document the document to generate an index key for
-     * @returns {String}
-     */
-    this.generateIndexKey = function(document) {
-        var composite = module.exports.Scule.functions.searchObject(this.attributes, document);
-        if(composite.length == 1) {
-            return composite[0];
-        }
-        return composite.join(',');
-    };
-    
-    /**
-     * Add a document to the index
-     * @public
-     * @param {Object} document the document to index
-     * @returns {Boolean}
-     */
-    this.index = function(document) {
-        if(!this.structure) {
-            return false;
-        }
-        var id  = module.exports.Scule.functions.getObjectId(document, true);
-        var key = this.generateIndexKey(document);
-        if (key.length == 0) {
-            return false;
-        }
-        this.structure.insert(key, document);
-        var table = this.structure.search(key);
-        this.leaves.put(id, {
-            table: table,
-            key:   key
-        });
-        return true;
-    };
-    
-    /**
-     * Removes a document from the index
-     * @public
-     * @param {Object} document the document to remove
-     * @returns {Boolean}
-     */
-    this.remove = function(document) {
-        if(!this.structure) {
-            return false;
-        }
-        var id = module.exports.Scule.functions.getObjectId(document, true);
-        if(!this.leaves.contains(id)) {
-            return false;
-        }
-        var node = this.leaves.get(id);
-        node.table.remove(id);
-        if(node.table.getLength() == 0) {
-            this.structure.remove(node.key);
-        }
-        return true;
-    };
-    
-    /**
-     * Prunes an entire keyspace from the index
-     * @public
-     * @param {Mixed} key the key to remove
-     * @returns {Boolean}
-     */
-    this.removeKey = function(key) {
-        if(!this.structure) {
-            return false;
-        }  
-        var table = this.structure.search(key);
-        if(table && table.length > 0) {
-            this.structure.remove(key);
-            for(var k in table.table) {
-                this.leaves.remove(module.exports.Scule.functions.getObjectId(table.get(k), true));
-            }
-        }
-        return true;
-    };
-    
-    /**
-     * Searches the index using the provided key
-     * @public
-     * @param {Object} key the key to search for within the index
-     * @returns {Array}
-     */
-    this.search = function(key) {
-        if(this.structure) {
-            var table = this.structure.search(key);
-            if(table) {
-                return table.getValues();
-            }
-        }
-        return [];
-    };
-    
-    /**
-     * Searches the index for a range of values bounded by min and max values
-     * @public
-     * @param {Mixed} min the minimum boundary of the range
-     * @param {Mixed} max the maximum boundary of the range
-     * @param {Boolean} includeMin a boolean flag indicating whether or not to include the minimum bound in the range
-     * @param {Boolean} includeMax a boolean flag indicating whether or not to include the maximum bound in the range
-     * @returns {Array}
-     */
-    this.range = function(min, max, includeMin, includeMax) {
-        if(this.structure) {
-            return this.structure.range(min, max, includeMin, includeMax);
-        }
-        return false;
-    };
-    
-    /**
-     * Removes all values from the index
-     * @public
-     * @returns {Void}
-     */
-    this.clear = function() {
-        if(this.structure) {
-            this.structure.clear();
-            return true;
-        }
-        return false;
-    };
-    
-    /**
-     * Returns the length of the index as an integer value
-     * @public
-     * @returns {Number}
-     */
-    this.getLength = function() {
-        return this.leaves.length;
-    };
-    
-};
-
-/**
- * Represents a B+tree index extending the Index class interface contract
- * @see http://en.wikipedia.org/wiki/B+Tree
- * @public
- * @constructor
- * @class {BPlusTreeIndex}
- * @param {Number} order the branching factor for the encapsulated b+tree datastructure
- * @extends {Index}
- * @returns {Void}
- */
-module.exports.Scule.classes.BPlusTreeIndex = function(order) {
-    
-    module.exports.Scule.classes.Index.call(this);
-    
-    if(!order) {
-        order = 100;
-    }
-    
-    /**
-     * @private
-     * @type {BPlusHashingTree}
-     */
-    this.structure = new module.exports.Scule.classes.BPlusHashingTree(order);
-    
-    /**
-     * @private
-     * @type {Number}
-     */
-    this.type      = module.exports.Scule.constants.INDEX_TYPE_BTREE;
-    
-};
-
-/**
- * Represents a HashTable index extending the Index class interface contract.
- * This index type does not support the range operation.
- * @see http://en.wikipedia.org/wiki/Hashtable
- * @public
- * @constructor
- * @extends {Index}
- * @returns {Void}
- */
-module.exports.Scule.classes.HashTableIndex = function() {
-    
-    module.exports.Scule.classes.Index.call(this);
-    
-    /**
-     * @private
-     * @type {HashBucketTable}
-     */
-    this.structure = new module.exports.Scule.classes.HashBucketTable();
-    
-    /**
-     * @private
-     * @type {Number}
-     */
-    this.type      = module.exports.Scule.constants.INDEX_TYPE_HASH;
-    
-    /**
-     * This is actually a no-op, hash indices cannot support range queries. Calling
-     * this function throws an {Exception}
-     * @public
-     * @param {Mixed} min the minimum boundary of the range
-     * @param {Mixed} max the maximum boundary of the range
-     * @param {Boolean} includeMin a boolean flag indicating whether or not to include the minimum bound in the range
-     * @param {Boolean} includeMax a boolean flag indicating whether or not to include the maximum bound in the range
-     * @throws {Exception}
-     */
-    this.range = function(min, max, includeMin, includeMax) {
-        throw 'HashTable type indices to not support range query operations';
-    };    
-    
-};
-
-/**
  * A simple cryptography provider with convenience functions to allow the signing of data
  * @public
  * @constructor
@@ -5768,205 +5124,6 @@ module.exports.Scule.classes.QueryNormalizer = function() {
 };
 
 /**
- * Selects and resolves the appropriate indices for a query against a given collection
- * @public
- * @constructor
- * @class {IndexSelector}
- * @returns {Void}
- */
-module.exports.Scule.classes.IndexSelector = function() {
-
-    /**
-     * Selects and resolves the appropriate indices for a query against a given collection
-     * @param {Collection} collection the collection to resolve indices against
-     * @param {Object} query the query to analyze
-     */
-    this.resolveIndices = function (collection, query) {
-        var containers = this.selectIndices(collection, query);
-        if (!containers || !containers.selected) {
-            return collection.documents.table;
-        }
-        return this.queryIndices(containers, query);
-    };
-
-    /**
-     * @private
-     */
-    this.buildHashIndexKey = function(keys, query) {
-        var ikey = [];
-        for (var key in keys) {
-            if (!query.hasOwnProperty(key)) {
-                continue;
-            }
-            ikey.push(query[key].$eq);
-        }
-        if (ikey.length == 1) {
-            return ikey[0];
-        }
-        return ikey.join(',');
-    };
-
-    /**
-     * @private
-     */
-    this.buildRangeIndexKey = function(keys, query) {
-        var ikey   = [null, null, false, false];  
-        var minkey = [];
-        var maxkey = [];
-        for (var key in keys) {
-            if (!query.hasOwnProperty(key)) {
-                continue;
-            }
-            for (var skey in query[key]) {
-                switch (skey) {
-                    case '$gt':
-                        minkey.push(query[key][skey]);
-                        break;
-                    
-                    case '$gte':
-                        minkey.push(query[key][skey]);
-                        ikey[2] = true;
-                        break;
-                    
-                    case '$lt':
-                        maxkey.push(query[key][skey]);
-                        break;
-                    
-                    case '$lte':
-                        maxkey.push(query[key][skey]);
-                        ikey[3] = true;
-                        break;
-                }
-            }
-        }
-        if (minkey.length > 0) {
-            if (minkey.length == 1) {
-                ikey[0] = minkey[0];
-            } else {
-                ikey[0] = minkey.join(',');
-            }
-        }
-        if (maxkey.length > 0) {
-            if (maxkey.length == 1) {
-                ikey[1] = maxkey[0];
-            } else {
-                ikey[1] = maxkey.join(',');
-            }
-        }
-        return ikey;
-    };
-
-    /**
-     * @private
-     */
-    this.queryHashIndex = function(container, key) {
-        return container.$index.search(key);
-    };
-
-    /**
-     * @private
-     */
-    this.queryRangeIndex = function(container, min, max, imin, imax) {
-        return container.$index.range(min, max, imin, imax);
-    };
-
-    /**
-     * @private
-     */
-    this.queryIndices = function(containers, query) {
-        var o         = [];
-        var key       = null;
-        var ikey      = null;
-        var container = null;
-        for (key in containers.range) {
-            container = containers.range[key];
-            ikey      = this.buildRangeIndexKey(container.$attr, query);
-            o.push(this.queryRangeIndex(container, ikey[0], ikey[1], ikey[2], ikey[3]));
-        }
-        for (key in containers.exact) {
-            container = containers.exact[key];
-            ikey      = this.buildHashIndexKey(container.$attr, query);
-            o.push(this.queryHashIndex(container, ikey));
-        }
-        return module.exports.Scule.functions.intersection(o);
-    };
-
-    /**
-     * @private
-     */
-    this.selectIndices = function (collection, query) {
-        var range = module.exports.getHashTable();
-        var exact = module.exports.getHashTable();
-        
-        this.populateAttributes(query, range, exact);
-
-        range = range.getKeys().sort();
-        exact = exact.getKeys().sort();
-
-        if(range.length === 0 && exact.length === 0) {
-            return;
-        }
-        
-        var hkey     = null;
-        var m        = null;
-        var matches  = {
-            range:{}, 
-            exact:{}, 
-            selected:false
-        };
-        var indices  = collection.indices;
-
-        for(var i=0; i < indices.length; i++) {
-            var index = indices[i];
-            m = index.applies(range, true);
-            if(m && !m.$partial) {
-                hkey = JSON.stringify(m.$index.astrings.getKeys().sort());
-                matches.range[hkey] = m;
-                matches.selected = true;
-            }            
-            m = index.applies(exact, false);
-            if(m && !m.$partial) {
-                hkey = JSON.stringify(m.$index.astrings.getKeys().sort());
-                matches.exact[hkey] = m;
-                matches.selected = true;
-            }
-        }
-        
-        return matches;
-    };
-
-    /**
-     * @private
-     */
-    this.populateAttributes = function(query, range, exact) {
-        for (var key in query) {
-            for (var sub in query[key]) {
-                if (!module.exports.Scule.symbols.table.hasOwnProperty(sub)) {
-                    continue;
-                }
-                switch (module.exports.Scule.symbols.table[sub]) {
-                    case module.exports.Scule.arities.range:
-                        range.put(key, true);
-                        break;
-                   
-                    case module.exports.Scule.arities.operand:    
-                    case module.exports.Scule.arities.binary:
-                        if (key == '$eq') {
-                            exact.put(key, true);
-                        }
-                        break;                   
-                    
-                    case module.exports.Scule.arities.selective:
-                        throw 'sub-expressions cannot use indexes';
-                        break;                    
-                }
-            }
-        }
-    };
-
-};
-
-/**
  * Contains the core logic for SculeJS query evaluation and execution
  * @public
  * @constructor
@@ -5993,19 +5150,6 @@ module.exports.Scule.classes.QueryEngine = function() {
      */
     this.traverseObject = function(k, o) {
         return module.exports.Scule.functions.traverseObject(module.exports.Scule.functions.parseAttributes(k), o);
-    };
-
-    /**
-     * Updates the indices for a given collection and document
-     * @param {Object} document the document to update indices for
-     * @param {Collection} collection the collection update indices for
-     * @return {Void}
-     */
-    this.updateIndexes = function (document, collection) {
-        collection.indices.forEach(function (index) {
-            index.remove(document);
-            index.index(document);
-        });
     };
 
     this.$ne = function (a, b) {
@@ -6378,10 +5522,10 @@ module.exports.Scule.classes.QueryCompiler = function() {
      * @param {Boolean} upsert a flag indicating whether or not the engine should upsert
      * @returns {String}
      */    
-    this.compileUpdate = function(query, upsert) {
+    this.compileUpdate = function(query, upsert, ignoreCache) {
 
         var hash = md5.hash(this.serializeQuery(query));
-        if(this.cache.contains(hash)) {
+        if(!ignoreCache && this.cache.contains(hash)) {
             return this.cache.get(hash);
         }        
 
@@ -6397,13 +5541,17 @@ module.exports.Scule.classes.QueryCompiler = function() {
         }
         
         closure     += updates.join('\n');
-        closure     += '\n\t\tengine.updateIndexes(o, collection);\n';
         closure     += '\t});\n'
         closure     += '\treturn objects;\n';
         closure     += '}\n';
 
-        this.cache.put(hash, closure);        
-        return closure;
+        if (ignoreCache) {
+            return closure;
+        }
+
+        eval(closure);
+        this.cache.put(hash, u);        
+        return this.cache.get(hash);
 
     };
     
@@ -6436,21 +5584,20 @@ module.exports.Scule.classes.QueryCompiler = function() {
      * @param {Object} conditions the conditions for the query
      * @returns {String}
      */        
-    this.compileQuery = function(query, conditions) {
+    this.compileQuery = function(query, conditions, ignoreCache) {
         
-        query      = this.normalizer.normalize(query);
+        query = this.normalizer.normalize(query);
         
         var hash = md5.hash(this.serializeQuery(query) + this.serializeQuery(conditions));
-        if(this.cache.contains(hash)) {
+        if(!ignoreCache && this.cache.contains(hash)) {
             return this.cache.get(hash);
         }        
         
         var closure = 'var c = function(objects, engine) {\n';        
         closure    += '\tvar r = [];\n';
         if (module.exports.Scule.functions.sizeOf(query) > 0) {
-            closure    += '\tfor (var k in objects) {\n';
-            closure    += '\t\tif (!objects.hasOwnProperty(k)) { continue; }\n';
-            closure    += '\t\tvar o = objects[k];\n';
+            closure    += '\tobjects.forEach(function(o) {\n';
+            closure    += '\t\to = o.element;\n';
             var ands    = [];
             var ors     = '';
             for (var key in query) {
@@ -6468,19 +5615,16 @@ module.exports.Scule.classes.QueryCompiler = function() {
                     ors = ' && ' + ors;
                 }
                 closure += '\t\tif ((' + ands.join(' && ') + ')' + ors + ') {\n';
-                closure += '\t\t\tr.push(o);\n'
+                closure += '\t\t\tr[r.length] = o;\n'
                 closure += '\t\t}\n';
             } else if (ors.length > 0) {
                 closure += '\t\tif (' + ors + ') {\n';
-                closure += '\t\t\tr.push(o);\n'
+                closure += '\t\t\tr[r.length] = o;\n'
                 closure += '\t\t}\n';            
             }
-            closure += '\t};\n';
+            closure += '\t});\n';
         } else {
-            closure    += '\tfor (var k in objects) {\n';
-            closure    += '\t\tif (!objects.hasOwnProperty(k)) { continue; }\n';
-            closure    += '\t\tr.push(o[k]);\n';
-            closure    += '\t}\n';
+            closure += '\tr = objects.toArray();\n';
         }
         if (conditions && conditions.hasOwnProperty('$skip')) {
             closure += '\tr.splice(0, ' + conditions.$skip + ');\n';
@@ -6492,8 +5636,13 @@ module.exports.Scule.classes.QueryCompiler = function() {
         closure += '\treturn r;\n';
         closure += '};\n';
         
-        this.cache.put(hash, closure);        
-        return closure;
+        if (ignoreCache) {
+            return closure;
+        }
+        
+        eval(closure);
+        this.cache.put(hash, c);        
+        return this.cache.get(hash);
         
     };
 
@@ -6504,7 +5653,7 @@ module.exports.Scule.classes.QueryCompiler = function() {
      * @returns {String}
      */
     this.explainQuery = function(query, conditions) {
-        var source = this.compileQuery(query, conditions);
+        var source = this.compileQuery(query, conditions, true);
         console.log(source);
         return source;
     };
@@ -6516,7 +5665,7 @@ module.exports.Scule.classes.QueryCompiler = function() {
      * @returns {String}
      */
     this.explainUpdate = function(query, upsert) {
-        var source = this.compileUpdate(query, upsert);
+        var source = this.compileUpdate(query, upsert, true);
         console.log(source);
         return source;
     };
@@ -6532,7 +5681,6 @@ module.exports.Scule.classes.QueryCompiler = function() {
  */
 module.exports.Scule.classes.QueryInterpreter = function() {
 
-    this.indexer  = new module.exports.Scule.classes.IndexSelector();
     this.compiler = new module.exports.Scule.classes.QueryCompiler();
 
     /**
@@ -6547,9 +5695,8 @@ module.exports.Scule.classes.QueryInterpreter = function() {
         if (explain) {
             return this.compiler.explainQuery(query, conditions);
         }
-        var o   = this.indexer.resolveIndices(collection, query);
-        var src = this.compiler.compileQuery(query, conditions);
-        eval(src);
+        var o = collection.documents.queue;
+        var c = this.compiler.compileQuery(query, conditions);
         return c(o, module.exports.Scule.objects.engine);
     };
 
@@ -6567,9 +5714,81 @@ module.exports.Scule.classes.QueryInterpreter = function() {
         if (explain) {
             return this.compiler.explainUpdate(updates, upsert);
         }
-        var src = this.compiler.compileUpdate(updates, upsert);
-        eval(src);
+        var u = this.compiler.compileUpdate(updates, upsert);
         return u(o, collection, module.exports.Scule.objects.engine);
+    };
+
+};
+
+module.exports.Scule.classes.PrimaryKeyIndex = function() {
+
+    this.table  = new module.exports.Scule.classes.HashTable();
+    this.queue  = new module.exports.Scule.classes.DoublyLinkedList();
+
+    this.clear = function() {
+        this.table.clear();
+        this.queue.clear();
+    };
+
+    this.contains = function(key) {
+        return this.table.contains(key);
+    };
+
+    this.get = function(key) {
+        if (!this.table.contains(key)) {
+            return null;
+        }
+        return this.table.get(key).element;
+    };
+
+    this.add = function(object) {
+        var key = module.exports.Scule.functions.getObjectId(object);
+        if (this.table.contains(key)) {
+            this.remove(object);
+        }
+        this.table.put(key, this.queue.add(object));
+        return true;
+    };
+
+    this.remove = function(object) {
+        var key = module.exports.Scule.functions.getObjectId(object);
+        if (!this.table.contains(key)) {
+            return false;
+        }
+
+        var node = this.table.remove(key);
+        if (!node) {
+            return false;
+        }
+
+        var prev = node.prev;
+        var next = node.next;
+        if (prev) {
+            prev.next = next;
+        }
+        if (next) {
+            next.prev = prev;
+        }
+        node.detach();
+        this.queue.length--;
+        
+        return node.element;
+    };
+
+    this.length = function() {
+        return this.queue.length;
+    };
+
+    this.toTable = function() {
+        var objects = {};
+        this.queue.forEach(function(object) {
+            objects[module.exports.Scule.functions.getObjectId(object)] = object.element;
+        });
+        return objects;
+    };
+
+    this.toArray = function() {
+        return this.queue.toArray();
     };
 
 };
@@ -6588,7 +5807,7 @@ module.exports.Scule.classes.Collection = function(name) {
      * @private
      * @type {HashTable}
      */    
-    this.documents  = new module.exports.Scule.classes.HashTable();
+    this.documents  = new module.exports.Scule.classes.PrimaryKeyIndex();
     
     /**
      * @private
@@ -6634,12 +5853,6 @@ module.exports.Scule.classes.Collection = function(name) {
     this.storage    = null;
     
     /**
-     * @private
-     * @type {Array}
-     */    
-    this.indices    = [];
-    
-    /**
      * Sets the storage engine for the collection
      * @public
      * @param {StorageEngine} storage the storage engine to set on the collection
@@ -6647,75 +5860,6 @@ module.exports.Scule.classes.Collection = function(name) {
      */
     this.setStorageEngine = function(storage) {
         this.storage = storage;
-    };
-    
-    /**
-     * Ensures that an index exists on the collection with the provided attributes
-     * @public
-     * @param {Number} type the type of index
-     * @param {String} definition the attributes to use when building the index
-     * @param {Object} options the index type specific options to use
-     * @returns {Void}
-     */
-    this.ensureIndex = function(type, definition, options) {
-        var index;
-        switch(type) {
-            case module.exports.Scule.constants.INDEX_TYPE_BTREE:
-                if(!options) {
-                    options = {
-                        order:100
-                    };
-                }
-                index = new module.exports.Scule.classes.BPlusTreeIndex(options.order);
-                index.parseAttributes(definition);
-                break;
-                
-            case module.exports.Scule.constants.INDEX_TYPE_HASH:
-                index = new module.exports.Scule.classes.HashTableIndex();
-                index.parseAttributes(definition);
-                break;
-        }
-        if(index) {
-            var inserted = false;
-            var alen     = index.astrings.length;
-            for(var i=0; i < this.indices.length; i++) {
-                if(alen > this.indices[i].astrings.length) {
-                    this.indices.splice(i, 0, index);
-                    inserted = true;
-                    break;
-                }
-            }
-            if(!inserted) {
-                var o = this.findAll();
-                o.forEach(function(document) {
-                    index.index(document);
-                });
-                this.indices.push(index);
-            }
-        }
-    };
-    
-    /**
-     * Ensures a b+tree index exists using the provided definition and options
-     * @public
-     * @param {String} definition the index definition (e.g. a,b,c.d)
-     * @param {Object} options the options for the index implementation
-     * @returns {Void}
-     */
-    this.ensureBTreeIndex = function(definition, options) {
-        this.ensureIndex(module.exports.Scule.constants.INDEX_TYPE_BTREE, definition, options);
-    };
-
-
-    /**
-     * Ensures a hash index exists using the provided definition and options
-     * @public
-     * @param {String} definition the index definition (e.g. a,b,c.d)
-     * @param {Object} options the options for the index implementation
-     * @returns {Void}
-     */
-    this.ensureHashIndex = function(definition, options) {
-        this.ensureIndex(module.exports.Scule.constants.INDEX_TYPE_HASH, definition, options);
     };
     
     /**
@@ -6743,7 +5887,7 @@ module.exports.Scule.classes.Collection = function(name) {
      * @returns {Number}
      */
     this.getLength = function() {
-        return this.documents.getLength();
+        return this.documents.length();
     };
     
     /**
@@ -6774,10 +5918,7 @@ module.exports.Scule.classes.Collection = function(name) {
             for(var ky in o._objects) {
                 var document = o._objects[ky];
                 module.exports.Scule.functions.unflattenObject(document);
-                self.documents.put(module.exports.Scule.functions.getObjectId(document, true), document);
-                for(var i=0; i < self.indices.length; i++) {
-                    self.indices[i].index(document);
-                }
+                self.documents.add(document);
             }
             self.isOpen = true;
             if(callback) {
@@ -6798,7 +5939,7 @@ module.exports.Scule.classes.Collection = function(name) {
             _salt: null,
             _name: this.name,
             _version: this.version,
-            _objects: this.documents.table            
+            _objects: this.documents.toTable()            
         };
         this.storage.write(this.name, collection, callback);
     };
@@ -6850,9 +5991,6 @@ module.exports.Scule.classes.Collection = function(name) {
      */
     this.clear = function(callback) {
         this.documents.clear();
-        for(var i=0; i < this.indices.length; i++) {
-            this.indices[i].clear();
-        }
         if(callback) {
             callback(this);
         }
@@ -6867,10 +6005,7 @@ module.exports.Scule.classes.Collection = function(name) {
      * @returns {Array}
      */
     this.findAll = function(callback) {
-        var result = [];
-        for(var ky in this.documents.table) {
-            result.push(this.documents.get(ky));
-        }
+        var result = this.documents.toArray();
         if(callback) {
             callback(result);
         }
@@ -6918,11 +6053,7 @@ module.exports.Scule.classes.Collection = function(name) {
                 document._id = new module.exports.Scule.classes.ObjectId(document._id);
             }
         }        
-        this.documents.put(module.exports.Scule.functions.getObjectId(document, true), document);
-        for(var i=0; i < this.indices.length; i++) {
-            this.indices[i].remove(document);
-            this.indices[i].index(document);
-        }
+        this.documents.add(document);
         if(this.autoCommit) {
             this.commit();
         }
@@ -6987,9 +6118,6 @@ module.exports.Scule.classes.Collection = function(name) {
         var results = this.find(query, conditions);
         results.forEach(function(o) {
             self.documents.remove(module.exports.Scule.functions.getObjectId(o));
-            self.indices.forEach(function(index) {
-                index.remove(o);
-            });
         });
         if (callback) {
             callback(results);
@@ -7038,7 +6166,7 @@ module.exports.Scule.classes.Collection = function(name) {
         var o    = collection.findAll();
         o.forEach(function(document) {
             if(!self.documents.contains(document._id)) {
-                self.documents.put(document._id, document);
+                self.documents.add(document);
             }
         });
         if(callback) {
@@ -7403,32 +6531,6 @@ module.exports.dropAll = function() {
 };
 
 /**
- * Returns an instance of the {Index} class
- * @returns {Index}
- */
-module.exports.getIndex = function() {
-    return new module.exports.Scule.classes.Index();
-};
-
-/**
- * Returns an instance of the {HashTableIndex} class
- * @param {Number} threshold
- * @returns {HashTableIndex}
- */
-module.exports.getHashTableIndex = function(threshold) {
-    return new module.exports.Scule.classes.HashTableIndex(threshold);
-};
-
-/**
- * Returns an instance of the {BPlusTreeIndex} class
- * @param {Number} threshold
- * @returns {BPlusTreeIndex}
- */
-module.exports.getBPlusTreeIndex = function(threshold) {
-    return new module.exports.Scule.classes.BPlusTreeIndex(threshold);
-};
-
-/**
  * Returns an instance of the {ObjectId} class
  * @param {String} id
  * @returns {ObjectId}
@@ -7673,14 +6775,6 @@ module.exports.getBloomFilter = function(capacity) {
  */
 module.exports.getQueryNormalizer = function() {
     return new module.exports.Scule.classes.QueryNormalizer();
-};
-
-/**
- * Returns an instance of the {IndexSelector} class
- * @returns {IndexSelector}
- */
-module.exports.getIndexSelector = function() {
-    return new module.exports.Scule.classes.IndexSelector();
 };
 
 /**

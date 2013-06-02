@@ -205,35 +205,6 @@ exports['test Normalizer'] = function(beforeExit, assert) {
 
 };
 
-exports['test Selector'] = function(beforeExit, assert) {
-
-    db.dropAll();
-    var collection = db.factoryCollection('scule+dummy://unittest');
-    collection.ensureHashIndex('a');
-    collection.ensureBTreeIndex('d', {
-        order:1000
-    });
-
-    for (var i=0; i < 100000; i++) {
-        collection.save({
-            a:i,
-            b:i+10,
-            c:i+30,
-            d:i+5
-        });
-    }
-
-    var selector = db.getIndexSelector();
-    var o = selector.resolveIndices(collection, {
-        d:{
-            $gte:9000, 
-            $lt:9100
-        }
-    });
-    assert.equal(o.length, 100);
-    
-};
-
 exports['test QueryCompiler'] = function(beforeExit, assert) {
 
     var d = [];
@@ -241,15 +212,17 @@ exports['test QueryCompiler'] = function(beforeExit, assert) {
         var foo = (i%3 == 0) ? 3 : 1;
         var bar = (i%2 == 0) ? 3 : 2;
         d.push({
-            foo: foo, 
-            bar: bar
+            element: {
+                foo: foo, 
+                bar: bar
+            }
         });
     }
     
     var engine = db.getQueryEngine();
     var interpreter = db.getQueryCompiler();
     
-    eval(interpreter.compileQuery({
+    var c = interpreter.compileQuery({
         foo:{
             $eq:1
         }, 
@@ -258,7 +231,7 @@ exports['test QueryCompiler'] = function(beforeExit, assert) {
         }
     }, {
         $sort:['foo', -1]
-        }));
+        });
     
     var t = inst.getTimer();
     
@@ -295,13 +268,13 @@ exports['test ElemMatch'] = function(beforeExit, assert) {
                 });                
             }
         }
-        d.push(o);
+        d.push({element: o});
     }    
     
     var engine = db.getQueryEngine();
     var interpreter = db.getQueryCompiler();
     
-    eval(interpreter.compileQuery({bar:{$eq:3}, arr:{$elemMatch:{j:18, f:0}}}));
+    var c = interpreter.compileQuery({bar:{$eq:3}, arr:{$elemMatch:{j:18, f:0}}});
     
     var t = inst.getTimer();
     

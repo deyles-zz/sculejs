@@ -483,35 +483,6 @@ function runAllTests() {
 
         };
 
-        function testSelector() {
-
-            Scule.dropAll();
-            var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.ensureHashIndex('a');
-            collection.ensureBTreeIndex('d', {
-                order:1000
-            });
-
-            for (var i=0; i < 100000; i++) {
-                collection.save({
-                    a:i,
-                    b:i+10,
-                    c:i+30,
-                    d:i+5
-                });
-            }
-
-            var selector = Scule.getIndexSelector();
-            var o = selector.resolveIndices(collection, {
-                d:{
-                    $gte:9000, 
-                    $lt:9100
-                }
-            });
-            JSUNIT.assertEquals(o.length, 100);
-    
-        };
-
         function testQueryCompiler() {
 
             var d = [];
@@ -519,15 +490,17 @@ function runAllTests() {
                 var foo = (i%3 == 0) ? 3 : 1;
                 var bar = (i%2 == 0) ? 3 : 2;
                 d.push({
-                    foo: foo, 
-                    bar: bar
+                    element: {
+                        foo: foo, 
+                        bar: bar
+                    }
                 });
             }
     
             var engine = Scule.getQueryEngine();
             var interpreter = Scule.getQueryCompiler();
     
-            eval(interpreter.compileQuery({
+            var c = interpreter.compileQuery({
                 foo:{
                     $eq:1
                 }, 
@@ -536,7 +509,7 @@ function runAllTests() {
                 }
             }, {
                 $sort:['foo', -1]
-            }));
+            });
     
             var t = Scule.getTimer();
     
@@ -573,13 +546,13 @@ function runAllTests() {
                         });                
                     }
                 }
-                d.push(o);
+                d.push({element: o});
             }    
     
             var engine = Scule.getQueryEngine();
             var interpreter = Scule.getQueryCompiler();
     
-            eval(interpreter.compileQuery({
+            var c = interpreter.compileQuery({
                 bar:{
                     $eq:3
                 }, 
@@ -589,7 +562,7 @@ function runAllTests() {
                         f:0
                     }
                 }
-            }));
+            });
     
             var t = Scule.getTimer();
     
@@ -655,7 +628,6 @@ function runAllTests() {
             JSUNIT.addTest(testQueryOperators);
             JSUNIT.addTest(testUpdateOperators);
             JSUNIT.addTest(testNormalizer);
-            JSUNIT.addTest(testSelector);
             JSUNIT.addTest(testQueryCompiler);
             JSUNIT.addTest(testElemMatch);
             JSUNIT.addTest(testUpdate);
@@ -2195,211 +2167,6 @@ function runAllTests() {
     }());
 
     (function() {
-
-        function testBPlusHashingTreeVerifyKeys(node) {
-            if(node.isLeaf()) {
-                return;
-            }
-            var key, left, right;
-            for(var i=1; i < node.data.length; i=i+2) {
-                key   = node.data[i];
-                left  = node.data[i-1];
-                right = node.data[i+1];
-                if(left.isLeaf() && right.isLeaf()) {
-                    JSUNIT.assertTrue(left.data[0].key < key);
-                    JSUNIT.assertTrue(right.data[0].key == key);                
-                    return;
-                }
-                JSUNIT.assertTrue(left.data[1] < key);
-                JSUNIT.assertTrue(right.data[1] >= key);
-                testBPlusHashingTreeVerifyKeys(left);
-                testBPlusHashingTreeVerifyKeys(right);
-            }    
-        };
-
-        function testBPlusHashingTreeLinkedListOrder(tree) {
-            var prev = undefined;    
-            var curr = tree.root.data[0];
-            while(curr) {
-                JSUNIT.assertEquals(prev, curr.getLeft());
-                prev = curr;       
-                curr = curr.getRight();
-            }    
-        };
-
-        function testBPlusHashingTreeVerifyOrder(node) {
-            if(node.isLeaf()) {
-                for(var i=0; i < node.data.length; i++) {
-                    if(i > 0) {
-                        for(var j=0; j < i; j++) {
-                            JSUNIT.assertFalse(node.data[j].key >= node.data[i].key);
-                        }
-                    }
-                }
-            } else {
-                for(var i=0; i < node.data.length; i=i+2) {
-                    testBPlusHashingTreeVerifyOrder(node.data[i]);
-                }
-            }    
-        };
-
-        function testBPlusHashingTreeInsert() {
-            var tree = Scule.getBPlusHashingTree(5);
-            for(var i=0; i < 200; i++) {
-                var k = Scule.global.functions.randomFromTo(10, 200);
-                var o = {
-                    _id: Scule.getObjectId(),
-                    key: k,
-                    slug: 'slug:' + i
-                };
-                tree.insert(k, o);
-            }
-            testBPlusHashingTreeVerifyKeys(tree.root);
-            testBPlusHashingTreeVerifyOrder(tree.root);
-        };
-
-        function testBPlusHashingTreeInsert2() {
-            var tree = Scule.getBPlusHashingTree(33);
-            for(var i=0; i < 10; i++) {
-                var k = Scule.global.functions.randomFromTo(10, 200);
-                var o = {
-                    _id: Scule.getObjectId(),
-                    key: k,
-                    slug: 'slug:' + i
-                };
-                tree.insert(k, o);
-            }
-            testBPlusHashingTreeVerifyKeys(tree.root);
-            testBPlusHashingTreeVerifyOrder(tree.root);
-        };
-
-        function testBPlusHashingTreeInsert3() {
-            var tree = Scule.getBPlusHashingTree(17);
-            for(var i=0; i < 100; i++) {
-                var k = i%10;
-                var o = {
-                    _id: Scule.getObjectId(),
-                    key: k,
-                    slug: 'slug:' + i
-                };
-                tree.insert(k, o);        
-            }
-            for(var i=0; i < 10; i++) {
-                var table = tree.search(i);
-                JSUNIT.assertEquals(table.getLength(), 10);
-                var keys = table.getKeys();
-                keys.forEach(function(key) {
-                    JSUNIT.assertEquals(table.get(key).key, i);
-                    JSUNIT.assertEquals(table.get(key)._id.toString(), key);
-                });
-            }
-        }
-
-        function testBPlusHashingTreeRemove() {
-            var tree = Scule.getBPlusHashingTree(10);
-            for(var i=0; i < 100; i++) {
-                var k = i%10;
-                var o = {
-                    _id: Scule.getObjectId(),
-                    key: k,
-                    slug: 'slug:' + i
-                };
-                tree.insert(k, o);        
-            }
-            tree.remove(5);
-            JSUNIT.assertEquals(tree.search(5), null);
-            tree.remove(2);
-            JSUNIT.assertEquals(tree.search(2), null);    
-            JSUNIT.assertNotEquals(tree.search(9), null);    
-        }
-
-        function testBPlusHashingTreeRange() {
-            var tree = Scule.getBPlusHashingTree(15);
-            for(var i=0; i < 2000; i++) {
-                var k = Scule.global.functions.randomFromTo(10, 2000);
-                var o = {
-                    _id: Scule.getObjectId(),
-                    key: k,
-                    slug: 'slug:' + i
-                };
-                tree.insert(k, o);
-            }
-            var range = tree.range(333, 1987);
-            var broken = false;
-            for(var i=0; i < range.length; i++) {
-                for(var j=0; j < i; j++) {
-                    if(range[j] > range[i]) {
-                        broken = true;
-                        break;
-                    }
-                }
-            }
-            JSUNIT.assertFalse(broken);
-        };
-
-        function testBPlusHashingTreeLeftRange() {
-            var tree = Scule.getBPlusHashingTree(15);
-            for(var i=0; i < 2000; i++) {
-                var k = Scule.global.functions.randomFromTo(10, 2000);
-                var o = {
-                    _id: Scule.getObjectId(),
-                    key: k,
-                    slug: 'slug:' + i
-                };
-                tree.insert(k, o);
-            }
-            var range = tree.range(333, null);
-            var broken = false;
-            for(var i=0; i < range.length; i++) {
-                for(var j=0; j < i; j++) {
-                    if(range[j] > range[i]) {
-                        broken = true;
-                        break;
-                    }
-                }
-            }
-            JSUNIT.assertFalse(broken);
-        };
-
-        function testBPlusHashingTreeRightRange() {
-            var tree = Scule.getBPlusHashingTree(15);
-            for(var i=0; i < 2000; i++) {
-                var k = Scule.global.functions.randomFromTo(10, 2000);
-                var o = {
-                    _id: Scule.getObjectId(),
-                    key: k,
-                    slug: 'slug:' + i
-                };
-                tree.insert(k, o);
-            }
-            var range = tree.range(null, 333);
-            var broken = false;
-            for(var i=0; i < range.length; i++) {
-                for(var j=0; j < i; j++) {
-                    if(range[j] > range[i]) {
-                        broken = true;
-                        break;
-                    }
-                }
-            }
-            JSUNIT.assertFalse(broken);
-        };
-
-        (function() {
-            JSUNIT.resetTests();
-            JSUNIT.addTest(testBPlusHashingTreeInsert);
-            JSUNIT.addTest(testBPlusHashingTreeInsert2);
-            JSUNIT.addTest(testBPlusHashingTreeInsert3);
-            JSUNIT.addTest(testBPlusHashingTreeRemove);
-            JSUNIT.addTest(testBPlusHashingTreeRange);
-            JSUNIT.addTest(testBPlusHashingTreeLeftRange);
-            JSUNIT.addTest(testBPlusHashingTreeRightRange);
-            JSUNIT.runTests('B+ Hashing Tree tests', Scule.tests.functions.renderTest);
-        }());
-
-    }());
-
-    (function() {
     
         function testBinaryTreeNode() {
             var node = Scule.getBinarySearchTreeNode('foo', 'bar');
@@ -3160,10 +2927,9 @@ function runAllTests() {
             table.put(666, 'the devil!');
             table.remove('foo');
             JSUNIT.assertFalse(table.contains('foo'));
-            JSUNIT.assertTrue(table.contains('foo2'));
-            JSUNIT.assertTrue(table.remove('foo2'));
+            JSUNIT.assertEquals('bar2', table.remove('foo2'));
             JSUNIT.assertFalse(table.remove('foo2'));
-            JSUNIT.assertTrue(table.remove(666));
+            JSUNIT.assertEquals('the devil!', table.remove(666));
             JSUNIT.assertFalse(table.remove(666));
             JSUNIT.assertFalse(table.remove(999));
         }
@@ -3597,140 +3363,6 @@ function runAllTests() {
 
     (function() {
     
-        function testIndexParseAttributes() {
-            var index = Scule.getIndex();
-
-            index.parseAttributes([
-                'a',
-                'c.d',
-                'e.f.0'
-                ]);
-            var o1 = index.attributes;
-
-            index.resetAttributes();
-            index.parseAttributes('a,c.d,e.f.0');
-            var o2 = index.attributes;
-
-            index.resetAttributes();
-            index.parseAttributes('a , c.d, e. f.0 ');
-            var o3 = index.attributes;
-
-            JSUNIT.assertEquals(o1.a, o2.a);
-            JSUNIT.assertEquals(o1.c.d, o2.c.d);
-            JSUNIT.assertEquals(o1.e.f[0], o2.e.f[0]);
-            JSUNIT.assertEquals(o1.a, o3.a);
-            JSUNIT.assertEquals(o1.c.d, o3.c.d);
-            JSUNIT.assertEquals(o1.e.f[0], o3.e.f[0]);
-            JSUNIT.assertEquals(o3.a, o2.a);
-            JSUNIT.assertEquals(o3.c.d, o2.c.d);
-            JSUNIT.assertEquals(o3.e.f[0], o2.e.f[0]);
-        };
-
-        function testIndexGenerateKey() {
-            var index = Scule.getIndex();
-            var document = {
-                a:21,
-                c:{
-                    d:34
-                },
-                e:{
-                    f:[32, 23, 43, 45]
-                },
-                f:[2, 7, 6, 0],
-                foo:'bar',
-                bar:'foo'
-            };
-            index.parseAttributes('a,c.d,e.f.0');
-            JSUNIT.assertEquals(index.generateIndexKey(document), '21,34,32');
-            index.resetAttributes();
-            index.parseAttributes('e.f.0,c.d,a');
-            JSUNIT.assertEquals(index.generateIndexKey(document), '21,34,32');
-            index.resetAttributes();
-            index.parseAttributes('c.d,e.f.0,a');
-            JSUNIT.assertEquals(index.generateIndexKey(document), '21,34,32');    
-            index.resetAttributes();    
-            index.parseAttributes('c.d,e.f.3');
-            JSUNIT.assertEquals(index.generateIndexKey(document), '34,45');
-            index.resetAttributes();
-            index.parseAttributes('f.1,c.d,e.f.1');
-            JSUNIT.assertEquals(index.generateIndexKey(document), '34,23,7');
-            index.resetAttributes();
-            index.parseAttributes('f.0');
-            JSUNIT.assertEquals(index.generateIndexKey(document), 2);
-            index.resetAttributes();
-            index.parseAttributes('foo');
-            JSUNIT.assertEquals(index.generateIndexKey(document), 'bar');
-            JSUNIT.assertNotEquals(index.generateIndexKey(document), 'foo');
-            index.resetAttributes();
-            index.parseAttributes('bar');
-            JSUNIT.assertEquals(index.generateIndexKey(document), 'foo');
-            JSUNIT.assertNotEquals(index.generateIndexKey(document), 'bar');    
-        };
-
-        function testIndexSearch() {
-            var index = Scule.getIndex();
-            JSUNIT.assertEquals(index.search('1,2,3').length, 0);
-        };
-
-        function testIndexClear() {
-            var index = Scule.getIndex();
-            JSUNIT.assertFalse(index.clear());
-        };
-
-        function testIndexRange() {
-            var index = Scule.getIndex();
-            JSUNIT.assertFalse(index.range(0, 100000));    
-        };
-
-        function testIndexIndex() {
-            var document = {
-                a:21,
-                c:{
-                    d:34
-                },
-                e:{
-                    f:[32, 23, 43, 45]
-                },
-                f:[2, 7, 6, 0],
-                foo:'bar',
-                bar:'foo'
-            };    
-            var index = Scule.getIndex();
-            JSUNIT.assertFalse(index.index(document));    
-        };
-
-        function testIndexRemove() {
-            var document = {
-                a:21,
-                c:{
-                    d:34
-                },
-                e:{
-                    f:[32, 23, 43, 45]
-                },
-                f:[2, 7, 6, 0],
-                foo:'bar',
-                bar:'foo'
-            };    
-            var index = Scule.getIndex();
-            JSUNIT.assertFalse(index.remove(document));    
-        };
-
-        (function() {
-            JSUNIT.resetTests();
-            JSUNIT.addTest(testIndexParseAttributes);
-            JSUNIT.addTest(testIndexGenerateKey);
-            JSUNIT.addTest(testIndexSearch);
-            JSUNIT.addTest(testIndexClear);
-            JSUNIT.addTest(testIndexRange);
-            JSUNIT.addTest(testIndexRemove);
-            JSUNIT.runTests('Index tests', Scule.tests.functions.renderTest);
-        }());    
-    
-    }());
-
-    (function() {
-    
         function testDBRefCreation() {
             var ut1 = Scule.factoryCollection('scule+dummy://ut1');
             ut1.save({
@@ -3763,430 +3395,9 @@ function runAllTests() {
 
     (function() {
   
-        function testHashTableIndexSearch1() {  
-            var document, result;
-            var index = Scule.getHashTableIndex(100);
-            index.parseAttributes('a');
-            for(var i=0; i < 300; i++) {
-                document = {
-                    _id: Scule.getObjectId(),
-                    a:i%10,
-                    c:{
-                        d:i
-                    },
-                    e:{
-                        f:[i, i+1, i+2, i+3]
-                    },
-                    f:[2, 7, 6, 0],
-                    foo:'bar' + (i%10),
-                    bar:'foo' + (i%10)
-                };
-                index.index(document);
-            }
-
-            result = index.search(9);
-            JSUNIT.assertEquals(result.length, 30);
-            result.forEach(function(o) {
-                JSUNIT.assertEquals(o.a, 9); 
-            });
-
-            result = index.search(3);
-            JSUNIT.assertEquals(result.length, 30);
-            result.forEach(function(o) {
-                JSUNIT.assertEquals(o.a, 3); 
-            });    
-        };
-
-        function testHashTableIndexSearch2() {
-            var document, result;
-            var index = Scule.getHashTableIndex(100);
-            index.parseAttributes('a,e.f.2');
-            for(var i=0; i < 300; i++) {
-                document = {
-                    _id: Scule.getObjectId(),
-                    a:i%10,
-                    c:{
-                        d:i
-                    },
-                    e:{
-                        f:[i%10, (i%10)+1, (i%10)+2, (i%10)+3]
-                    },
-                    f:[2, 7, 6, 0],
-                    foo:'bar' + (i%10),
-                    bar:'foo' + (i%10)
-                };
-                index.index(document);
-            }
-
-            result = index.search('3,5');
-            JSUNIT.assertEquals(result.length, 30);
-            result.forEach(function(o) {
-                JSUNIT.assertEquals(o.a, 3); 
-                JSUNIT.assertEquals(o.e.f[2], 5);
-            });
-        };
-
-        function testHashTableIndexSearch3() {
-            var document, result;
-            var index = Scule.getHashTableIndex(100);
-            index.parseAttributes('foo');
-            for(var i=0; i < 300; i++) {
-                document = {
-                    _id: Scule.getObjectId(),
-                    a:i%10,
-                    c:{
-                        d:i
-                    },
-                    e:{
-                        f:[i%10, (i%10)+1, (i%10)+2, (i%10)+3]
-                    },
-                    f:[2, 7, 6, 0],
-                    foo:'bar' + (i%10),
-                    bar:'foo' + (i%10)
-                };
-                index.index(document);
-            }
-
-            result = index.search('bar3');
-            JSUNIT.assertEquals(result.length, 30);
-            result.forEach(function(o) {
-                JSUNIT.assertEquals(o.a, 3); 
-                JSUNIT.assertEquals(o.foo, 'bar3');
-            });
-        };
-
-        function testHashTableIndexClear() {
-            var document, result;
-            var index = Scule.getHashTableIndex(100);
-            index.parseAttributes('a,e.f.2');
-            for(var i=0; i < 300; i++) {
-                document = {
-                    _id: Scule.getObjectId(),
-                    a:i%10,
-                    c:{
-                        d:i
-                    },
-                    e:{
-                        f:[i%10, (i%10)+1, (i%10)+2, (i%10)+3]
-                    },
-                    f:[2, 7, 6, 0],
-                    foo:'bar' + (i%10),
-                    bar:'foo' + (i%10)
-                };
-                index.index(document);
-            }
-            JSUNIT.assertTrue(index.clear());
-
-            result = index.search('3,5');
-            JSUNIT.assertEquals(result.length, 0);
-        };
-
-        function testHashTableIndexRemove() {
-            var document, result, document;
-            var index = Scule.getHashTableIndex(100);
-            index.parseAttributes('c.d');
-            for(var i=0; i < 3000; i++) {
-                document = {
-                    _id: Scule.getObjectId(),
-                    a:i%10,
-                    c:{
-                        d:i
-                    },
-                    e:{
-                        f:[i%10, (i%10)+1, (i%10)+2, (i%10)+3]
-                    },
-                    f:[2, 7, 6, 0],
-                    foo:'bar' + (i%10),
-                    bar:'foo' + (i%10)
-                };
-                index.index(document);
-            }
-            result   = index.search(1000);
-
-            JSUNIT.assertEquals(result.length, 1);
-
-            document = result[0];
-            index.remove(document);
-
-            result   = index.search(1000);
-            JSUNIT.assertEquals(result.length, 0);
-        };
-
-        function testHashTableIndexRemoveKey() {
-            var document, result;
-            var index = Scule.getHashTableIndex(100);
-            index.parseAttributes('a');
-            for(var i=0; i < 3000; i++) {
-                document = {
-                    _id: Scule.getObjectId(),
-                    a:i%10,
-                    c:{
-                        d:i
-                    },
-                    e:{
-                        f:[i%10, (i%10)+1, (i%10)+2, (i%10)+3]
-                    },
-                    f:[2, 7, 6, 0],
-                    foo:'bar' + (i%10),
-                    bar:'foo' + (i%10)
-                };
-                index.index(document);
-            }
-            result   = index.search(3);
-            JSUNIT.assertEquals(result.length, 300);
-
-            document = result[0];
-            index.removeKey(3);
-
-            result   = index.search(3);
-            JSUNIT.assertEquals(result.length, 0);
-
-            JSUNIT.assertFalse(index.leaves.contains(document._id));
-        };
-
-        (function() {
-            JSUNIT.resetTests();
-            JSUNIT.addTest(testHashTableIndexSearch1);
-            JSUNIT.addTest(testHashTableIndexSearch2);
-            JSUNIT.addTest(testHashTableIndexSearch3);
-            JSUNIT.addTest(testHashTableIndexClear);
-            JSUNIT.addTest(testHashTableIndexRemove);
-            JSUNIT.addTest(testHashTableIndexRemoveKey);
-            JSUNIT.runTests('Hash Table Index tests', Scule.tests.functions.renderTest);
-        }());
-
-    }());
-
-    (function() {
-  
-        function testBPlusTreeIndexSearch1() {  
-            var document, result;
-            var index = Scule.getBPlusTreeIndex(100);
-            index.parseAttributes('a');
-            for(var i=0; i < 300; i++) {
-                document = {
-                    _id: Scule.getObjectId(),
-                    a:i%10,
-                    c:{
-                        d:i
-                    },
-                    e:{
-                        f:[i, i+1, i+2, i+3]
-                    },
-                    f:[2, 7, 6, 0],
-                    foo:'bar' + (i%10),
-                    bar:'foo' + (i%10)
-                };
-                index.index(document);
-            }
-
-            result = index.search(9);
-            JSUNIT.assertEquals(result.length, 30);
-            result.forEach(function(o) {
-                JSUNIT.assertEquals(o.a, 9); 
-            });
-
-            result = index.search(3);
-            JSUNIT.assertEquals(result.length, 30);
-            result.forEach(function(o) {
-                JSUNIT.assertEquals(o.a, 3); 
-            });    
-        };
-
-        function testBPlusTreeIndexSearch2() {
-            var document, result;
-            var index = Scule.getBPlusTreeIndex(100);
-            index.parseAttributes('a,e.f.2');
-            for(var i=0; i < 300; i++) {
-                document = {
-                    _id: Scule.getObjectId(),
-                    a:i%10,
-                    c:{
-                        d:i
-                    },
-                    e:{
-                        f:[i%10, (i%10)+1, (i%10)+2, (i%10)+3]
-                    },
-                    f:[2, 7, 6, 0],
-                    foo:'bar' + (i%10),
-                    bar:'foo' + (i%10)
-                };
-                index.index(document);
-            }
-
-            result = index.search('3,5');
-            JSUNIT.assertEquals(result.length, 30);
-            result.forEach(function(o) {
-                JSUNIT.assertEquals(o.a, 3); 
-                JSUNIT.assertEquals(o.e.f[2], 5);
-            });
-        };
-
-        function testBPlusTreeIndexSearch3() {
-            var document, result;
-            var index = Scule.getBPlusTreeIndex(100);
-            index.parseAttributes('foo');
-            for(var i=0; i < 300; i++) {
-                document = {
-                    _id: Scule.getObjectId(),
-                    a:i%10,
-                    c:{
-                        d:i
-                    },
-                    e:{
-                        f:[i%10, (i%10)+1, (i%10)+2, (i%10)+3]
-                    },
-                    f:[2, 7, 6, 0],
-                    foo:'bar' + (i%10),
-                    bar:'foo' + (i%10)
-                };
-                index.index(document);
-            }
-
-            result = index.search('bar3');
-            JSUNIT.assertEquals(result.length, 30);
-            result.forEach(function(o) {
-                JSUNIT.assertEquals(o.a, 3); 
-                JSUNIT.assertEquals(o.foo, 'bar3');
-            });
-        };
-
-        function testBPlusTreeIndexClear() {
-            var document, result;
-            var index = Scule.getBPlusTreeIndex(100);
-            index.parseAttributes('a,e.f.2');
-            for(var i=0; i < 300; i++) {
-                document = {
-                    _id: Scule.getObjectId(),
-                    a:i%10,
-                    c:{
-                        d:i
-                    },
-                    e:{
-                        f:[i%10, (i%10)+1, (i%10)+2, (i%10)+3]
-                    },
-                    f:[2, 7, 6, 0],
-                    foo:'bar' + (i%10),
-                    bar:'foo' + (i%10)
-                };
-                index.index(document);
-            }
-            JSUNIT.assertTrue(index.clear());
-
-            result = index.search('3,5');
-            JSUNIT.assertEquals(result.length, 0);
-        };
-
-        function testBPlusTreeIndexRange() {
-            var document, result;
-            var index = Scule.getBPlusTreeIndex(100);
-            index.parseAttributes('c.d');
-            for(var i=0; i < 3000; i++) {
-                document = {
-                    _id: Scule.getObjectId(),
-                    a:i%10,
-                    c:{
-                        d:i
-                    },
-                    e:{
-                        f:[i%10, (i%10)+1, (i%10)+2, (i%10)+3]
-                    },
-                    f:[2, 7, 6, 0],
-                    foo:'bar' + (i%10),
-                    bar:'foo' + (i%10)
-                };
-                index.index(document);
-            }
-
-            var result = index.range(1000, 2500, true, true);
-            JSUNIT.assertEquals(result.length, 1501);
-            JSUNIT.assertEquals(result[0].c.d, 1000);
-            JSUNIT.assertEquals(result[1500].c.d, 2500);
-        };
-
-        function testBPlusTreeIndexRemove() {
-            var document, result, document;
-            var index = Scule.getBPlusTreeIndex(100);
-            index.parseAttributes('c.d');
-            for(var i=0; i < 3000; i++) {
-                document = {
-                    _id: Scule.getObjectId(),
-                    a:i%10,
-                    c:{
-                        d:i
-                    },
-                    e:{
-                        f:[i%10, (i%10)+1, (i%10)+2, (i%10)+3]
-                    },
-                    f:[2, 7, 6, 0],
-                    foo:'bar' + (i%10),
-                    bar:'foo' + (i%10)
-                };
-                index.index(document);
-            }
-            result   = index.search(1000);
-            JSUNIT.assertEquals(result.length, 1);
-
-            document = result[0];
-            index.remove(document);
-
-            result   = index.search(1000);
-            JSUNIT.assertEquals(result.length, 0);
-        };
-
-        function testBPlusTreeIndexRemoveKey() {
-            var document, result;
-            var index = Scule.getBPlusTreeIndex(100);
-            index.parseAttributes('a');
-            for(var i=0; i < 3000; i++) {
-                document = {
-                    _id: Scule.getObjectId(),
-                    a:i%10,
-                    c:{
-                        d:i
-                    },
-                    e:{
-                        f:[i%10, (i%10)+1, (i%10)+2, (i%10)+3]
-                    },
-                    f:[2, 7, 6, 0],
-                    foo:'bar' + (i%10),
-                    bar:'foo' + (i%10)
-                };
-                index.index(document);
-            }
-            result   = index.search(3);
-            JSUNIT.assertEquals(result.length, 300);
-
-            document = result[0];
-            index.removeKey(3);
-
-            result   = index.search(3);
-            JSUNIT.assertEquals(result.length, 0);  
-            JSUNIT.assertFalse(index.leaves.contains(document._id));
-        };
-
-        (function() {
-            JSUNIT.resetTests();
-            JSUNIT.addTest(testBPlusTreeIndexSearch1);
-            JSUNIT.addTest(testBPlusTreeIndexSearch2);
-            JSUNIT.addTest(testBPlusTreeIndexSearch3);
-            JSUNIT.addTest(testBPlusTreeIndexClear);
-            JSUNIT.addTest(testBPlusTreeIndexRange);
-            JSUNIT.addTest(testBPlusTreeIndexRemove);
-            JSUNIT.addTest(testBPlusTreeIndexRemoveKey);
-            JSUNIT.runTests('B+ Tree Index tests', Scule.tests.functions.renderTest);
-        }());
-
-    }());
-
-    (function() {
-  
         function testCollectionFactory() {
             Scule.dropAll();
             var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.ensureIndex(Scule.global.constants.INDEX_TYPE_BTREE, 'a.b', {
-                order:100
-            });
             for(var i=0; i < 1000; i++) {
                 var r = i%10;
                 collection.save({
@@ -4207,9 +3418,6 @@ function runAllTests() {
         function testCollectionFactory2() {
             Scule.dropAll();
             var collection = Scule.factoryCollection('scule+local://collection', {secret:'test'});
-            collection.ensureIndex(Scule.global.constants.INDEX_TYPE_BTREE, 'a.b', {
-                order:100
-            });
             collection.clear();
             for(var i=0; i < 1000; i++) {
                 var r = i%10;
@@ -4277,9 +3485,6 @@ function runAllTests() {
         function testCollectionMapReduce() {
             Scule.dropAll();
             var collection = Scule.factoryCollection('scule+dummy://unittest');
-            collection.ensureIndex(Scule.global.constants.INDEX_TYPE_BTREE, 'a.b', {
-                order:100
-            });
             for(var i=0; i < 1000; i++) {
                 var r = i%10;
                 collection.save({
@@ -4360,17 +3565,6 @@ function runAllTests() {
 
             var timer = Scule.getTimer();
             var collection = Scule.factoryCollection('scule+dummy://unittest');
-
-            collection.ensureBTreeIndex('loc.lat', {
-                order:1000
-            });
-            collection.ensureBTreeIndex('i',       {
-                order:1000
-            });
-            collection.ensureBTreeIndex('n',       {
-                order:1000
-            });    
-
             collection.clear();    
 
             var k = 0;

@@ -30,7 +30,6 @@ var sculedb   = require('../lib/com.scule.db');
 exports['test CollectionMapReduce'] = function(beforeExit, assert) {
     sculedb.dropAll();
     var collection = sculedb.factoryCollection('scule+dummy://unittest');
-    collection.ensureIndex(sculedb.Scule.$c.INDEX_TYPE_BTREE, 'a.b', {order:100});
     for(var i=0; i < 1000; i++) {
         var r = i%10;
         collection.save({

@@ -30,7 +30,6 @@ var sculedb = require('../lib/com.scule.db');
 exports['test CollectionFactory'] = function(beforeExit, assert) {
     sculedb.dropAll();
     var collection = sculedb.factoryCollection('scule+dummy://unittest');
-    collection.ensureIndex(sculedb.Scule.$c.INDEX_TYPE_BTREE, 'a.b', {order:100});
     collection.clear();
     for(var i=0; i < 1000; i++) {
         var r = i%10;
@@ -52,7 +51,6 @@ exports['test CollectionFactory'] = function(beforeExit, assert) {
 exports['test CollectionFactoryDisk'] = function(beforeExit, assert) {
     sculedb.dropAll();
     var collection = sculedb.factoryCollection('scule+nodejs://collection', {secret:'test', path:'/tmp'});
-    collection.ensureIndex(sculedb.Scule.$c.INDEX_TYPE_BTREE, 'a.b', {order:100});
     setTimeout(function() {
         collection.clear();
         for(var i=0; i < 5; i++) {

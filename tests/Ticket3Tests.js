@@ -30,7 +30,6 @@ var sculedb   = require('../lib/com.scule.db');
 exports['test CollectionIndexes'] = function(beforeExit, assert) {
     sculedb.dropAll();
     var collection = sculedb.factoryCollection('scule+dummy://tests');
-    collection.ensureBTreeIndex('b,a,c', {order:1000});
     for (var i=0; i < 10000; i++) {
         collection.save({
             a:i,

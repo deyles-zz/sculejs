@@ -76,9 +76,9 @@ exports['test HashTableRemove'] = function(beforeExit, assert) {
     table.remove('foo');
     assert.equal(false, table.contains('foo'));
     assert.equal(true, table.contains('foo2'));
-    assert.equal(true, table.remove('foo2'));
+    assert.equal('bar2', table.remove('foo2'));
     assert.equal(false, table.remove('foo2'));
-    assert.equal(true, table.remove(666));
+    assert.equal('the devil!', table.remove(666));
     assert.equal(false, table.remove(666));
     assert.equal(false, table.remove(999));
 }
