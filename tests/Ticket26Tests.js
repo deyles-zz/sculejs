@@ -25,24 +25,32 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-var sculedb   = require('../lib/com.scule.db');
+var scule   = require('../lib/com.scule.db');
 
-exports['test ObjectDateConstructorDefault'] = function(beforeExit, assert) {
-    var date = sculedb.getObjectDate();
-    var ts   = (new Date()).getTime();
-    assert.equal(true, ts > date.getTimestamp());
-    assert.equal(true, date.getSeconds() > 0);
-    assert.equal(true, date.getMicroSeconds() > 0);
-};
+exports['test Ticket26'] = function(beforeExit, assert) {
+ 
+    scule.dropAll();
+    var o = null;
+    var collection = scule.factoryCollection('scule+nodejs://test', {path:'/tmp'});
+    collection.clear();
+    collection.save({date:scule.getObjectDate(1372603560, 212), id:1});
+    collection.save({date:scule.getObjectDateFromDate((new Date(1362395600 * 1000))), id:2});
+    collection.commit();
+    collection.update({id:1}, {$set:{zero:0}}, {}, true);
+    
+    o = collection.find({date:{$gt:(new Date(1372395600 * 1000))}});
+    assert.equal(1, o.length);
+    assert.equal(1, o[0].id);
+    assert.equal(1372603560212, o[0].date.toDate().getTime());
 
-exports['test ObjectDateConstructor'] = function(beforeExit, assert) {
-    var ts   = (new Date()).getTime().toString();
-    var date = sculedb.getObjectDate(parseInt(ts.substring(0, 10)), parseInt(ts.substring(10)));
-    assert.equal(true, date.getSeconds() > 0);
-    assert.equal(true, date.getMicroSeconds() > 0);
-};
+    o = collection.find({date:{$gt:scule.getObjectDateFromDate((new Date(1362395600 * 1000)))}});
+    assert.equal(1, o.length);
+    assert.equal(1, o[0].id);
+    assert.equal(1372603560212, o[0].date.toDate().getTime());
 
-exports['test ObjectDateToDate'] = function(beforeExit, assert) {
-    var date = sculedb.getObjectDate(1372395600, 0);
-    assert.equal((new Date(1372395600 * 1000)).getTime(), date.toDate().getTime());
+    o = collection.find({date:{$eq:scule.getObjectDateFromDate(new Date(1362395600000))}});
+    assert.equal(1, o.length);
+    assert.equal(2, o[0].id);
+    assert.equal(1362395600000, o[0].date.toDate().getTime());
+
 };

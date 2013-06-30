@@ -4072,12 +4072,141 @@ function runAllTests() {
 
         };
 
+        function testDateComparator() {
+
+            var comparator = Scule.getDateComparator();
+            
+            JSUNIT.assertEquals(true, comparator.isDate(new Date()));
+            JSUNIT.assertEquals(true, comparator.isDate(Scule.getObjectDate()));
+            JSUNIT.assertEquals(false, comparator.isDate(1372395600));
+
+            JSUNIT.assertEquals(1372395600000, comparator.normalizeDate(new Date(1372395600 * 1000)));
+            JSUNIT.assertEquals(1372395600000, comparator.normalizeDate(Scule.getObjectDate(1372395600, 0)));
+
+            JSUNIT.assertEquals(true, comparator.$eq(new Date(1372395600 * 1000), new Date(1372395600 * 1000)));
+            JSUNIT.assertEquals(true, comparator.$eq(new Date(1372395600 * 1000), Scule.getObjectDate(1372395600, 0)));
+            JSUNIT.assertEquals(true, comparator.$eq(Scule.getObjectDate(1372395600, 0), new Date(1372395600 * 1000)));
+            JSUNIT.assertEquals(true, comparator.$eq(Scule.getObjectDate(1372395600, 0), Scule.getObjectDate(1372395600, 0)));
+
+            JSUNIT.assertEquals(true, comparator.$gt(new Date(1372395630 * 1000), new Date(1372395600 * 1000)));
+            JSUNIT.assertEquals(true, comparator.$gt(new Date(1372395630 * 1000), Scule.getObjectDate(1372395600, 0)));
+            JSUNIT.assertEquals(true, comparator.$gt(Scule.getObjectDate(1372395600, 300), new Date(1372395600 * 1000)));
+            JSUNIT.assertEquals(true, comparator.$gt(Scule.getObjectDate(1372395600, 300), Scule.getObjectDate(1372395600, 0)));
+
+            JSUNIT.assertEquals(false, comparator.$gt(new Date(1372395600 * 1000), new Date(1372395630 * 1000)));
+            JSUNIT.assertEquals(false, comparator.$gt(new Date(1372395600 * 1000), Scule.getObjectDate(1372395630, 300)));
+            JSUNIT.assertEquals(false, comparator.$gt(Scule.getObjectDate(1372395600, 0), new Date(1372395600 * 1000)));
+            JSUNIT.assertEquals(false, comparator.$gt(Scule.getObjectDate(1372395600, 0), Scule.getObjectDate(1372395600, 300)));
+
+            JSUNIT.assertEquals(true, comparator.$gte(new Date(1372395600 * 1000), new Date(1372395600 * 1000)));
+            JSUNIT.assertEquals(true, comparator.$gte(new Date(1372395630 * 1000), Scule.getObjectDate(1372395600, 0)));
+            JSUNIT.assertEquals(true, comparator.$gte(Scule.getObjectDate(1372395600, 300), new Date(1372395600 * 1000)));
+            JSUNIT.assertEquals(true, comparator.$gte(Scule.getObjectDate(1372395600, 300), Scule.getObjectDate(1372395600, 0)));
+
+            JSUNIT.assertEquals(false, comparator.$gte(new Date(1372395600 * 1000), new Date(1372395630 * 1000)));
+            JSUNIT.assertEquals(false, comparator.$gte(new Date(1372395600 * 1000), Scule.getObjectDate(1372395630, 300)));
+            JSUNIT.assertEquals(true,  comparator.$gte(Scule.getObjectDate(1372395600, 0), new Date(1372395600 * 1000)));
+            JSUNIT.assertEquals(false, comparator.$gte(Scule.getObjectDate(1372395600, 0), Scule.getObjectDate(1372395600, 300)));
+
+        };
+
+        function testQueryEngine() {
+
+            var engine = Scule.getQueryEngine();
+
+            JSUNIT.assertEquals(true, engine.$eq(new Date(1372395600 * 1000), new Date(1372395600 * 1000)));
+            JSUNIT.assertEquals(true, engine.$eq(new Date(1372395600 * 1000), Scule.getObjectDate(1372395600, 0)));
+            JSUNIT.assertEquals(true, engine.$eq(Scule.getObjectDate(1372395600, 0), new Date(1372395600 * 1000)));
+            JSUNIT.assertEquals(true, engine.$eq(Scule.getObjectDate(1372395600, 0), Scule.getObjectDate(1372395600, 0)));
+            JSUNIT.assertEquals(false, engine.$eq(Scule.getObjectDate(1372395600, 300), Scule.getObjectDate(1372395600, 0)));
+            JSUNIT.assertEquals(false, engine.$eq(new Date(1372395631 * 1000), Scule.getObjectDate(1372395630, 0)));
+
+            JSUNIT.assertEquals(true, engine.$eq(3, 3));
+            JSUNIT.assertEquals(true, engine.$eq(0, 0));
+            JSUNIT.assertEquals(true, engine.$eq(-3, -3));
+            JSUNIT.assertEquals(true, engine.$eq(null, null));
+            JSUNIT.assertEquals(true, engine.$eq('a', 'a'));
+            JSUNIT.assertEquals(true, engine.$eq('abc', 'abc'));
+            JSUNIT.assertEquals(true, engine.$eq('abc', /^abc$/));
+            JSUNIT.assertEquals(false, engine.$eq(3, 0));
+            JSUNIT.assertEquals(false, engine.$eq('a', 'b'));
+            JSUNIT.assertEquals(false, engine.$eq('bac', 'abc'));
+            JSUNIT.assertEquals(false, engine.$eq('cac', /^abc$/));
+
+            JSUNIT.assertEquals(false, engine.$ne(new Date(1372395600 * 1000), new Date(1372395600 * 1000)));
+            JSUNIT.assertEquals(false, engine.$ne(new Date(1372395600 * 1000), Scule.getObjectDate(1372395600, 0)));
+            JSUNIT.assertEquals(false, engine.$ne(Scule.getObjectDate(1372395600, 0), new Date(1372395600 * 1000)));
+            JSUNIT.assertEquals(false, engine.$ne(Scule.getObjectDate(1372395600, 0), Scule.getObjectDate(1372395600, 0)));
+            JSUNIT.assertEquals(true, engine.$ne(Scule.getObjectDate(1372395600, 300), Scule.getObjectDate(1372395600, 0)));
+            JSUNIT.assertEquals(true, engine.$ne(new Date(1372395631 * 1000), Scule.getObjectDate(1372395630, 0)));
+
+            JSUNIT.assertEquals(false, engine.$ne(3, 3));
+            JSUNIT.assertEquals(false, engine.$ne(0, 0));
+            JSUNIT.assertEquals(false, engine.$ne(-3, -3));
+            JSUNIT.assertEquals(false, engine.$ne(null, null));
+            JSUNIT.assertEquals(false, engine.$ne('a', 'a'));
+            JSUNIT.assertEquals(false, engine.$ne('abc', 'abc'));
+            JSUNIT.assertEquals(false, engine.$ne('abc', /^abc$/));
+            JSUNIT.assertEquals(true, engine.$ne(3, 0));
+            JSUNIT.assertEquals(true, engine.$ne('a', 'b'));
+            JSUNIT.assertEquals(true, engine.$ne('bac', 'abc'));
+            JSUNIT.assertEquals(true, engine.$ne('cac', /^abc$/));    
+
+            JSUNIT.assertEquals(true, engine.$in(1, [2, 3, 1, 5]));
+            JSUNIT.assertEquals(true, engine.$in('a', [2, 'c', 'a', 3, 1, 5]));
+            JSUNIT.assertEquals(true, engine.$in(null, [2, null, 3, 1, 5]));
+            JSUNIT.assertEquals(true, engine.$in('abc', [2, null, 3, /^ab/, 5]));
+            JSUNIT.assertEquals(true, engine.$in(Scule.getObjectDate(1372395600, 0), [2, new Date(1372395600 * 1000), 3, 1, 5]));
+            JSUNIT.assertEquals(true, engine.$in(Scule.getObjectDate(1372395600, 0), [2, Scule.getObjectDate(1372395600, 0), 3, 1, 5]));
+            JSUNIT.assertEquals(true, engine.$in(new Date(1372395600 * 1000), [2, new Date(1372395600 * 1000), 3, 1, 5]));
+
+            JSUNIT.assertEquals(false, engine.$nin(1, [2, 3, 1, 5]));
+            JSUNIT.assertEquals(false, engine.$nin('a', [2, 'c', 'a', 3, 1, 5]));
+            JSUNIT.assertEquals(false, engine.$nin(null, [2, null, 3, 1, 5]));
+            JSUNIT.assertEquals(false, engine.$nin('abc', [2, null, 3, /^ab/, 5]));
+            JSUNIT.assertEquals(false, engine.$nin(Scule.getObjectDate(1372395600, 0), [2, new Date(1372395600 * 1000), 3, 1, 5]));
+            JSUNIT.assertEquals(false, engine.$nin(Scule.getObjectDate(1372395600, 0), [2, Scule.getObjectDate(1372395600, 0), 3, 1, 5]));
+            JSUNIT.assertEquals(false, engine.$nin(new Date(1372395600 * 1000), [2, new Date(1372395600 * 1000), 3, 1, 5]));
+
+        };
+
+        function testTicket26() {
+
+            Scule.dropAll();
+            var o = null;
+            var collection = Scule.factoryCollection('scule+dummy://test');
+            collection.clear();
+            collection.save({date:Scule.getObjectDate(1372603560, 212), id:1});
+            collection.save({date:Scule.getObjectDateFromDate((new Date(1362395600 * 1000))), id:2});
+            collection.commit();
+            collection.update({id:1}, {$set:{zero:0}}, {}, true);
+
+            o = collection.find({date:{$gt:(new Date(1372395600 * 1000))}});
+            JSUNIT.assertEquals(1, o.length);
+            JSUNIT.assertEquals(1, o[0].id);
+            JSUNIT.assertEquals(1372603560212, o[0].date.toDate().getTime());
+
+            o = collection.find({date:{$gt:Scule.getObjectDateFromDate((new Date(1362395600 * 1000)))}});
+            JSUNIT.assertEquals(1, o.length);
+            JSUNIT.assertEquals(1, o[0].id);
+            JSUNIT.assertEquals(1372603560212, o[0].date.toDate().getTime());
+
+            o = collection.find({date:{$eq:Scule.getObjectDateFromDate(new Date(1362395600000))}});
+            JSUNIT.assertEquals(1, o.length);
+            JSUNIT.assertEquals(2, o[0].id);
+            JSUNIT.assertEquals(1362395600000, o[0].date.toDate().getTime());
+
+        };
+
         (function() {
             JSUNIT.resetTests();
+            JSUNIT.addTest(testDateComparator);            
+            JSUNIT.addTest(testQueryEngine);
             JSUNIT.addTest(testQueries);
             JSUNIT.addTest(testTicket14a);
             JSUNIT.addTest(testTicket14b);
             JSUNIT.addTest(testTicket22);
+            JSUNIT.addTest(testTicket26);
             JSUNIT.runTests('Query tests', Scule.tests.functions.renderTest);
         }());    
        

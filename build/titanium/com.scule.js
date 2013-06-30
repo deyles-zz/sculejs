@@ -5008,6 +5008,14 @@ module.exports.Scule.classes.ObjectDate = function(sec, usec) {
         return this.usec;
     };
     
+    /**
+     * Returns a Date representation of the ObjectDate instance
+     * @returns {Date}
+     */
+    this.toDate = function() {
+        return new Date((this.sec * 1000) + this.usec);
+    };
+    
 };
 
 /**
@@ -5124,6 +5132,64 @@ module.exports.Scule.classes.QueryNormalizer = function() {
 };
 
 /**
+ * A utility class used for date comparisons
+ * @public
+ * @constructor
+ * @class {DateComparator}
+ * @returns {Void}
+ */
+module.exports.Scule.classes.DateComparator = function() {
+
+    /**
+     * Returns a boolean value indicating whether or not the provided object represents a date
+     * @param {Object} o
+     * @returns {Boolean}
+     */
+    this.isDate = function(o) {
+        return (o instanceof Date || o instanceof module.exports.Scule.classes.ObjectDate);
+    }
+
+    /**
+     * Normalizes the provided object to a JavaScript Date object
+     * @param {Object} date
+     * @returns {Date}
+     */
+    this.normalizeDate = function(date) {
+        if (!this.isDate(date)) {
+            throw new Error('unable to compare non-date object');
+        }
+        if (date instanceof module.exports.Scule.classes.ObjectDate) {
+            return date.toDate().getTime();
+        }
+        if (date instanceof Date) {
+            return date.getTime();
+        }
+        return date;
+    }
+
+    this.$eq = function(a, b) {
+        return this.normalizeDate(a) === this.normalizeDate(b);
+    };
+
+    this.$gt = function(a, b) {
+        return this.normalizeDate(a) > this.normalizeDate(b);
+    };
+
+    this.$gte = function(a, b) {
+        return this.normalizeDate(a) >= this.normalizeDate(b);
+    };
+
+    this.$lt = function(a, b) {
+        return this.normalizeDate(a) < this.normalizeDate(b);
+    };
+
+    this.$lte = function(a, b) {
+        return this.normalizeDate(a) <= this.normalizeDate(b);
+    };
+
+};
+
+/**
  * Contains the core logic for SculeJS query evaluation and execution
  * @public
  * @constructor
@@ -5131,6 +5197,11 @@ module.exports.Scule.classes.QueryNormalizer = function() {
  * @returns {Void}
  */
 module.exports.Scule.classes.QueryEngine = function() {
+
+    /**
+     * @type {DateComparator}
+     */
+    this.comparator = new module.exports.Scule.classes.DateComparator();
 
     /**
      * A wrapper around the core SculeJS traverse function
@@ -5153,30 +5224,47 @@ module.exports.Scule.classes.QueryEngine = function() {
     };
 
     this.$ne = function (a, b) {
-        return a != b;
+        return !this.$eq(a, b);
     };
 
     this.$eq = function (a, b) {
         if (b instanceof RegExp) {
             return b.test(a);
+        } else if (a instanceof module.exports.Scule.classes.ObjectId) {
+            return a.toString() == b;
         } else {
-            return a == b;
-        }
+            if (this.comparator.isDate(a) && this.comparator.isDate(b)) {
+                return this.comparator.$eq(a, b);
+            }
+            return a === b;
+        }        
     };
 
     this.$gt = function (a, b) {
+        if (this.comparator.isDate(a) && this.comparator.isDate(b)) {
+            return this.comparator.$gt(a, b);
+        }        
         return a > b;
     };
 
     this.$gte = function (a, b) {
+        if (this.comparator.isDate(a) && this.comparator.isDate(b)) {
+            return this.comparator.$gte(a, b);
+        }        
         return a >= b;
     };
 
     this.$lt = function (a, b) {
+        if (this.comparator.isDate(a) && this.comparator.isDate(b)) {
+            return this.comparator.$lt(a, b);
+        }        
         return a < b;
     };
     
     this.$lte = function (a, b) {
+        if (this.comparator.isDate(a) && this.comparator.isDate(b)) {
+            return this.comparator.$lte(a, b);
+        }        
         return a <= b;
     };
     
@@ -5200,7 +5288,7 @@ module.exports.Scule.classes.QueryEngine = function() {
     
     this.$in = function (a, b) {
         for (var i=0; i < b.length; i++) {
-            if (b[i] == a) {
+            if (this.$eq(a, b[i])) {
                 return true;
             }
         }
@@ -5209,7 +5297,7 @@ module.exports.Scule.classes.QueryEngine = function() {
 
     this.$nin = function (a, b) {
         for (var i=0; i < b.length; i++) {
-            if (b[i] == a) {
+            if (this.$eq(a, b[i])) {
                 return false;
             }
         }
@@ -5489,6 +5577,10 @@ module.exports.Scule.classes.QueryCompiler = function() {
                     var v = null;
                     if (subQuery[operator] instanceof RegExp) {
                         v = subQuery[operator].toString();
+                    } else if (subQuery[operator] instanceof Date) {
+                        v = "new Date(\"" + subQuery[operator].toString() + "\")";
+                    } else if (subQuery[operator] instanceof module.exports.Scule.classes.ObjectDate) {
+                        v = "new Date(\"" + subQuery[operator].toDate().toString() + "\")";                        
                     } else {
                         v = JSON.stringify(subQuery[operator]);
                     }
@@ -6550,6 +6642,22 @@ module.exports.getObjectDate = function(sec, usec) {
 };
 
 /**
+ * Returns an instance of the {ObjectDate} class
+ * @param {Date} date
+ * @returns {ObjectDate}
+ * @throws {Error}
+ */
+module.exports.getObjectDateFromDate = function(date) {
+    if (!(date instanceof Date)) {
+        throw new Error('unable to factory ObjectDate from non-date object');
+    }
+    var ts = date.getTime().toString();
+    var sec  = parseInt(ts.substring(0, 10), 10);
+    var usec = parseInt(ts.substring(10), 10);
+    return new module.exports.Scule.classes.ObjectDate(sec, usec);
+};
+
+/**
  * Returns an instance of the {DBRef} class
  * @param {String} ref the collection connector string for the referenced collection
  * @param {String|ObjectId} id the identifier of the object to reference
@@ -6799,4 +6907,12 @@ module.exports.getQueryCompiler = function() {
  */
 module.exports.getQueryInterpreter = function() {
     return new module.exports.Scule.classes.QueryInterpreter();
+};
+
+/**
+ * Returns an isntance of the {DateComparator} class
+ * @returns {DateComparator}
+ */
+module.exports.getDateComparator = function() {
+    return new module.exports.Scule.classes.DateComparator();
 };
