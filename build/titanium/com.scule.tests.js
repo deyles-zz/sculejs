@@ -3359,15 +3359,15 @@ var sfunc  = scule.Scule.functions;
             var ht = scule.getHashTable();
             ht.put('hasOwnProperty', true);
             ht.put('bar', 'foo');
-            assert.equal(null, ht.get('foo'));    
-            assert.equal(null, ht.search('foo'));    
-            assert.equal(false, ht.contains('foo'));
-            assert.equal(true, ht.contains('hasOwnProperty'));
-            assert.equal(true, ht.get('hasOwnProperty'));
-            assert.equal(true, ht.contains('bar'));
-            assert.equal('foo', ht.get('bar'));
-            assert.equal(2, ht.getKeys().length);
-            assert.equal('[true,"foo"]', JSON.stringify(ht.getValues()));
+            jsunit.assertEquals(null, ht.get('foo'));    
+            jsunit.assertEquals(null, ht.search('foo'));    
+            jsunit.assertEquals(false, ht.contains('foo'));
+            jsunit.assertEquals(true, ht.contains('hasOwnProperty'));
+            jsunit.assertEquals(true, ht.get('hasOwnProperty'));
+            jsunit.assertEquals(true, ht.contains('bar'));
+            jsunit.assertEquals('foo', ht.get('bar'));
+            jsunit.assertEquals(2, ht.getKeys().length);
+            jsunit.assertEquals('[true,"foo"]', JSON.stringify(ht.getValues()));
 
         };
 
@@ -3379,6 +3379,7 @@ var sfunc  = scule.Scule.functions;
         jsunit.addTest(testTicket14a);
         jsunit.addTest(testTicket14b);
         jsunit.addTest(testTicket26);
+        jsunit.addTest(testTicket29);
         jsunit.runTests();
     }());
 

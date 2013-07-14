@@ -6721,14 +6721,6 @@ module.exports.getBPlusHashingTree = function(order, threshold) {
 };
 
 /**
- * Returns an instance of the {HashBucketTable} class
- * @returns {HashBucketTable}
- */
-module.exports.getHashBucketTable = function() {
-    return new module.exports.Scule.classes.HashBucketTable();
-};
-
-/**
  * Returns an instrumentation timer instance
  * @returns {Timer}
  */

@@ -8303,13 +8303,5 @@ if (typeof console == 'undefined') {
     Scule.getBPlusHashingTree = function(order, threshold) {
         return new Scule.db.classes.BPlusHashingTree(order, threshold);
     };
-
-    /**
-     * Returns an instance of the {HashBucketTable} class
-     * @returns {HashBucketTable}
-     */
-    Scule.getHashBucketTable = function() {
-        return new Scule.db.classes.HashBucketTable();
-    };   
     
 }());
