@@ -4198,6 +4198,23 @@ function runAllTests() {
 
         };
 
+        function testTicket29() {
+
+            var ht = Scule.getHashTable();
+            ht.put('hasOwnProperty', true);
+            ht.put('bar', 'foo');
+            JSUNIT.assertEquals(null, ht.get('foo'));    
+            JSUNIT.assertEquals(null, ht.search('foo'));    
+            JSUNIT.assertEquals(false, ht.contains('foo'));
+            JSUNIT.assertEquals(true, ht.contains('hasOwnProperty'));
+            JSUNIT.assertEquals(true, ht.get('hasOwnProperty'));
+            JSUNIT.assertEquals(true, ht.contains('bar'));
+            JSUNIT.assertEquals('foo', ht.get('bar'));
+            JSUNIT.assertEquals(2, ht.getKeys().length);
+            JSUNIT.assertEquals('[true,"foo"]', JSON.stringify(ht.getValues()));
+
+        };
+
         (function() {
             JSUNIT.resetTests();
             JSUNIT.addTest(testDateComparator);            
@@ -4207,6 +4224,7 @@ function runAllTests() {
             JSUNIT.addTest(testTicket14b);
             JSUNIT.addTest(testTicket22);
             JSUNIT.addTest(testTicket26);
+            JSUNIT.addTest(testTicket29);
             JSUNIT.runTests('Query tests', Scule.tests.functions.renderTest);
         }());    
        

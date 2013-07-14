@@ -661,6 +661,17 @@ if (typeof console == 'undefined') {
 (function() {
 
     /**
+     * Returns a boolean value indicating whether or not the provided key exists
+     * as a property of the provided object
+     * @param {Object} object
+     * @param {String} key
+     * @returns {boolean}
+     */
+    Scule.global.functions.hasOwnProperty = function(object, key) {
+        return Object.prototype.hasOwnProperty.call(object, key);
+    };
+
+    /**
      * Given a map, extracts all key => value pairs where the value is true
      * and the key is not prefixed with a $
      * @param object Object
@@ -669,7 +680,7 @@ if (typeof console == 'undefined') {
     Scule.global.functions.extractTrueValues = function(object) {
         var map = {};
         for (var name in object) {
-            if(object.hasOwnProperty(name)) {
+            if(Scule.global.functions.hasOwnProperty(object, name)) {
                 if (name.match(/^\$/)) {
                     continue;
                 }
@@ -755,7 +766,7 @@ if (typeof console == 'undefined') {
         var leaf  = null;
         var probe = function(attr) {
             for (var k in attr) {
-                if(attr.hasOwnProperty(k)) {
+                if(Scule.global.functions.hasOwnProperty(attr, k)) {
                     if (attr[k] === true) {
                         leaf = k;
                         break;
@@ -773,8 +784,8 @@ if (typeof console == 'undefined') {
                 return o;
             }
             for (var k in attr) {
-                if(attr.hasOwnProperty(k)) {
-                    if (!o.hasOwnProperty(k)) {
+                if(Scule.global.functions.hasOwnProperty(attr, k)) {
+                    if (!Scule.global.functions.hasOwnProperty(o, k)) {
                         return null;
                     }
                     if (attr[k] === true) {
@@ -798,7 +809,7 @@ if (typeof console == 'undefined') {
         var o = {};
         var k = [];
         for (var key in object) {
-            if(object.hasOwnProperty(key)) {
+            if(Scule.global.functions.hasOwnProperty(object, key)) {
                 k.push(key);
             }
         }
@@ -835,7 +846,7 @@ if (typeof console == 'undefined') {
     Scule.global.functions.objectValues = function(object) {
         var values = [];
         for (var k in object) {
-            if (!object.hasOwnProperty(k)) {
+            if (!Scule.global.functions.hasOwnProperty(object, k)) {
                 continue;
             }
             values.push(object[k]);
@@ -846,7 +857,7 @@ if (typeof console == 'undefined') {
     Scule.global.functions.objectKeys = function(object) {
         var keys = [];
         for (var k in object) {
-            if (!object.hasOwnProperty(k)) {
+            if (!Scule.global.functions.hasOwnProperty(object, k)) {
                 continue;
             }
             keys.push(k);
@@ -866,7 +877,7 @@ if (typeof console == 'undefined') {
     
             var size = 0, key;
             for (key in o) {
-                if (o.hasOwnProperty(key)) {
+                if (Scule.global.functions.hasOwnProperty(o, key)) {
                     size++;
                 }
             }
@@ -911,7 +922,7 @@ if (typeof console == 'undefined') {
     };
 
     Scule.global.functions.contains = function(object, key) {
-        return (key in object);
+        return Scule.global.functions.hasOwnProperty(object, key);
     };
 
     /**
@@ -3891,7 +3902,7 @@ if (typeof console == 'undefined') {
          * @returns {Boolean}
          */
         this.contains = function(key) {
-            return key in this.table;
+            return Scule.global.functions.hasOwnProperty(this.table, key);
         };
 
         /**
@@ -3921,7 +3932,7 @@ if (typeof console == 'undefined') {
         this.getKeys = function() {
             var keys = [];
             for (var ky in this.table) {
-                if(this.table.hasOwnProperty(ky)) {
+                if(this.contains(ky)) {
                     keys.push(ky);
                 }
             }
@@ -3936,7 +3947,7 @@ if (typeof console == 'undefined') {
         this.getValues = function() {
             var values = [];
             for (var ky in this.table) {
-                if(this.table.hasOwnProperty(ky)) {
+                if(this.contains(ky)) {
                     values.push(this.table[ky]);
                 }
             }
@@ -3950,7 +3961,7 @@ if (typeof console == 'undefined') {
         this.toArray = function() {
             var a = [];
             for (var ky in this.table) {
-                if(this.table.hasOwnProperty(ky)) {
+                if(this.contains(ky)) {
                     a[ky] = this.table[ky];
                 }
             }        

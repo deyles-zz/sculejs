@@ -126,6 +126,17 @@ module.exports.Scule.symbols.table = {
 };
 
 /**
+ * Returns a boolean value indicating whether or not the provided key exists
+ * as a property of the provided object
+ * @param {Object} object
+ * @param {String} key
+ * @returns {boolean}
+ */
+module.exports.Scule.functions.hasOwnProperty = function (object, key) {
+    return Object.prototype.hasOwnProperty.call(object, key);
+};
+
+/**
  * Given a map, extracts all key => value pairs where the value is true
  * and the key is not prefixed with a $
  * @param {Object} object the object to extra true values from
@@ -314,7 +325,7 @@ module.exports.Scule.functions.sortObjectKeys = function(object) {
 module.exports.Scule.functions.objectValues = function(object) {
     var values = [];
     for (var k in object) {
-        if (!object.hasOwnProperty(k)) {
+        if (!module.exports.Scule.functions.hasOwnProperty(object, k)) {
             continue;
         }
         values.push(object[k]);
@@ -325,7 +336,7 @@ module.exports.Scule.functions.objectValues = function(object) {
 module.exports.Scule.functions.objectKeys = function(object) {
     var keys = [];
     for (var k in object) {
-        if (!object.hasOwnProperty(k)) {
+        if (!module.exports.Scule.functions.hasOwnProperty(object, k)) {
             continue;
         }
         keys.push(k);
@@ -391,7 +402,7 @@ module.exports.Scule.functions.sizeOf = function(o) {
     
         var size = 0, key;
         for (key in o) {
-            if (o.hasOwnProperty(key)) size++;
+            if (module.exports.Scule.functions.hasOwnProperty(o, key)) size++;
         }
         return size;
     }
@@ -2880,7 +2891,7 @@ module.exports.Scule.classes.HashTable = function() {
      * @returns {Boolean}
      */
     this.contains = function(key) {
-        return key in this.table;
+        return module.exports.Scule.functions.hasOwnProperty(this.table, key);
     };
     
     /**
@@ -2910,7 +2921,9 @@ module.exports.Scule.classes.HashTable = function() {
     this.getKeys = function() {
         var keys = [];
         for(var ky in this.table) {
-            keys.push(ky);
+            if (this.contains(ky)) {
+                keys.push(ky);
+            }
         }
         return keys;
     };
@@ -2923,7 +2936,9 @@ module.exports.Scule.classes.HashTable = function() {
     this.getValues = function() {
         var values = [];
         for(var ky in this.table) {
-            values.push(this.table[ky]);
+            if (this.contains(ky)) {
+                values.push(this.table[ky]);
+            }
         }
         return values;
     };
@@ -2935,7 +2950,9 @@ module.exports.Scule.classes.HashTable = function() {
     this.toArray = function() {
         var a = [];
         for(var ky in this.table) {
-            a[ky] = this.table[ky];
+            if (this.contains(ky)) {
+                a[ky] = this.table[ky];
+            }
         }        
         return a;
     };

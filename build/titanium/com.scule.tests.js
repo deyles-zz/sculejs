@@ -3354,6 +3354,23 @@ var sfunc  = scule.Scule.functions;
 
         };
 
+        function testTicket29() {
+
+            var ht = scule.getHashTable();
+            ht.put('hasOwnProperty', true);
+            ht.put('bar', 'foo');
+            assert.equal(null, ht.get('foo'));    
+            assert.equal(null, ht.search('foo'));    
+            assert.equal(false, ht.contains('foo'));
+            assert.equal(true, ht.contains('hasOwnProperty'));
+            assert.equal(true, ht.get('hasOwnProperty'));
+            assert.equal(true, ht.contains('bar'));
+            assert.equal('foo', ht.get('bar'));
+            assert.equal(2, ht.getKeys().length);
+            assert.equal('[true,"foo"]', JSON.stringify(ht.getValues()));
+
+        };
+
     (function() {
         jsunit.resetTests();
         jsunit.addTest(testQueryEngine);
