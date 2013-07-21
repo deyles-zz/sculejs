@@ -5845,7 +5845,7 @@ module.exports.Scule.classes.PrimaryKeyIndex = function() {
     };
 
     this.add = function(object) {
-        var key = module.exports.Scule.functions.getObjectId(object);
+        var key = module.exports.Scule.functions.getObjectId(object, true);
         if (this.table.contains(key)) {
             this.remove(object);
         }
@@ -5854,7 +5854,7 @@ module.exports.Scule.classes.PrimaryKeyIndex = function() {
     };
 
     this.remove = function(object) {
-        var key = module.exports.Scule.functions.getObjectId(object);
+        var key = module.exports.Scule.functions.getObjectId(object, true);
         if (!this.table.contains(key)) {
             return false;
         }
