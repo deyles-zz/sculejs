@@ -76,16 +76,6 @@ exports['test Ticket31'] = function(beforeExit, assert) {
         }
     });
 
-    collection.explain({
-        loc: {
-            $within:{
-                lat:30, 
-                lon:30, 
-                distance:2
-            }
-        }
-    })
-
     collection.find({
         loc: {
             $within:{
@@ -95,7 +85,7 @@ exports['test Ticket31'] = function(beforeExit, assert) {
             }
         }
     },{},function(results) {
-        console.log(results);
+//        console.log(results);
     });
 
 };

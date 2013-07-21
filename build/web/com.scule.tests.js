@@ -4369,17 +4369,99 @@ function runAllTests() {
             
         };
 
+        function testTicket6() {
+            Scule.dropAll();
+            var a = [];
+            var collection = Scule.factoryCollection('scule+dummy://test');
+            for (var i=0; i < 100; i++) {
+                var o = {i: i};
+                collection.save(o);
+                a.push(o);
+            }
+
+            var o = null;
+            o = collection.find({}, {$skip:5});
+            JSUNIT.assertEquals(95, o.length);
+            JSUNIT.assertEquals(o[0].i, a[5].i);
+
+            o = collection.find({}, {$skip:5, $limit:10});
+            JSUNIT.assertEquals(10, o.length);
+            JSUNIT.assertEquals(o[0].i, a[5].i);
+            JSUNIT.assertEquals(o[9].i, a[14].i);
+
+            o = collection.find({}, {$skip:5, $limit:10, $sort:{i:-1}});
+            JSUNIT.assertEquals(10, o.length);
+            JSUNIT.assertEquals(o[0].i, a[94].i);
+            JSUNIT.assertEquals(o[9].i, a[85].i);
+
+            o = collection.find({}, {$skip:100});
+            JSUNIT.assertEquals(o.length, 0);
+
+            o = collection.find({i:{$gte:50}}, {$skip:30});
+            JSUNIT.assertEquals(o.length, 20);
+            JSUNIT.assertEquals(o[0].i, a[80].i);
+            JSUNIT.assertEquals(o[19].i, a[99].i);            
+        };
+
+        function testTicket33a() {
+            var lastNames = ['Edgar', 'Adams', 'Jones', 'Bryan', 'Smith', 'Doe', 'Lennard', 'Turkish', 'Allan', 'Collins'];
+            Scule.dropAll();
+            var collection = Scule.factoryCollection('scule+dummy://ticket33');
+            collection.clear();
+            for (var i=0; i < 100; i++) {
+                var o = {
+                    position: i,
+                    last_name: lastNames[Math.floor((i/10))]
+                };
+                collection.save(o);
+            }
+            var a = ["Adams","Adams","Adams","Adams","Adams","Adams","Adams","Adams","Adams","Adams","Bryan","Edgar","Edgar","Edgar","Edgar"];
+            collection.find({position:{$lte:30}}, {$sort:{last_name:2}, $limit:15}, function(players) {
+                for (var i=0; i < players.length; i++) {
+                    JSUNIT.assertEquals(a[i], players[i].last_name);
+                }
+            });            
+        };
+
+        function testTicket33b() {
+            var lastNames = ['Edgar', 'Adams', 'Jones', 'Bryan', 'Smith', 'Doe', 'Lennard', 'Turkish', 'Allan', 'Collins'];
+            Scule.dropAll();
+            var collection = Scule.factoryCollection('scule+dummy://ticket33');
+            collection.clear();
+            for (var i=0; i < 100; i++) {
+                var o = {
+                    position: i,
+                    last_name: lastNames[Math.floor((i/10))]
+                };
+                collection.save(o);
+            }
+            var a = [];
+            collection.find({position:{$lte:60}}, {$sort:{last_name:2}, $limit:30}, function(players) {
+                for (var i=0; i < players.length; i++) {
+                    a.push(players[i].position);
+                }
+            });
+            collection.find({position:{$lte:60}}, {$sort:{last_name:2}, $skip:15, $limit:15}, function(players) {
+                for (var i=0; i < players.length; i++) {
+                    JSUNIT.assertEquals(a[i+15], players[i].position);
+                }
+            });            
+        };
+
         (function() {
             JSUNIT.resetTests();
             JSUNIT.addTest(testDateComparator);            
             JSUNIT.addTest(testQueryEngine);
             JSUNIT.addTest(testQueries);
+            JSUNIT.addTest(testTicket6);
             JSUNIT.addTest(testTicket14a);
             JSUNIT.addTest(testTicket14b);
             JSUNIT.addTest(testTicket22);
             JSUNIT.addTest(testTicket26);
             JSUNIT.addTest(testTicket29);
             JSUNIT.addTest(testTicket32);
+            JSUNIT.addTest(testTicket33a);
+            JSUNIT.addTest(testTicket33b);
             JSUNIT.runTests('Query tests', Scule.tests.functions.renderTest);
         }());    
        

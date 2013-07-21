@@ -2876,7 +2876,7 @@ var sfunc  = scule.Scule.functions;
 }());
 
 (function() {
-  
+	
     function testQueries() {
 
         scule.dropAll();
@@ -3381,13 +3381,99 @@ var sfunc  = scule.Scule.functions;
             collection1.commit();  
                 
             var storage     = scule.getTitaniumDiskStorageEngine({'secret':'test'});
-            var collection2 = new scule.Scule.classes.Collection('ticket32');
-	    collection2.setStorageEngine(storage);
-	    collection2.open();         
-            collection2.findAll(function(o) {
-		jsunit.assertEquals(100, o.length);	
-            });            		               	
-	};
+        	var collection2 = new scule.Scule.classes.Collection('ticket32');
+	        collection2.setStorageEngine(storage);
+	        collection2.open();         
+			collection2.findAll(function(o) {
+				jsunit.assertEquals(100, o.length);	
+			});            		               	
+		};
+		
+		function testTicket6() {
+		
+		    scule.dropAll();
+		    var a = [];
+		    var collection = scule.factoryCollection('scule+dummy://test');
+		    for (var i=0; i < 100; i++) {
+		        var o = {i: i};
+		        collection.save(o);
+		        a.push(o);
+		    }
+		    
+		    var o = null;
+		    o = collection.find({}, {$skip:5});
+		    jsunit.assertEquals(95, o.length);
+		    jsunit.assertEquals(o[0].i, a[5].i);
+		    
+		    o = collection.find({}, {$skip:5, $limit:10});
+		    jsunit.assertEquals(10, o.length);
+		    jsunit.assertEquals(o[0].i, a[5].i);
+		    jsunit.assertEquals(o[9].i, a[14].i);
+		  
+		    o = collection.find({}, {$skip:5, $limit:10, $sort:{i:-1}});
+		    jsunit.assertEquals(10, o.length);
+		    jsunit.assertEquals(o[0].i, a[94].i);
+		    jsunit.assertEquals(o[9].i, a[85].i);
+		
+		    o = collection.find({}, {$skip:100});
+		    jsunit.assertEquals(o.length, 0);
+		
+		    o = collection.find({i:{$gte:50}}, {$skip:30});
+		    jsunit.assertEquals(o.length, 20);
+		    jsunit.assertEquals(o[0].i, a[80].i);
+		    jsunit.assertEquals(o[19].i, a[99].i);
+		
+		};	
+
+		function testTicket33Sort() {		
+		    var lastNames = ['Edgar', 'Adams', 'Jones', 'Bryan', 'Smith', 'Doe', 'Lennard', 'Turkish', 'Allan', 'Collins'];
+		    scule.dropAll();
+		    var collection = scule.factoryCollection('scule+dummy://ticket33');
+		    collection.clear();
+		    for (var i=0; i < 100; i++) {
+		        var o = {
+		            position: i,
+		            last_name: lastNames[Math.floor((i/10))]
+		        };
+		        collection.save(o);
+		    }
+		    var a = ["Adams","Adams","Adams","Adams","Adams","Adams","Adams","Adams","Adams","Adams","Bryan","Edgar","Edgar","Edgar","Edgar"];
+		    collection.find({position:{$lte:30}}, {$sort:{last_name:2}, $limit:15}, function(players) {
+		        for (var i=0; i < players.length; i++) {
+		            jsunit.assertEquals(a[i], players[i].last_name);
+		        }
+		    });
+		};
+		
+		function testTicket33Skip() {
+		
+		    var lastNames = ['Edgar', 'Adams', 'Jones', 'Bryan', 'Smith', 'Doe', 'Lennard', 'Turkish', 'Allan', 'Collins'];
+		 
+		    scule.dropAll();
+		    var collection = scule.factoryCollection('scule+dummy://ticket33');
+		    collection.clear();
+		    for (var i=0; i < 100; i++) {
+		        var o = {
+		            position: i,
+		            last_name: lastNames[Math.floor((i/10))]
+		        };
+		        collection.save(o);
+		    }
+		
+		    var a = [];
+		    collection.find({position:{$lte:60}}, {$sort:{last_name:2}, $limit:30}, function(players) {
+		        for (var i=0; i < players.length; i++) {
+		            a.push(players[i].position);
+		        }
+		    });
+		    
+		    collection.find({position:{$lte:60}}, {$sort:{last_name:2}, $skip:15, $limit:15}, function(players) {
+		        for (var i=0; i < players.length; i++) {
+		            jsunit.assertEquals(a[i+15], players[i].position);
+		        }
+		    });
+		
+		};
 
     (function() {
         jsunit.resetTests();
@@ -3399,6 +3485,9 @@ var sfunc  = scule.Scule.functions;
         jsunit.addTest(testTicket26);
         jsunit.addTest(testTicket29);
         jsunit.addTest(testTicket32);
+        jsunit.addTest(testTicket6);
+        jsunit.addTest(testTicket33Sort);
+        jsunit.addTest(testTicket33Skip);
         jsunit.runTests();
     }());
 

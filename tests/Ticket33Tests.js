@@ -27,40 +27,56 @@
 
 var scule = require('../lib/com.scule.db');
 
-exports['test Ticket32'] = function(beforeExit, assert) {
- 
-    var table = {};
+exports['test Ticket33 sort'] = function(beforeExit, assert) {
+
+    var lastNames = ['Edgar', 'Adams', 'Jones', 'Bryan', 'Smith', 'Doe', 'Lennard', 'Turkish', 'Allan', 'Collins'];
  
     scule.dropAll();
-    var collection1 = scule.factoryCollection('scule+nodejs://ticket32', {
-        'secret':'test',
-        'path':'/tmp'
-    });
-    collection1.clear();
+    var collection = scule.factoryCollection('scule+dummy://ticket33');
+    collection.clear();
     for (var i=0; i < 100; i++) {
         var o = {
-            i: i
+            position: i,
+            last_name: lastNames[Math.floor((i/10))]
         };
-        collection1.save(o);
-        table[scule.Scule.$f.getObjectId(o, true)] = o;
+        collection.save(o);
     }
-    collection1.commit();
-           
-    setTimeout(function() {
-        var storage = scule.getNodeJSDiskStorageEngine({
-            'secret':'test',
-            'path':'/tmp'
-        });
-        var collection2 = new scule.Scule.classes.Collection('ticket32');
-        collection2.setStorageEngine(storage);
-        collection2.open(function() {
-            collection2.findAll(function(documents) {
-                assert.equal(100, documents.length);
-                documents.forEach(function(o) {
-                    assert.equal(true, table.hasOwnProperty(scule.Scule.$f.getObjectId(o, true)));
-                });
-            });            
-        });
-    }, 100);
+
+    var a = ["Adams","Adams","Adams","Adams","Adams","Adams","Adams","Adams","Adams","Adams","Bryan","Edgar","Edgar","Edgar","Edgar"];
+    collection.find({position:{$lte:30}}, {$sort:{last_name:2}, $limit:15}, function(players) {
+        for (var i=0; i < players.length; i++) {
+            assert.equal(a[i], players[i].last_name);
+        }
+    });
+
+};
+
+exports['test Ticket33 skip'] = function(beforeExit, assert) {
+
+    var lastNames = ['Edgar', 'Adams', 'Jones', 'Bryan', 'Smith', 'Doe', 'Lennard', 'Turkish', 'Allan', 'Collins'];
+ 
+    scule.dropAll();
+    var collection = scule.factoryCollection('scule+dummy://ticket33');
+    collection.clear();
+    for (var i=0; i < 100; i++) {
+        var o = {
+            position: i,
+            last_name: lastNames[Math.floor((i/10))]
+        };
+        collection.save(o);
+    }
+
+    var a = [];
+    collection.find({position:{$lte:60}}, {$sort:{last_name:2}, $limit:30}, function(players) {
+        for (var i=0; i < players.length; i++) {
+            a.push(players[i].position);
+        }
+    });
+    
+    collection.find({position:{$lte:60}}, {$sort:{last_name:2}, $skip:15, $limit:15}, function(players) {
+        for (var i=0; i < players.length; i++) {
+            assert.equal(a[i+15], players[i].position);
+        }
+    });
 
 };
