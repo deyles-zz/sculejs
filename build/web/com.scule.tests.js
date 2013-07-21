@@ -3362,6 +3362,137 @@ function runAllTests() {
     }());
 
     (function() {
+        
+        function testPrimaryKeyIndexAdd() {
+            var index = Scule.getPrimaryKeyIndex();
+            for (var i=0; i < 100; i++) {
+                var o = {
+                    i: i,
+                    _id: Scule.getObjectId()
+                };
+                index.add(o);
+            }
+            JSUNIT.assertEquals(100, index.length());
+        };
+
+        function testPrimaryKeyIndexContains() {
+            var objects = [];
+            var index = Scule.getPrimaryKeyIndex();
+            for (var i=0; i < 100; i++) {
+                var o = {
+                    i: i,
+                    _id: Scule.getObjectId()
+                };
+                objects.push(o);
+                index.add(o);
+            }
+            objects.forEach(function(o) {
+                JSUNIT.assertEquals(true, index.contains(Scule.global.functions.getObjectId(o, true)));
+            });
+        };
+
+        function testPrimaryKeyIndexGet() {
+            var objects = [];
+            var index = Scule.getPrimaryKeyIndex();
+            for (var i=0; i < 100; i++) {
+                var o = {
+                    i: i,
+                    _id: Scule.getObjectId()
+                };
+                objects.push(o);
+                index.add(o);
+            }
+            objects.forEach(function(o) {
+                JSUNIT.assertEquals(o, index.get(Scule.global.functions.getObjectId(o, true)));
+            });
+        };
+
+        function testPrimaryKeyIndexClear() {
+            var index = Scule.getPrimaryKeyIndex();
+            for (var i=0; i < 100; i++) {
+                var o = {
+                    i: i,
+                    _id: Scule.getObjectId()
+                };
+                index.add(o);
+            }
+            JSUNIT.assertEquals(100, index.length());
+            index.clear();
+            JSUNIT.assertEquals(0, index.length());
+        };
+
+        function testPrimaryKeyIndexRemove() {
+            var objects = [];
+            var index = Scule.getPrimaryKeyIndex();
+            for (var i=0; i < 100; i++) {
+                var o = {
+                    i: i,
+                    _id: Scule.getObjectId()
+                };
+                objects.push(o);
+                index.add(o);
+            }
+            JSUNIT.assertEquals(100, index.length());
+            JSUNIT.assertEquals(true, index.contains(Scule.global.functions.getObjectId(objects[50], true)))
+            index.remove(objects[50]);
+            JSUNIT.assertEquals(99, index.length());
+            JSUNIT.assertEquals(false, index.contains(Scule.global.functions.getObjectId(objects[50], true)))
+            JSUNIT.assertEquals(true, index.contains(Scule.global.functions.getObjectId(objects[10], true)))
+            index.remove(objects[10]);
+            JSUNIT.assertEquals(98, index.length());
+            JSUNIT.assertEquals(false, index.contains(Scule.global.functions.getObjectId(objects[10], true)))
+        };
+
+        function testPrimaryKeyIndexToTable() {
+            var objects = [];
+            var index = Scule.getPrimaryKeyIndex();
+            for (var i=0; i < 100; i++) {
+                var o = {
+                    i: i,
+                    _id: Scule.getObjectId()
+                };
+                objects.push(o);
+                index.add(o);
+            }
+            var table = index.toTable();
+            objects.forEach(function(o) {
+                JSUNIT.assertEquals(true, table.hasOwnProperty(Scule.global.functions.getObjectId(o, true)));
+            });
+        };
+
+        function testPrimaryKeyIndexToArray() {
+            var objects = [];
+            var index = Scule.getPrimaryKeyIndex();
+            for (var i=0; i < 100; i++) {
+                var o = {
+                    i: i,
+                    _id: Scule.getObjectId()
+                };
+                objects.push(o);
+                index.add(o);
+            }
+            var array = index.toArray();
+            JSUNIT.assertEquals(100, array.length);
+            for (var j=0; j < array.length; j++) {
+                JSUNIT.assertEquals(objects[j], array[j]);
+            }
+        };
+        
+        (function() {
+            JSUNIT.resetTests();
+            JSUNIT.addTest(testPrimaryKeyIndexToArray);
+            JSUNIT.addTest(testPrimaryKeyIndexToTable);
+            JSUNIT.addTest(testPrimaryKeyIndexRemove);
+            JSUNIT.addTest(testPrimaryKeyIndexClear);
+            JSUNIT.addTest(testPrimaryKeyIndexAdd);
+            JSUNIT.addTest(testPrimaryKeyIndexGet);
+            JSUNIT.addTest(testPrimaryKeyIndexContains);
+            JSUNIT.runTests('PrimaryKeyIndex tests', Scule.tests.functions.renderTest);
+        }());
+        
+    }());
+
+    (function() {
     
         function testDBRefCreation() {
             var ut1 = Scule.factoryCollection('scule+dummy://ut1');
@@ -4215,6 +4346,29 @@ function runAllTests() {
 
         };
 
+        function testTicket32() {
+            
+            Scule.dropAll();
+            var collection1 = Scule.factoryCollection('scule+local://ticket32', {'secret':'test'});
+            collection1.clear();
+            for (var i=0; i < 100; i++) {
+                collection1.save({i: i});
+            }
+            collection1.commit();
+            
+            setTimeout(function() {
+                var storage     = Scule.getLocalStorageStorageEngine({'secret':'test'});
+                var collection2 = new Scule.db.classes.Collection('ticket32');
+                collection2.setStorageEngine(storage);
+                collection2.open(function() {
+                    collection2.findAll(function(o) {
+                        JSUNIT.assertEquals(100, o.length);	
+                    });                
+                });
+            }, 100);
+            
+        };
+
         (function() {
             JSUNIT.resetTests();
             JSUNIT.addTest(testDateComparator);            
@@ -4225,6 +4379,7 @@ function runAllTests() {
             JSUNIT.addTest(testTicket22);
             JSUNIT.addTest(testTicket26);
             JSUNIT.addTest(testTicket29);
+            JSUNIT.addTest(testTicket32);
             JSUNIT.runTests('Query tests', Scule.tests.functions.renderTest);
         }());    
        

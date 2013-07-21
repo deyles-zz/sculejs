@@ -3371,6 +3371,24 @@ var sfunc  = scule.Scule.functions;
 
         };
 
+        function testTicket32() {
+            scule.dropAll();
+            var collection1 = scule.factoryCollection('scule+titanium://ticket32', {'secret':'test'});
+            collection1.clear();
+            for (var i=0; i < 100; i++) {
+                collection1.save({i: i});
+            }
+            collection1.commit();  
+                
+            var storage     = scule.getTitaniumDiskStorageEngine({'secret':'test'});
+            var collection2 = new scule.Scule.classes.Collection('ticket32');
+	    collection2.setStorageEngine(storage);
+	    collection2.open();         
+            collection2.findAll(function(o) {
+		jsunit.assertEquals(100, o.length);	
+            });            		               	
+	};
+
     (function() {
         jsunit.resetTests();
         jsunit.addTest(testQueryEngine);
@@ -3380,6 +3398,7 @@ var sfunc  = scule.Scule.functions;
         jsunit.addTest(testTicket14b);
         jsunit.addTest(testTicket26);
         jsunit.addTest(testTicket29);
+        jsunit.addTest(testTicket32);
         jsunit.runTests();
     }());
 

@@ -7414,7 +7414,7 @@ if (typeof console == 'undefined') {
         };
 
         this.add = function(object) {
-            var key = Scule.global.functions.getObjectId(object);
+            var key = Scule.global.functions.getObjectId(object, true);
             if (this.table.contains(key)) {
                 this.remove(object);
             }
@@ -7423,7 +7423,7 @@ if (typeof console == 'undefined') {
         };
 
         this.remove = function(object) {
-            var key = Scule.global.functions.getObjectId(object);
+            var key = Scule.global.functions.getObjectId(object, true);
             if (!this.table.contains(key)) {
                 return false;
             }
@@ -7454,7 +7454,7 @@ if (typeof console == 'undefined') {
         this.toTable = function() {
             var objects = {};
             this.queue.forEach(function(object) {
-                objects[Scule.global.functions.getObjectId(object)] = object.element;
+                objects[Scule.global.functions.getObjectId(object.element, true)] = object.element;
             });
             return objects;
         };
@@ -8278,12 +8278,12 @@ if (typeof console == 'undefined') {
     };
 
     /**
-     * Returns an instance of the {LocalStorageDiskStorageEngine} class
+     * Returns an instance of the {LocalStorageStorageEngine} class
      * @param {Object} configuration
-     * @returns {LocalStorageDiskStorageEngine}
+     * @returns {LocalStorageStorageEngine}
      */
-    Scule.getLocalStorageDiskStorageEngine = function(configuration) {
-        return new Scule.db.classes.LocalStorageDiskStorageEngine(configuration);    
+    Scule.getLocalStorageStorageEngine = function(configuration) {
+        return new Scule.db.classes.LocalStorageStorageEngine(configuration);    
     };
 
     /**

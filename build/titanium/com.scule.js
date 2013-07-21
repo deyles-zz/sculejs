@@ -674,12 +674,6 @@ module.exports.Scule.functions.trim = function(value) {
  * @returns {Integer}
  */
 module.exports.Scule.functions.getMACAddress = function() {
-    if(!Titanium.Platform.macaddress) {
-        if(!module.exports.Scule.variables.SimulatedMacAddress) {
-            module.exports.Scule.variables.SimulatedMacAddress = (new Date()).getTime().toString().substring(9, 11) + '' + module.exports.Scule.functions.randomFromTo(100, 999);
-        }
-        return module.exports.Scule.variables.SimulatedMacAddress;
-    }
     return Titanium.Platform.macaddress;
 };
 
@@ -4830,7 +4824,7 @@ module.exports.Scule.classes.TitaniumDiskStorageEngine = function(configuration)
 };
 
 /**
- * A disk based storage engine for web broswers that support the LocalStorage standard
+ * A disk based storage engine for web browsers that support the LocalStorage standard
  * @public
  * @constructor
  * @class {LocalStorageStorageEngine}
@@ -5891,7 +5885,7 @@ module.exports.Scule.classes.PrimaryKeyIndex = function() {
     this.toTable = function() {
         var objects = {};
         this.queue.forEach(function(object) {
-            objects[module.exports.Scule.functions.getObjectId(object)] = object.element;
+            objects[module.exports.Scule.functions.getObjectId(object.element, true)] = object.element;
         });
         return objects;
     };
@@ -6017,6 +6011,7 @@ module.exports.Scule.classes.Collection = function(name) {
      */
     this.open = function(callback) {
         if(this.isOpen) {
+        	callback(this);
             return;
         }
         var self = this;
@@ -6624,11 +6619,12 @@ module.exports.registerCollectionPlugin = function(name, plugin) {
 /**
  * Creates a new Collection instance corresponding to the provided name and using the provided storage engine
  * @param {String} name the name of the collection to load
+ * @param {Object} the configuration for the collection and storage engine
  * @returns {Collection}
  * @throws {Exception}
  */
-module.exports.factoryCollection = function(name) {
-    return module.exports.Scule.objects.core.collections.factory.getCollection(name);
+module.exports.factoryCollection = function(name, configuration) {
+    return module.exports.Scule.objects.core.collections.factory.getCollection(name, configuration);
 };
 
 /**
@@ -6718,6 +6714,14 @@ module.exports.getSimpleCryptographyProvider = function() {
  */
 module.exports.getBPlusHashingTree = function(order, threshold) {
     return new module.exports.Scule.classes.BPlusHashingTree(order, threshold);
+};
+
+/**
+ * Returns an instance of the {HashBucketTable} class
+ * @returns {HashBucketTable}
+ */
+module.exports.getHashBucketTable = function() {
+    return new module.exports.Scule.classes.HashBucketTable();
 };
 
 /**
