@@ -29,53 +29,10 @@ var assert = require('assert');
 var Scule = require('../lib/com.scule');
 
 describe('functions', function() {
-    it('should push a value onto an array if it is not null', function() {
-        var a = [];
-        Scule.global.functions.pushIfNotNull(a, 'foo');
-        Scule.global.functions.pushIfNotNull(a, null);
-        Scule.global.functions.pushIfNotNull(a, 'bar');
-        assert.equal(2, a.length);
-        assert.equal('foo', a[0]);
-        assert.equal('bar', a[1]);
-    });
-    it('should push a value from an object onto an array if the key exists', function() {
-        var a = [];
-        var o = {'foo':'bar'};
-        Scule.global.functions.pushIfExists(a, o, 'foo');
-        Scule.global.functions.pushIfExists(a, o, 'bar');
-        assert.equal(1, a.length);
-        assert.equal('bar', a[0]);        
-    });
-    it('should return the value in an object mapped to the provided key, or a default', function() {
-        var o = {'foo':'bar'};
-        assert.equal('bar', Scule.global.functions.getObjectAttribute(o, 'foo', 'test'));
-        assert.equal('test', Scule.global.functions.getObjectAttribute(o, 'bar', 'test'));
-    });
-    it('should extract all key => value pairs where the value is true', function() {
-        var o = {
-            'foo':true,
-            'bar':false,
-            'lol':true,
-            '$bar':true
-        };
-        assert.equal('{"foo":true,"lol":true}', JSON.stringify(Scule.global.functions.extractTrueValues(o)));
-    });
-    it('should return a list of all unique values in an array', function() {
-        var a = ['foo', 'bar', 'lol', 'bar', 2, 3, 4, 2];
-        assert.equal('["foo","bar","lol",2,3,4]', JSON.stringify(Scule.global.functions.unique(a)));
-    });
     it('should compare one value with another', function() {
         assert.equal(Scule.global.functions.compare(1, 1), 0);
         assert.equal(Scule.global.functions.compare(2, 1), 1);
         assert.equal(Scule.global.functions.compare(1, 2), -1);        
-    });
-    it('should compare two arrays', function() {
-        assert.equal(Scule.global.functions.compareArray([[1, 2, 3], 2, 3], [[1, 2, 3], 2, 3]), 0);
-        assert.equal(Scule.global.functions.compareArray([[2, 2, 3], 2, 3], [[1, 2, 3], 2, 3]), 1);
-        assert.equal(Scule.global.functions.compareArray([[1, 2, 3], 2, 3], [[2, 2, 3], 2, 3]), -1);
-        assert.equal(Scule.global.functions.compareArray([1, 2, 3], [1, 2, 3]), 0);
-        assert.equal(Scule.global.functions.compareArray([2, 2, 3], [1, 2, 3]), 1);
-        assert.equal(Scule.global.functions.compareArray([1, 2, 3], [3, 2, 3]), -1);        
     });
     it('should generate a random number between 10 and 30', function() {
         var e = Scule.global.functions.randomFromTo(10, 30);  
@@ -91,10 +48,10 @@ describe('functions', function() {
     });
     it('should return the keys in an object', function() {
         assert.equal(JSON.stringify(["foo","bar"]), JSON.stringify(Scule.global.functions.objectKeys({"foo":true, "bar":true})));
+        var o = new RegExp(/abc/);
+        o.foo = true;
+        assert.equal(JSON.stringify(["foo"]), JSON.stringify(Scule.global.functions.objectKeys(o)));
     });
-    it('should return the values in an object', function() {
-        assert.equal(JSON.stringify(["foo1","bar1"]), JSON.stringify(Scule.global.functions.objectValues({"foo":"foo1","bar":"bar1"})));
-    });    
     it('should return the number of keys in the provided object', function() {
         assert.equal(Scule.global.functions.sizeOf({
             foo:'bar',
@@ -140,33 +97,6 @@ describe('functions', function() {
         }));
         assert.equal(false, Scule.global.functions.isScalar([1,2,3,4,5]));            
     });
-    it('should search an object using a dot notated address', function() {
-        var composite;
-        var keys = {a:true, c:{d:true}, e:{f:{'0':true}}};
-        var object = {
-            a: 10,
-            c: {
-                d: 'foo'
-            },
-            e: {
-                f: [11, 12, 23, 33]
-            },
-            f: 12
-        }
-        composite = Scule.global.functions.searchObject(keys, object);
-        assert.equal(composite[0], 10);
-        assert.equal(composite[1], 'foo');
-        assert.equal(composite[2], 11);
-
-        keys.e.f = {'2':true};
-        keys.f = true;
-        composite = Scule.global.functions.searchObject(keys, object);
-        assert.equal(composite[0], 10);
-        assert.equal(composite[1], 'foo');
-        assert.equal(composite[2], 23);  
-        assert.equal(composite[3], 12);
-        assert.equal(composite[3] == 33, false);        
-    });
     it('should traverse the provided object', function() {
         var object = {
             a: 10,
@@ -190,4 +120,119 @@ describe('functions', function() {
         result = Scule.global.functions.traverseObject({e:{f:{'*':true}}}, object);
         assert.equal('["*",[11,12,23,33]]', JSON.stringify(result));        
     });
+    it('should test whether or not an object contains a given key', function() {
+        var o = {
+            foo:true
+        }
+        assert.equal(true, Scule.global.functions.contains(o, 'foo'));
+        assert.equal(false, Scule.global.functions.contains(o, 'bar'));
+    });
+    it('should test if a variable represents a double wide number', function() {
+        assert.equal(false, Scule.global.functions.isDouble('foo'));
+        assert.equal(false, Scule.global.functions.isDouble([1, 2, 3]));
+        assert.equal(false, Scule.global.functions.isDouble({foo:'bar'}));
+        assert.equal(true, Scule.global.functions.isDouble(2));
+        assert.equal(true, Scule.global.functions.isDouble(2.2));
+    });
+    it('should trim whitespace off a string', function() {
+        assert.equal('', Scule.global.functions.trim('   '));
+        assert.equal('foo', Scule.global.functions.trim('foo '));
+        assert.equal('foo', Scule.global.functions.trim('  foo '));
+        assert.equal('foo', Scule.global.functions.trim(' foo'));
+        assert.equal('foo', Scule.global.functions.trim("foo\n"));
+        assert.equal('foo', Scule.global.functions.trim('foo\t'));
+        assert.equal('foo', Scule.global.functions.trim('foo\t\n'));
+        assert.equal('foo', Scule.global.functions.trim('foo'));
+    });
+    it('should sort the keys in a dictionary', function() {
+        var o = {
+            z:true,
+            b:true,
+            a:true,
+            c:true
+        }
+        o = Scule.global.functions.sortObjectKeys(o);
+        assert.equal('{"a":true,"b":true,"c":true,"z":true}', JSON.stringify(o));
+    });
+    it('should sort the keys in a dictionary, placing dollar prefixed keys at the end', function() {
+        var o = {
+            z:true,
+            b:true,
+            $a:true,
+            c:true
+        }
+        o = Scule.global.functions.sortObjectKeys(o);
+        assert.equal('{"b":true,"c":true,"z":true,"$a":true}', JSON.stringify(o));
+    });
+    it('should parse an attribute string to a corresponding data structure', function() {
+        var o = Scule.global.functions.parseAttributes('a.b,c.d.e');
+        assert.equal('{"a":{"b":true},"c":{"d":{"e":true}}}', JSON.stringify(o));
+    });
+    it("should retrieve a single attribute from an object given a path statement (e.g 'a.b')", function() {
+        var o = {
+            a: {
+                b: {
+                    c:'foo'
+                }
+            }
+        };
+        assert.equal('foo', Scule.global.functions.traverse('a.b.c', o));
+        assert.equal('{"c":"foo"}', JSON.stringify(Scule.global.functions.traverse('a.b', o)));
+        assert.equal(null, Scule.global.functions.traverse('a.b.c.d', o));
+        assert.equal(undefined, Scule.global.functions.traverse('a.b.c.d', undefined));
+    });
+    it('should sort an array of objects in descending order', function() {
+        var get = function() {
+            var a = [];
+            for (var i=0; i < 100; i++) {
+                a.push({'key':i});
+            }
+            return a;
+        };
+        var a = get();
+        Scule.global.functions.sort(-1, a, 'key');
+        for (var i=0; i < 100; i++) {
+            assert.equal(i, 99 - a[i].key);
+        }
+    });
+    it('should sort an array of objects in reverse order', function() {
+        var get = function() {
+            var a = [];
+            for (var i=0; i < 100; i++) {
+                a.push({'key':i});
+            }
+            return a;
+        };
+        var a = get();
+        Scule.global.functions.sort(3, a, 'key');
+        for (var i=0; i < 100; i++) {
+            assert.equal(i, 99 - a[i].key);
+        }
+    });
+    it('should sort an array of objects in ascending order', function() {
+        var get = function() {
+            var a = [];
+            for (var i=0; i < 100; i++) {
+                a.push({'key':i});
+            }
+            return a;
+        };
+        var a = get();
+        Scule.global.functions.sort(1, a, 'key');
+        for (var i=0; i < 100; i++) {
+            assert.equal(i, a[i].key);
+        }
+    });
+    it('should sort an array of objects in alphabetical order', function() {
+        var get = function() {
+            return [{k:'c'},{k:'a'},{k:'b'},{k:'d'},{k:'c'}];
+        };
+        var a = get();
+        Scule.global.functions.sort(2, a, 'k');
+        assert.equal(a[0].k, 'a');
+        assert.equal(a[1].k, 'b');
+        assert.equal(a[2].k, 'c');
+        assert.equal(a[3].k, 'c');
+        assert.equal(a[4].k, 'd');
+    });    
 });

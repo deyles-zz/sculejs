@@ -28,40 +28,21 @@
 var assert = require('assert');
 var Scule = require('../lib/com.scule');
 
-describe('Observer', function() {
-    describe('Event', function() {
-       it('verifies that accessors on events function as excepted', function() {
-            var event = Scule.getEvent('test', {foo:'bar'});
-            assert.ok(event);
-            assert.equal(event.getName(), 'test');
-            assert.equal(JSON.stringify(event.getBody()), JSON.stringify({foo:'bar'}));           
-       });
+describe('hashing', function() {
+    describe('md5', function() {
+        it('should hash the string "foo" using the md5 algorithm', function() {
+            assert.equal('acbd18db4cc2f85cedef654fccc4a4d8', Scule.md5.hash('foo'));
+            
+            var md5 = new Scule.global.classes.md5();
+            assert.equal('acbd18db4cc2f85cedef654fccc4a4d8', md5.hash('foo'));
+        });
     });
-    describe('EventListener', function() {
-       it('verifies that accessors on event listeners function as expected', function() {
-            var event    = Scule.getEvent('test', {foo:'bar'});
-            var closure  = function(e) {
-                assert.equal(e.getName(), 'test');
-                assert.equal(JSON.stringify(e.getBody()), JSON.stringify({foo:'bar'}));
-            };
-            var listener = Scule.getEventListener(closure);
-            assert.ok(listener);
-            assert.equal(closure, listener.getClosure());
-            listener.consume(event);           
-       });
-    });
-    describe('EventEmitter', function() {
-        it('verifies that events are emitted successfully', function() {
-            var event   = Scule.getEvent('test', {foo:'bar'});
-            var emitter = Scule.getEventEmitter();
-            for (var i=0; i < 20; i++) {
-                emitter.addEventListener('test', function(e) {
-                    assert.ok(e);
-                    assert.equal(e.getName(), 'test');
-                    assert.equal(JSON.stringify(e.getBody()), JSON.stringify({foo:'bar'}));
-                });
-            }
-            emitter.fireEvent('test', {foo:'bar'});            
+    describe('sha1', function() {
+        it('should hash the string "foo" using the sha1 algorithm', function() {
+            assert.equal('0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33', Scule.sha1.hash('foo'));
+            
+            var sha1 = new Scule.global.classes.sha1();
+            assert.equal('0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33', sha1.hash('foo'));
         });
     });
 });

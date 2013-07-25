@@ -29,6 +29,33 @@ var assert = require('assert');
 var Scule = require('../lib/com.scule');
 
 describe('BloomFilter', function() {
+    it('should throw an exception when trying to use a string in the constructor', function() {
+        var exception = false;
+        try {
+            var filter = Scule.getBloomFilter('test');
+        } catch (e) {
+            exception = true;
+        }
+        assert.equal(true, exception);        
+    });
+    it('should throw an exception when trying to use a negative number in the constructor', function() {
+        var exception = false;
+        try {
+            var filter = Scule.getBloomFilter(-100);
+        } catch (e) {
+            exception = true;
+        }
+        assert.equal(true, exception);        
+    });
+    it('should throw an exception when trying to use a floating point number in the constructor', function() {
+        var exception = false;
+        try {
+            var filter = Scule.getBloomFilter(111.030202);
+        } catch (e) {
+            exception = true;
+        }
+        assert.equal(true, exception);
+    });    
     it('verifies that bloom filter insertion and queries function as expected', function() {
         for (var j=0; j < 500; j++) {
             var table  = Scule.getHashTable(2000);

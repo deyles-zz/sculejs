@@ -25,69 +25,69 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-var Scule   = require('../lib/com.scule');
+var assert = require('assert');
+var Scule = require('../lib/com.scule');
 
-exports['test SignString'] = function(beforeExit, assert) {
-    var provider = Scule.getSimpleCryptographyProvider();
-    var hash = provider.signString('foobar');
-    assert.equal(hash, provider.signString('foobar'));
-};
-
-exports['test SignObject'] = function(beforeExit, assert) {
-    var provider = Scule.getSimpleCryptographyProvider();
-    var object = {
-        _sig: null,
-        _meta: {
-            ver: 2.0,
-            salt: 123456789
-        },
-        _collection: {
-            'iamatestkey':{
-                foo:'bar',
-                bar:'foo'
+describe('SimpleCryptographyProvider', function() {
+    it('should sign a string', function() {
+        var provider = Scule.getSimpleCryptographyProvider();
+        var hash = provider.signString('foobar');
+        assert.equal(hash, provider.signString('foobar'));        
+    });
+    it('should sign an object', function() {
+        var provider = Scule.getSimpleCryptographyProvider();
+        var object = {
+            _sig: null,
+            _meta: {
+                ver: 2.0,
+                salt: 123456789
+            },
+            _collection: {
+                'iamatestkey':{
+                    foo:'bar',
+                    bar:'foo'
+                }
             }
-        }
-    };
-    var hash = provider.signObject(object, 'mysecretkey', 'mysecretsalt');
-    assert.equal(hash, provider.signObject(object, 'mysecretkey', 'mysecretsalt'));
-};
-
-exports['test SignJSONString'] = function(beforeExit, assert) {
-    var provider = Scule.getSimpleCryptographyProvider();
-    var object = {
-        _sig: null,
-        _meta: {
-            ver: 2.0,
-            salt: 123456789
-        },
-        _collection: {
-            'iamatestkey':{
-                foo:'bar',
-                bar:'foo'
+        };
+        var hash = provider.signObject(object, 'mysecretkey', 'mysecretsalt');
+        assert.equal(hash, provider.signObject(object, 'mysecretkey', 'mysecretsalt'));        
+    });
+    it('should sign a JSON string', function() {
+        var provider = Scule.getSimpleCryptographyProvider();
+        var object = {
+            _sig: null,
+            _meta: {
+                ver: 2.0,
+                salt: 123456789
+            },
+            _collection: {
+                'iamatestkey':{
+                    foo:'bar',
+                    bar:'foo'
+                }
             }
-        }
-    };
-    var hash = provider.signJSONString(object, 'mysecretkey', 'mysecretsalt'); 
-    assert.equal(hash, provider.signJSONString(object, 'mysecretkey', 'mysecretsalt'));
-};
-
-exports['test VerifyObjectSignature'] = function(beforeExit, assert) {
-    var provider = Scule.getSimpleCryptographyProvider();
-    var object = {
-        _sig: null,
-        _meta: {
-            ver: 2.0,
-            salt: 123456789
-        },
-        _collection: {
-            'iamatestkey':{
-                foo:'bar',
-                bar:'foo'
+        };
+        var hash = provider.signJSONString(object, 'mysecretkey', 'mysecretsalt'); 
+        assert.equal(hash, provider.signJSONString(object, 'mysecretkey', 'mysecretsalt'));        
+    });
+    it('should verify the signature calculated from an object', function() {
+        var provider = Scule.getSimpleCryptographyProvider();
+        var object = {
+            _sig: null,
+            _meta: {
+                ver: 2.0,
+                salt: 123456789
+            },
+            _collection: {
+                'iamatestkey':{
+                    foo:'bar',
+                    bar:'foo'
+                }
             }
-        }
-    };
-    object._sig = provider.signObject(object, 'mysecretkey', 'mysecretsalt');
-    assert.equal(true, provider.verifyObjectSignature(object, 'mysecretkey', 'mysecretsalt'));
-    object._sig = 'foobar';
-    assert.equal(false, provider.verifyObjectSignature(object, 'mysecretkey', 'mysecretsalt'));    
-};
+        };
+        object._sig = provider.signObject(object, 'mysecretkey', 'mysecretsalt');
+        assert.equal(true, provider.verifyObjectSignature(object, 'mysecretkey', 'mysecretsalt'));
+        object._sig = 'foobar';
+        assert.equal(false, provider.verifyObjectSignature(object, 'mysecretkey', 'mysecretsalt'));            
+    });
+});

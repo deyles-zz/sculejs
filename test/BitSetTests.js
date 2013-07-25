@@ -25,78 +25,99 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+var assert = require('assert');
 var Scule = require('../lib/com.scule');
 
-exports['test BitSetInitializeString'] = function(beforeExit, assert) {   
-    var exception = false;
-    try {
-        var bitset = Scule.getBitSet('test');
-    } catch (e) {
-        exception = true;
-    }
-    assert.equal(true, exception);
-};
-
-exports['test BitSetInitializeNegativeNumber'] = function(beforeExit, assert) {   
-    var exception = false;
-    try {
-        var bitset = Scule.getBitSet(-100);
-    } catch (e) {
-        exception = true;
-    }
-    assert.equal(true, exception);
-};
-
-exports['test BitSetInitializeFloatingPointNumber'] = function(beforeExit, assert) {   
-    var exception = false;
-    try {
-        var bitset = Scule.getBitSet(111.030202);
-    } catch (e) {
-        exception = true;
-    }
-    assert.equal(true, exception);
-};
-
-exports['test BitSetInitialize'] = function(beforeExit, assert) {   
-    var bitset = Scule.getBitSet(8);
-    assert.equal(8, bitset.getLength());
-};
-
-exports['test BitSetEmpty'] = function(beforeExit, assert) {   
-    var bitset = Scule.getBitSet(1024);
-    for (var i=0; i < bitset.words.length; i++) {
-        assert.equal(0x00, bitset.words[i]);
-    }
-};
-
-exports['test BitSetSetEverySecondBit'] = function(beforeExit, assert) {   
-    var bitset = Scule.getBitSet(10);
-    for (var i=0; i < 10; i++) {
-        if (i%2) {
-            bitset.set(i);
+describe('BitSet', function() {
+    it('should throw an exception when trying to use a string in the constructor', function() {
+        var exception = false;
+        try {
+            var bitset = Scule.getBitSet('test');
+        } catch (e) {
+            exception = true;
         }
-    }
-    for (var i=0; i < 10; i++) {
-        if (i%2) {
-            assert.equal(true, bitset.get(i));
-        } else {
-            assert.equal(false, bitset.get(i));
+        assert.equal(true, exception);        
+    });
+    it('should throw an exception when trying to use a negative number in the constructor', function() {
+        var exception = false;
+        try {
+            var bitset = Scule.getBitSet(-100);
+        } catch (e) {
+            exception = true;
         }
-    }
-};
-
-exports['test BitSetSetRandomBits'] = function(beforeExit, assert) {
-    for (var j=0; j < 10000; j++) {
-        var bitset = Scule.getBitSet(90);
-        var string = '';
-        for (var i=0; i < bitset.getLength(); i++) {
-            if (Scule.global.functions.randomFromTo(0, 1) == 1) {
+        assert.equal(true, exception);        
+    });
+    it('should throw an exception when trying to use a floating point number in the constructor', function() {
+        var exception = false;
+        try {
+            var bitset = Scule.getBitSet(111.030202);
+        } catch (e) {
+            exception = true;
+        }
+        assert.equal(true, exception);
+    });
+    it('should initialize a bitset with a capacity of 8 bits', function() {
+        var bitset = Scule.getBitSet(8);
+        assert.equal(8, bitset.getLength());        
+    });
+    it('should verify that a new bitset is empty', function() {
+        var bitset = Scule.getBitSet(1024);
+        for (var i=0; i < bitset.words.length; i++) {
+            assert.equal(0x00, bitset.words[i]);
+        }        
+    });
+    it('should set every second bit', function() {
+        var bitset = Scule.getBitSet(10);
+        for (var i=0; i < 10; i++) {
+            if (i%2) {
                 bitset.set(i);
-                string += '1';
-            } else {
-                string += '0';
             }
         }
-        assert.equal(string, bitset.toString());
-    }
-};
+        for (var i=0; i < 10; i++) {
+            if (i%2) {
+                assert.equal(true, bitset.get(i));
+            } else {
+                assert.equal(false, bitset.get(i));
+            }
+        }        
+    });
+    it('should set random bits', function() {
+        for (var j=0; j < 10000; j++) {
+            var bitset = Scule.getBitSet(90);
+            var string = '';
+            for (var i=0; i < bitset.getLength(); i++) {
+                if (Scule.global.functions.randomFromTo(0, 1) == 1) {
+                    bitset.set(i);
+                    string += '1';
+                } else {
+                    string += '0';
+                }
+            }
+            assert.equal(string, bitset.toString());
+        }        
+    });
+    it('should clear a given bit in the bitset', function() {
+        var bitset = Scule.getBitSet(10);
+        for (var i=0; i < 10; i++) {
+            bitset.set(i);
+        }
+        bitset.clear(5);
+        for (var i=0; i < 10; i++) {
+            if (i == 5) {
+                assert.equal(false, bitset.get(i));                
+            } else {
+                assert.equal(true, bitset.get(i)); 
+            }
+        }
+    });
+    it('should throw an exception when attempting to address a bit out of range', function() {
+        var exception = false;
+        try {
+            var bitset = Scule.getBitSet(10);
+            bitset.get(1000);
+        } catch (e) {
+            exception = true;
+        }
+        assert.equal(true, exception);        
+    });
+});
