@@ -54,7 +54,22 @@ describe('DBRef', function() {
             o2 = o2[0];    
 
             var o3 = o2.ref.resolve(storage);
-            assert.equal(o1, o3);           
+            assert.equal(o1, o3);
+            
+            var exception = false;
+            try {
+                Scule.getDBRef('scule+dummy://ut1', undefined);
+            } catch (e) {
+                exception = true;
+            }
+            assert.equal(true, exception);
+       });
+    });
+    describe('accessors', function() {
+       it('should test object accessors', function() {
+           var ref = new Scule.db.classes.DBRef('foo', 'bar');
+           assert.equal('foo', ref.getRef());
+           assert.equal('bar', ref.getId());
        });
     });
 });
