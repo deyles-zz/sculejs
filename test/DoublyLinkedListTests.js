@@ -25,214 +25,195 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-var Scule   = require('../lib/com.scule');
+var assert = require('assert');
+var Scule = require('../lib/com.scule');
 
-exports['test DoublyLinkedListSize'] = function(beforeExit, assert) {
-    var list = Scule.getDoublyLinkedList();
-    list.add(1);
-    list.add(2);
-    list.add(3);
-    list.add(4);
-    assert.equal(list.getLength(), 4);
-}
-
-exports['test DoublyLinkedListGet'] = function(beforeExit, assert) {
-    var list = Scule.getDoublyLinkedList();
-    list.add(1);
-    list.add(2);
-    list.add(3);
-    list.add(4);
-    list.add(5);
-    list.add(6);
-    list.add(7);
-    list.add(8);
-    var node = list.get(4);
-    assert.equal(node.getElement(), 5);
-};
-
-exports['test DoublyLinkedListClear'] = function(beforeExit, assert) {
-    var list = Scule.getDoublyLinkedList();
-    list.add(1);
-    list.add(2);
-    list.add(3);
-    list.add(4);
-    list.add(5);
-    list.add(6);
-    list.add(7);
-    list.add(8);
-    list.clear();
-    assert.equal(list.getLength(), 0);
-    assert.equal(list.getHead(), null);
-}
-
-exports['test DoublyLinkedListIsEmpty'] = function(beforeExit, assert) {
-    var list = Scule.getDoublyLinkedList();
-    list.add(1);
-    list.add(2);
-    assert.equal(list.isEmpty(), false);
-}
-
-exports['test DoublyLinkedListRemove'] = function(beforeExit, assert) {
-    var list = Scule.getDoublyLinkedList();
-    list.add(1);
-    list.add(2);
-    list.add(3);
-    list.add(4);
-    list.add(5);
-    list.add(6);
-    list.add(7);
-    list.add(8);
-    list.remove(4);
-    assert.equal(list.remove(-1), null);
-    assert.equal(list.remove(10), null);
-    assert.equal(list.getLength(), 7);
-    assert.equal(list.get(4).getElement(), 6);
-};
-
-exports['test DoublyLinkedListTrim'] = function(beforeExit, assert) {
-    var list = Scule.getDoublyLinkedList();
-    list.add(1);
-    list.add(2);
-    list.add(3);
-    list.add(4);
-    list.add(5);
-    list.add(6);
-    list.add(7);
-    list.add(8);
-    list.trim();
-    assert.equal(list.getLength(), 7);
-    assert.equal(list.get(6).getElement(), 7);
-    assert.equal(list.get(7), null);
-    list.trim();
-    assert.equal(list.getLength(), 6);
-    assert.equal(list.get(5).getElement(), 6);    
-};
-
-exports['test DoublyLinkedListPrepend'] = function(beforeExit, assert) {
-    var list = Scule.getDoublyLinkedList();
-    list.add(1);
-    list.add(2);
-    list.add(3);
-    list.add(4);
-    list.add(5);
-    list.add(6);
-    list.add(7);
-    list.add(8);
-    list.prepend(0);
-    assert.equal(list.getLength(), 9);
-    assert.equal(list.getHead().getElement(), 0);
-    list.prepend(-1);
-    assert.equal(list.getLength(), 10);
-    assert.equal(list.getHead().getElement(), -1);
-    list.trim();
-    assert.equal(list.getLength(), 9);
-    assert.equal(list.getHead().getElement(), -1);  
-    list.prepend(22);
-    assert.equal(list.getLength(), 10);
-    assert.equal(list.getHead().getElement(), 22);    
-};
-
-exports['test DoublyLinkedListSplit'] = function(beforeExit, assert) {
-    var list1 = Scule.getDoublyLinkedList();
-    list1.add(1);
-    list1.add(2);
-    list1.add(3);
-    list1.add(4);
-    list1.add(5);
-    list1.add(6);
-    list1.add(7);
-    list1.add(8);
-    var list2 = list1.split(4);
-    assert.equal(list1.getLength(), 4);
-    assert.equal(list1.tail.getElement(), 4);
-    assert.equal(list2.getLength(), 4);
-    assert.equal(list2.tail.getElement(), 8);
-}
-
-exports['test DoublyLinkedListSplit2'] = function(beforeExit, assert) {
-    var list1 = Scule.getDoublyLinkedList();
-    list1.add(1);
-    list1.add(2);
-    list1.add(3);
-    list1.add(4);
-    list1.add(5);
-    list1.add(6);
-    list1.add(7);
-    list1.add(8);
-    list1.add(9);
-    var list2 = list1.split();
-    assert.equal(list1.getLength(), 5);
-    assert.equal(list1.tail.getElement(), 5);
-    assert.equal(list2.getLength(), 4);
-    assert.equal(list2.tail.getElement(), 9);
-}
-
-exports['test DoublyLinkedListMiddle'] = function(beforeExit, assert) {
-    var list = Scule.getDoublyLinkedList();
-    list.add(1);
-    list.add(2);
-    list.add(3);
-    list.add(4);
-    list.add(5);
-    list.add(6);
-    list.add(7);
-    list.add(8);
-    assert.equal(list.middle().getElement(), 4);
-    list.add(9);
-    assert.equal(list.middle().getElement(), 5); 
-    list.add(10);
-    assert.equal(list.middle().getElement(), 5);
-};
-
-exports['test DoublyLinkedListReverse'] = function(beforeExit, assert) {
-    var list = Scule.getDoublyLinkedList();
-    list.add(1);
-    list.add(2);
-    list.add(3);
-    list.add(4);
-    list.add(5);
-    list.add(6);
-    list.add(7);
-    list.add(8);
-    assert.equal(list.getHead().getElement(), 1);
-    assert.equal(list.getTail().getElement(), 8);
-    list.reverse();
-    assert.equal(list.getHead().getElement(), 8);
-    assert.equal(list.getTail().getElement(), 1);
-};
-
-exports['test DoublyLinkedListSort'] = function(beforeExit, assert) {
-    var list = Scule.getDoublyLinkedList();
-    for(var i=0; i < 30; i++) {
-        list.add(Scule.global.functions.randomFromTo(10, 10000));
-    }
-    list.sort();
-    var curr = list.head;
-    while(curr && curr.next) {
-        assert.equal((curr.element <= curr.next.element), true);
-        curr = curr.next;
-    }
-};
-
-exports['test DoublyLinkedListContains'] = function(beforeExit, assert) {
-    var list = Scule.getDoublyLinkedList();
-    list.add(1);
-    list.add(2);
-    list.add(3);
-    list.add(4);
-    list.add(5);
-    list.add(6);
-    list.add(7);
-    list.add(8);
-    assert.equal(list.contains(6), true); 
-    assert.equal(list.contains(10), false);
-};
-
-exports['test DoublyLinkedListArraySearch'] = function(beforeExit, assert) {
-    var list = Scule.getLinkedList();
-    for(var i=0; i < 1000; i++) {
-        list.add([i, (i*2), (i-1)]);
-    }    
-    assert.equal((list.search([500, 1000, 499], null, Scule.global.functions.compareArray) !== null), true);
-    assert.equal(list.search([500, 1000, 498], null, Scule.global.functions.compareArray), null);
-};
+describe('DoublyLinkedList', function() {
+    it('should verify the size of the list', function() {
+        var list = Scule.getDoublyLinkedList();
+        list.add(1);
+        list.add(2);
+        list.add(3);
+        list.add(4);
+        assert.equal(list.getLength(), 4);        
+    });
+    it('should retrieve an entry from a list', function() {
+        var list = Scule.getDoublyLinkedList();
+        list.add(1);
+        list.add(2);
+        list.add(3);
+        list.add(4);
+        list.add(5);
+        list.add(6);
+        list.add(7);
+        list.add(8);
+        var node = list.get(4);
+        assert.equal(node.getElement(), 5);        
+    });
+    it('should remove all elements from a list', function() {
+        var list = Scule.getDoublyLinkedList();
+        list.add(1);
+        list.add(2);
+        list.add(3);
+        list.add(4);
+        list.add(5);
+        list.add(6);
+        list.add(7);
+        list.add(8);
+        list.clear();
+        assert.equal(list.getLength(), 0);
+        assert.equal(list.getHead(), null);        
+    });
+    it('should should empty a list', function() {
+        var list = Scule.getDoublyLinkedList();
+        list.add(1);
+        list.add(2);
+        assert.equal(list.isEmpty(), false);        
+    });
+    it('should remove an element from a list', function() {
+        var list = Scule.getDoublyLinkedList();
+        list.add(1);
+        list.add(2);
+        list.add(3);
+        list.add(4);
+        list.add(5);
+        list.add(6);
+        list.add(7);
+        list.add(8);
+        list.remove(4);
+        assert.equal(list.remove(-1), null);
+        assert.equal(list.remove(10), null);
+        assert.equal(list.getLength(), 7);
+        assert.equal(list.get(4).getElement(), 6);        
+    });
+    it('should remove the last element from a list', function() {
+        var list = Scule.getDoublyLinkedList();
+        list.add(1);
+        list.add(2);
+        list.add(3);
+        list.add(4);
+        list.add(5);
+        list.add(6);
+        list.add(7);
+        list.add(8);
+        list.trim();
+        assert.equal(list.getLength(), 7);
+        assert.equal(list.get(6).getElement(), 7);
+        assert.equal(list.get(7), null);
+        list.trim();
+        assert.equal(list.getLength(), 6);
+        assert.equal(list.get(5).getElement(), 6);        
+    });
+    it('should add an element to the head of the list', function() {
+        var list = Scule.getDoublyLinkedList();
+        list.add(1);
+        list.add(2);
+        list.add(3);
+        list.add(4);
+        list.add(5);
+        list.add(6);
+        list.add(7);
+        list.add(8);
+        list.prepend(0);
+        assert.equal(list.getLength(), 9);
+        assert.equal(list.getHead().getElement(), 0);
+        list.prepend(-1);
+        assert.equal(list.getLength(), 10);
+        assert.equal(list.getHead().getElement(), -1);
+        list.trim();
+        assert.equal(list.getLength(), 9);
+        assert.equal(list.getHead().getElement(), -1);  
+        list.prepend(22);
+        assert.equal(list.getLength(), 10);
+        assert.equal(list.getHead().getElement(), 22);         
+    });
+    it('should split a list into two lists', function() {
+        var list1 = Scule.getDoublyLinkedList();
+        list1.add(1);
+        list1.add(2);
+        list1.add(3);
+        list1.add(4);
+        list1.add(5);
+        list1.add(6);
+        list1.add(7);
+        list1.add(8);
+        var list2 = list1.split(4);
+        assert.equal(list1.getLength(), 4);
+        assert.equal(list1.tail.getElement(), 4);
+        assert.equal(list2.getLength(), 4);
+        assert.equal(list2.tail.getElement(), 8);
+        
+        list1 = Scule.getDoublyLinkedList();
+        list1.add(1);
+        list1.add(2);
+        list1.add(3);
+        list1.add(4);
+        list1.add(5);
+        list1.add(6);
+        list1.add(7);
+        list1.add(8);
+        list1.add(9);
+        list2 = list1.split();
+        assert.equal(list1.getLength(), 5);
+        assert.equal(list1.tail.getElement(), 5);
+        assert.equal(list2.getLength(), 4);
+        assert.equal(list2.tail.getElement(), 9);        
+    });
+    it('should return the element at the middle of the list', function() {
+        var list = Scule.getDoublyLinkedList();
+        list.add(1);
+        list.add(2);
+        list.add(3);
+        list.add(4);
+        list.add(5);
+        list.add(6);
+        list.add(7);
+        list.add(8);
+        assert.equal(list.middle().getElement(), 4);
+        list.add(9);
+        assert.equal(list.middle().getElement(), 5); 
+        list.add(10);
+        assert.equal(list.middle().getElement(), 5);        
+    });
+    it('should reverse a list', function() {
+        var list = Scule.getDoublyLinkedList();
+        list.add(1);
+        list.add(2);
+        list.add(3);
+        list.add(4);
+        list.add(5);
+        list.add(6);
+        list.add(7);
+        list.add(8);
+        assert.equal(list.getHead().getElement(), 1);
+        assert.equal(list.getTail().getElement(), 8);
+        list.reverse();
+        assert.equal(list.getHead().getElement(), 8);
+        assert.equal(list.getTail().getElement(), 1);        
+    });
+    it('should sort a list', function() {
+        var list = Scule.getDoublyLinkedList();
+        for(var i=0; i < 30; i++) {
+            list.add(Scule.global.functions.randomFromTo(10, 10000));
+        }
+        list.sort();
+        var curr = list.head;
+        while(curr && curr.next) {
+            assert.equal((curr.element <= curr.next.element), true);
+            curr = curr.next;
+        }        
+    });
+    it('should determine is a list contains a given value', function() {
+        var list = Scule.getDoublyLinkedList();
+        list.add(1);
+        list.add(2);
+        list.add(3);
+        list.add(4);
+        list.add(5);
+        list.add(6);
+        list.add(7);
+        list.add(8);
+        assert.equal(list.contains(6), true); 
+        assert.equal(list.contains(10), false);        
+    });
+});
