@@ -71,15 +71,6 @@ function runAllTests() {
             JSUNIT.assertEquals(Scule.global.functions.compare(1, 2), -1);
         };
 
-        function testArrayCompare() {
-            JSUNIT.assertEquals(Scule.global.functions.compareArray([[1, 2, 3], 2, 3], [[1, 2, 3], 2, 3]), 0);
-            JSUNIT.assertEquals(Scule.global.functions.compareArray([[2, 2, 3], 2, 3], [[1, 2, 3], 2, 3]), 1);
-            JSUNIT.assertEquals(Scule.global.functions.compareArray([[1, 2, 3], 2, 3], [[2, 2, 3], 2, 3]), -1);
-            JSUNIT.assertEquals(Scule.global.functions.compareArray([1, 2, 3], [1, 2, 3]), 0);
-            JSUNIT.assertEquals(Scule.global.functions.compareArray([2, 2, 3], [1, 2, 3]), 1);
-            JSUNIT.assertEquals(Scule.global.functions.compareArray([1, 2, 3], [3, 2, 3]), -1);
-        };
-
         function testRandomFromTo() {
             var e = Scule.global.functions.randomFromTo(10, 30);  
             JSUNIT.assertTrue(e >= 10 && e <= 30);  
@@ -142,46 +133,6 @@ function runAllTests() {
             JSUNIT.assertFalse(Scule.global.functions.isScalar([1,2,3,4,5]));    
         };
 
-        function testSearchObject() {
-            var composite;
-            var keys = {
-                a:true, 
-                c:{
-                    d:true
-                }, 
-                e:{
-                    f:{
-                        '0':true
-                    }
-                }
-            };
-            var object = {
-                a: 10,
-                c: {
-                    d: 'foo'
-                },
-                e: {
-                    f: [11, 12, 23, 33]
-                },
-                f: 12
-            }
-            composite = Scule.global.functions.searchObject(keys, object);
-            JSUNIT.assertEquals(composite[0], 10);
-            JSUNIT.assertEquals(composite[1], 'foo');
-            JSUNIT.assertEquals(composite[2], 11);
-
-            keys.e.f = {
-                '2':true
-            };
-            keys.f = true;
-            composite = Scule.global.functions.searchObject(keys, object);
-            JSUNIT.assertEquals(composite[0], 10);
-            JSUNIT.assertEquals(composite[1], 'foo');
-            JSUNIT.assertEquals(composite[2], 23);  
-            JSUNIT.assertEquals(composite[3], 12);
-            JSUNIT.assertNotEquals(composite[3], 33);
-        }
-
         function testTraverseObject() {
             var object = {
                 a: 10,
@@ -217,7 +168,6 @@ function runAllTests() {
         (function() {
             JSUNIT.resetTests();
             JSUNIT.addTest(testCompare);
-            JSUNIT.addTest(testArrayCompare);
             JSUNIT.addTest(testRandomFromTo);
             JSUNIT.addTest(testIsArray);
             JSUNIT.addTest(testSizeOf);
@@ -225,7 +175,6 @@ function runAllTests() {
             JSUNIT.addTest(testCloneObject);
             JSUNIT.addTest(testIsInteger);
             JSUNIT.addTest(testIsScalar);
-            JSUNIT.addTest(testSearchObject);
             JSUNIT.addTest(testTraverseObject);
             JSUNIT.runTests('General function tests', Scule.tests.functions.renderTest);
         }());    
@@ -634,181 +583,6 @@ function runAllTests() {
             JSUNIT.runTests('Query interpreter tests', Scule.tests.functions.renderTest);
         }());    
 
-    }());
-
-    (function() {
-    
-        function testEvent() {
-            var event = Scule.getEvent('test', {
-                foo:'bar'
-            });
-            JSUNIT.assertEquals(event.getName(), 'test');
-            JSUNIT.assertEquals(JSON.stringify(event.getBody()), JSON.stringify({
-                foo:'bar'
-            }));
-        };
-
-        function testEventListener() {
-            var event    = Scule.getEvent('test', {
-                foo:'bar'
-            });
-            var closure  = function(e) {
-                JSUNIT.assertEquals(e.getName(), 'test');
-                JSUNIT.assertEquals(JSON.stringify(e.getBody()), JSON.stringify({
-                    foo:'bar'
-                }));
-            };
-            var listener = Scule.getEventListener(closure);
-            JSUNIT.assertEquals(closure, listener.getClosure());
-            listener.consume(event);
-        };
-
-        function testEventEmitter() {
-            var event   = Scule.getEvent('test', {
-                foo:'bar'
-            });
-            var emitter = Scule.getEventEmitter();
-            for (var i=0; i < 20; i++) {
-                emitter.addEventListener('test', function(e) {
-                    JSUNIT.assertEquals(e.getName(), 'test');
-                    JSUNIT.assertEquals(JSON.stringify(e.getBody()), JSON.stringify({
-                        foo:'bar'
-                    }));
-                });
-            }
-            emitter.fireEvent('test', {
-                foo:'bar'
-            });
-        };    
-    
-        (function() {
-            JSUNIT.resetTests();
-            JSUNIT.addTest(testEvent);
-            JSUNIT.addTest(testEventListener);
-            JSUNIT.addTest(testEventEmitter);
-            JSUNIT.runTests('Observer Pattern tests', Scule.tests.functions.renderTest);
-        }());    
-    
-    }());
-
-    (function() {
-    
-        function testDirectMessageExchange() {
-            var queues = [];
-            for (var i=0; i < 10; i++) {
-                queues.push(Scule.getMessageQueue('q:' + i));
-            }
-            var exchange = Scule.getDirectMessageExchange('test');
-            var channel  = Scule.getMessageChannel();
-            for (var i=0; i < 10; i++) {
-                if (i%2 == 0) {
-                    channel.bind(exchange, queues[i], /^scule\.test\.(.*)$/gi);
-                }
-            }
-            channel.unbind(exchange, queues[0]);
-            exchange.route(Scule.getMessage('scule.test.unit', {
-                foo:'bar'
-            }));
-            exchange.route(Scule.getMessage('scule.foo.bar', {
-                foo:'bar'
-            }));
-            for (var i=1; i < 10; i++) {
-                if (i%2 == 0) {
-                    JSUNIT.assertEquals(queues[i].getLength(), 1);
-                    var o = queues[i].dequeue();
-                    JSUNIT.assertEquals(o.getKey(), 'scule.test.unit');
-                    JSUNIT.assertEquals(JSON.stringify(o.getBody()), JSON.stringify({
-                        foo:'bar'
-                    }));
-                }
-            }
-        };
-
-        function testFanOutMessageExchange() {
-            var queues = [];
-            for (var i=0; i < 10; i++) {
-                queues.push(Scule.getMessageQueue('q:' + i));
-            }
-            var exchange = Scule.getFanOutMessageExchange('test');
-            var channel  = Scule.getMessageChannel();
-            for (var i=0; i < 10; i++) {
-                if (i%2 == 0) {
-                    channel.bind(exchange, queues[i]);
-                }
-            }
-            var message  = Scule.getMessage('scule.test.unit', {
-                foo:'bar'
-            });
-            exchange.route(Scule.getMessage('scule.foo.bar', {
-                foo:'bar'
-            }));
-            exchange.route(message);
-            for (var i=0; i < 10; i++) {
-                if (i%2 == 0) {
-                    JSUNIT.assertEquals(queues[i].getLength(), 2);
-                    var o = queues[i].dequeue();
-                    JSUNIT.assertEquals(true, (o.getKey() == 'scule.test.unit' || o.getKey() == 'scule.foo.bar'));
-                    JSUNIT.assertEquals(JSON.stringify(o.getBody()), JSON.stringify({
-                        foo:'bar'
-                    }));
-                }
-            }
-        };
-
-        function testMessagingDirector() {
-            var director = Scule.getMessagingDirector();
-            director.bind('test_exchange1', 'test_queue1');
-            director.bind('test_exchange1', 'test_queue2');
-            director.bind('test_exchange1', 'test_queue3');
-            director.bind('test_exchange2', 'test_queue1', /scule\.test\.(.*)/ig);
-            director.bind('test_exchange2', 'test_queue2', /scule\.foo\.(.*)/ig);
-            director.bind('test_exchange3', 'test_queue3');
-
-            var c1 = 0, c2 = 0, c3 = 0;
-
-            director.subscribe('test_queue1', function(message) {
-                JSUNIT.assertEquals(true, (message.key == 'scule.test.bar' || message.key == 'scule.test.foo' || message.key == 'scule.lol.wut'));
-                c1++;
-            });
-            director.subscribe('test_queue2', function(message) {
-                JSUNIT.assertEquals(true, (message.key == 'scule.foo.bar' || message.key == 'scule.test.foo' || message.key == 'scule.lol.wut'));
-                c2++;
-            });
-            director.subscribe('test_queue3', function(message) {
-                c3++;
-            });    
-            for (var i=0; i < 10000; i++) {
-                director.publish('test_exchange1', 'scule.test.foo', {
-                    foo:'bar0'
-                });
-                director.publish('test_exchange1', 'scule.lol.wut', {
-                    foo:'bar1'
-                });        
-                director.publish('test_exchange2', 'scule.bar.foo', {
-                    foo:'bar2'
-                });
-                director.publish('test_exchange2', 'scule.test.bar', {
-                    foo:'bar3'
-                });
-                director.publish('test_exchange3', 'scule.a.b.c', {
-                    foo:'bar4'
-                });        
-            }
-            setTimeout(function() {
-                director.unsubscribeAll('test_queue1');
-                director.unsubscribeAll('test_queue2');
-                director.unsubscribeAll('test_queue3');
-            }, 1000);
-        };    
-    
-        (function() {
-            JSUNIT.resetTests();
-            JSUNIT.addTest(testDirectMessageExchange);
-            JSUNIT.addTest(testFanOutMessageExchange);
-            JSUNIT.addTest(testMessagingDirector);
-            JSUNIT.runTests('Messaging tests', Scule.tests.functions.renderTest);
-        }());    
-    
     }());
 
     (function() {
@@ -1493,15 +1267,6 @@ function runAllTests() {
             JSUNIT.assertFalse(list.contains(10));
         };
 
-        function testDoublyLinkedListArraySearch() {
-            var list = Scule.getLinkedList();
-            for(var i=0; i < 1000; i++) {
-                list.add([i, (i*2), (i-1)]);
-            }    
-            JSUNIT.assertTrue(list.search([500, 1000, 499], null, Scule.global.functions.compareArray));
-            JSUNIT.assertFalse(list.search([500, 1000, 498], null, Scule.global.functions.compareArray));
-        };
-
         (function() {
             JSUNIT.resetTests();
             JSUNIT.addTest(testDoublyLinkedListSize);
@@ -1517,7 +1282,6 @@ function runAllTests() {
             JSUNIT.addTest(testDoublyLinkedListReverse);
             JSUNIT.addTest(testDoublyLinkedListSort);
             JSUNIT.addTest(testDoublyLinkedListContains);
-            JSUNIT.addTest(testDoublyLinkedListArraySearch);
             JSUNIT.runTests('Doubly Linked List tests', Scule.tests.functions.renderTest);
         }());    
     
@@ -1904,15 +1668,6 @@ function runAllTests() {
             JSUNIT.assertFalse(list.search('foo'));
         };
 
-        function testLinkedListArraySearch() {
-            var list = Scule.getLinkedList();
-            for(var i=0; i < 1000; i++) {
-                list.add([i, (i*2), (i-1)]);
-            }    
-            JSUNIT.assertTrue(list.search([500, 1000, 499], null, Scule.global.functions.compareArray));
-            JSUNIT.assertFalse(list.search([500, 1000, 498], null, Scule.global.functions.compareArray));
-        };
-
         function testLinkedListSort() {
             var list = Scule.getLinkedList();
             for(var i=0; i < 30; i++) {
@@ -1939,7 +1694,6 @@ function runAllTests() {
             JSUNIT.addTest(testLinkedListReverse);
             JSUNIT.addTest(testLinkedListSort);
             JSUNIT.addTest(testLinkedListSearch);
-            JSUNIT.addTest(testLinkedListArraySearch);
             JSUNIT.runTests('Linked List tests', Scule.tests.functions.renderTest);
         }());    
     
