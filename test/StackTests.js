@@ -37,7 +37,10 @@ describe('Stack', function() {
         assert.equal(stack.pop(), 4);
         assert.equal(stack.pop(), 3);
         assert.equal(stack.pop(), 2);
-        assert.equal(stack.pop(), 1);        
+        assert.equal(stack.pop(), 1);
+        stack.clear();
+        assert.equal(null, stack.pop());
+        assert.equal(null, stack.peek());
     });
     it('should return the top value on a LIFO stack without mutating the structure', function() {
         var stack = Scule.getLIFOStack();
@@ -68,7 +71,10 @@ describe('Stack', function() {
         assert.equal(stack.pop(), 1);
         assert.equal(stack.pop(), 2);
         assert.equal(stack.pop(), 3);
-        assert.equal(stack.pop(), 4);            
+        assert.equal(stack.pop(), 4); 
+        stack.clear();
+        assert.equal(null, stack.pop());
+        assert.equal(null, stack.peek());        
     });
     it('should return the top value on a FIFO stack without mutating the structure', function() {
         var stack = Scule.getFIFOStack();

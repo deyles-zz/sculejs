@@ -25,140 +25,123 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+var assert = require('assert');
 var Scule = require('../lib/com.scule');
 
-exports['test PrimaryKeyIndex add'] = function(beforeExit, assert) {
-
-    var index = Scule.getPrimaryKeyIndex();
-    for (var i=0; i < 100; i++) {
-        var o = {
-            i: i,
-            _id: Scule.getObjectId()
-        };
-        index.add(o);
-    }
-    assert.equal(100, index.length());
-    
-};
-
-exports['test PrimaryKeyIndex contains'] = function(beforeExit, assert) {
-
-    var objects = [];
-    var index = Scule.getPrimaryKeyIndex();
-    for (var i=0; i < 100; i++) {
-        var o = {
-            i: i,
-            _id: Scule.getObjectId()
-        };
-        objects.push(o);
-        index.add(o);
-    }
-
-    objects.forEach(function(o) {
-        assert.equal(true, index.contains(Scule.global.functions.getObjectId(o, true)));
+describe('PrimaryKeyIndex', function() {
+    it('should add an object to the index', function() {
+        var index = Scule.getPrimaryKeyIndex();
+        for (var i=0; i < 100; i++) {
+            var o = {
+                i: i,
+                _id: Scule.getObjectId()
+            };
+            index.add(o);
+        }
+        assert.equal(100, index.length());        
     });
+    it('should return a boolean value indicating whether or not an object exists in the index', function() {
+        var objects = [];
+        var index = Scule.getPrimaryKeyIndex();
+        for (var i=0; i < 100; i++) {
+            var o = {
+                i: i,
+                _id: Scule.getObjectId()
+            };
+            objects.push(o);
+            index.add(o);
+        }
 
-};
-
-exports['test PrimaryKeyIndex get'] = function(beforeExit, assert) {
-
-    var objects = [];
-    var index = Scule.getPrimaryKeyIndex();
-    for (var i=0; i < 100; i++) {
-        var o = {
-            i: i,
-            _id: Scule.getObjectId()
-        };
-        objects.push(o);
-        index.add(o);
-    }
-
-    objects.forEach(function(o) {
-        assert.equal(o, index.get(Scule.global.functions.getObjectId(o, true)));
+        objects.forEach(function(o) {
+            assert.equal(true, index.contains(Scule.global.functions.getObjectId(o, true)));
+        });        
     });
+    it('should return an object from the index', function() {
+        var objects = [];
+        var index = Scule.getPrimaryKeyIndex();
+        for (var i=0; i < 100; i++) {
+            var o = {
+                i: i,
+                _id: Scule.getObjectId()
+            };
+            objects.push(o);
+            index.add(o);
+        }
 
-};
-
-exports['test PrimaryKeyIndex clear'] = function(beforeExit, assert) {
-
-    var index = Scule.getPrimaryKeyIndex();
-    for (var i=0; i < 100; i++) {
-        var o = {
-            i: i,
-            _id: Scule.getObjectId()
-        };
-        index.add(o);
-    }
-    assert.equal(100, index.length());
-    index.clear();
-    assert.equal(0, index.length());
-
-};
-
-exports['test PrimaryKeyIndex remove'] = function(beforeExit, assert) {
-
-    var objects = [];
-    var index = Scule.getPrimaryKeyIndex();
-    for (var i=0; i < 100; i++) {
-        var o = {
-            i: i,
-            _id: Scule.getObjectId()
-        };
-        objects.push(o);
-        index.add(o);
-    }
-    
-    assert.equal(100, index.length());
-    
-    assert.equal(true, index.contains(Scule.global.functions.getObjectId(objects[50], true)))
-    index.remove(objects[50]);
-    assert.equal(99, index.length());
-    assert.equal(false, index.contains(Scule.global.functions.getObjectId(objects[50], true)))
-    
-    assert.equal(true, index.contains(Scule.global.functions.getObjectId(objects[10], true)))
-    index.remove(objects[10]);
-    assert.equal(98, index.length());
-    assert.equal(false, index.contains(Scule.global.functions.getObjectId(objects[10], true)))
-
-};
-
-exports['test PrimaryKeyIndex toTable'] = function(beforeExit, assert) {
-
-    var objects = [];
-    var index = Scule.getPrimaryKeyIndex();
-    for (var i=0; i < 100; i++) {
-        var o = {
-            i: i,
-            _id: Scule.getObjectId()
-        };
-        objects.push(o);
-        index.add(o);
-    }
-
-    var table = index.toTable();
-    objects.forEach(function(o) {
-        assert.equal(true, table.hasOwnProperty(Scule.global.functions.getObjectId(o, true)));
+        objects.forEach(function(o) {
+            assert.equal(o, index.get(Scule.global.functions.getObjectId(o, true)));
+        });        
     });
+    it('should remove all objects from the index', function() {
+        var index = Scule.getPrimaryKeyIndex();
+        for (var i=0; i < 100; i++) {
+            var o = {
+                i: i,
+                _id: Scule.getObjectId()
+            };
+            index.add(o);
+        }
+        assert.equal(100, index.length());
+        index.clear();
+        assert.equal(0, index.length());        
+    });
+    it('should remove particular objects from the index', function() {
+        var objects = [];
+        var index = Scule.getPrimaryKeyIndex();
+        for (var i=0; i < 100; i++) {
+            var o = {
+                i: i,
+                _id: Scule.getObjectId()
+            };
+            objects.push(o);
+            index.add(o);
+        }
 
-};
+        assert.equal(100, index.length());
 
-exports['test PrimaryKeyIndex toArray'] = function(beforeExit, assert) {
+        assert.equal(true, index.contains(Scule.global.functions.getObjectId(objects[50], true)))
+        index.remove(objects[50]);
+        assert.equal(99, index.length());
+        assert.equal(false, index.contains(Scule.global.functions.getObjectId(objects[50], true)))
 
-    var objects = [];
-    var index = Scule.getPrimaryKeyIndex();
-    for (var i=0; i < 100; i++) {
-        var o = {
-            i: i,
-            _id: Scule.getObjectId()
-        };
-        objects.push(o);
-        index.add(o);
-    }
+        assert.equal(true, index.contains(Scule.global.functions.getObjectId(objects[10], true)))
+        index.remove(objects[10]);
+        assert.equal(98, index.length());
+        assert.equal(false, index.contains(Scule.global.functions.getObjectId(objects[10], true)))        
+    });
+    it('should return the index as a hash table', function() {
+        var objects = [];
+        var index = Scule.getPrimaryKeyIndex();
+        for (var i=0; i < 100; i++) {
+            var o = {
+                i: i,
+                _id: Scule.getObjectId()
+            };
+            objects.push(o);
+            index.add(o);
+        }
 
-    var array = index.toArray();
-    assert.equal(100, array.length);
-    for (var j=0; j < array.length; j++) {
-        assert.equal(objects[j], array[j]);
-    }
+        var table = index.toTable();
+        objects.forEach(function(o) {
+            assert.equal(true, table.hasOwnProperty(Scule.global.functions.getObjectId(o, true)));
+        });        
+    });
+    it('should return the index as an array', function() {
+        var objects = [];
+        var index = Scule.getPrimaryKeyIndex();
+        for (var i=0; i < 100; i++) {
+            var o = {
+                i: i,
+                _id: Scule.getObjectId()
+            };
+            objects.push(o);
+            index.add(o);
+        }
 
-};
+        var array = index.toArray();
+        assert.equal(100, array.length);
+        for (var j=0; j < array.length; j++) {
+            assert.equal(objects[j], array[j]);
+        }        
+    });
+});
