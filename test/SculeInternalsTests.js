@@ -24,4 +24,48 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-module.exports = (__dirname + '/com.scule');
+
+var assert = require('assert');
+var Scule = require('../lib/com.scule');
+
+describe('Scule', function() {
+    describe('namespaces', function() {
+        it('should register a new namespace', function() {
+            Scule.registerNamespace('foo', {bar:{}});
+            assert.equal(true, 'foo' in Scule);
+        });
+        it('should not register the same namespace twice', function() {
+            var exception = false;
+            try {
+                Scule.registerNamespace('foo', {bar:{}});
+            } catch (e) {
+                exception = true;
+            }
+            assert.equal(true, exception);
+        });
+        it('should throw an exception due to missing namespace', function() {
+            var exception = false;
+            try {
+                Scule.require('bar');
+            } catch (e) {
+                exception = true;
+            }
+            assert.equal(true, exception);            
+        });
+    });
+    describe('components', function() {
+        it('should register a new component', function() {
+            Scule.registerComponent('foo', 'bar', 'module', 'stuff');
+            assert.equal('stuff', Scule.foo.bar.module);
+        });
+        it('should throw an error if no matching type exists within the namespace', function() {
+            var exception = false;
+            try {
+                Scule.registerComponent('foo', 'bar2', 'module', 'stuff');
+            } catch (e) {
+                exception = true;
+            }
+            assert.equal(true, exception);            
+        });
+    });
+});

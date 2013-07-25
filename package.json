@@ -1,6 +1,6 @@
 {
   "private": false,
-  "version": "0.0.9",
+  "version": "0.1.0",
   "name": "sculejs",
   "description": "Data structures for the web",
   "author": "Dan Eyles <dan@irlgaming.com>",
@@ -12,7 +12,10 @@
   "dependencies": {},
   "main": "./lib/index.js",
   "scripts": {
-    "test": "expresso tests/*"
+    "test": "expresso tests/*",
+     "blanket": { 
+         "pattern": "lib"
+     } 
   },
   "readmeFilename": "README.md",
   "directories": {

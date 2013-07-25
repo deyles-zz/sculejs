@@ -24,4 +24,23 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-module.exports = (__dirname + '/com.scule');
+
+var Scule = require('../lib/com.scule');
+
+exports['HashTable hasOwnProperty'] = function(beforeExit, assert) {
+
+    var ht = Scule.getHashTable();
+    ht.put('hasOwnProperty', true);
+    ht.put('bar', 'foo');    
+        
+    assert.equal(null, ht.get('foo'));    
+    assert.equal(null, ht.search('foo'));    
+    assert.equal(false, ht.contains('foo'));
+    assert.equal(true, ht.contains('hasOwnProperty'));
+    assert.equal(true, ht.get('hasOwnProperty'));
+    assert.equal(true, ht.contains('bar'));
+    assert.equal('foo', ht.get('bar'));
+    assert.equal(2, ht.getKeys().length);
+    assert.equal('[true,"foo"]', JSON.stringify(ht.getValues()));
+
+};

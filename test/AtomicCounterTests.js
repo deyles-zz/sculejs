@@ -24,4 +24,39 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-module.exports = (__dirname + '/com.scule');
+
+var assert = require('assert');
+var Scule = require('../lib/com.scule');
+
+describe('AtomicCounter', function() {
+    describe('initialize', function() {
+       it('should set the counter to 999', function() {
+            var counter = Scule.getAtomicCounter(999);
+            assert.equal(counter.getCount(), 999);              
+       });
+    });
+    describe('increment', function() {
+       it('should increment the counter by 1', function() {
+            var counter = Scule.getAtomicCounter(1);
+            counter.increment(1);
+            assert.equal(counter.getCount(), 2);              
+       });
+       it('should increment the counter by 11', function() {
+            var counter = Scule.getAtomicCounter(1);
+            counter.increment(11);
+            assert.equal(counter.getCount(), 12);              
+       });
+    });
+    describe('decrement', function() {
+        it('should decrement the counter by 1', function() {
+            var counter = Scule.getAtomicCounter(2);
+            counter.decrement(1);
+            assert.equal(counter.getCount(), 1);               
+        });
+        it('should decrement the counter by 6', function() {
+            var counter = Scule.getAtomicCounter(12);
+            counter.decrement(6);
+            assert.equal(counter.getCount(), 6);               
+        });
+    });
+});

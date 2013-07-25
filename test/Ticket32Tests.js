@@ -24,4 +24,43 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-module.exports = (__dirname + '/com.scule');
+
+var Scule = require('../lib/com.scule');
+
+exports['test Ticket32'] = function(beforeExit, assert) {
+ 
+    var table = {};
+ 
+    Scule.dropAll();
+    var collection1 = Scule.factoryCollection('scule+nodejs://ticket32', {
+        'secret':'test',
+        'path':'/tmp'
+    });
+    collection1.clear();
+    for (var i=0; i < 100; i++) {
+        var o = {
+            i: i
+        };
+        collection1.save(o);
+        table[Scule.global.functions.getObjectId(o, true)] = o;
+    }
+    collection1.commit();
+           
+    setTimeout(function() {
+        var storage = Scule.getNodeJSDiskStorageEngine({
+            'secret':'test',
+            'path':'/tmp'
+        });
+        var collection2 = new Scule.db.classes.Collection('ticket32');
+        collection2.setStorageEngine(storage);
+        collection2.open(function() {
+            collection2.findAll(function(documents) {
+                assert.equal(100, documents.length);
+                documents.forEach(function(o) {
+                    assert.equal(true, table.hasOwnProperty(Scule.global.functions.getObjectId(o, true)));
+                });
+            });            
+        });
+    }, 100);
+
+};

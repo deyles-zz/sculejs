@@ -24,4 +24,31 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-module.exports = (__dirname + '/com.scule');
+
+var Scule = require('../lib/com.scule');
+
+exports['test Ticket22'] = function(beforeExit, assert) {
+ 
+    Scule.dropAll();
+    var collection = Scule.factoryCollection('scule+dummy://test');
+    collection.clear();
+    
+    for (var i=0; i < 1000; i++) {
+        collection.save({a:'test' + i});
+    }
+       
+    var i, count;
+    for (i=0; i < 100; i++) {
+        count = collection.count({a:/test[1]/ig});
+        assert.equal(111, count);
+    }
+    for (i=0; i < 100; i++) {
+        count = collection.count({a:/test[1-3]/g});
+        assert.equal(333, count);
+    }
+    for (i=0; i < 100; i++) {
+        count = collection.count({a:/test([1-9][0-9]?$|100$)/g});
+        assert.equal(100, count);
+    }
+
+};

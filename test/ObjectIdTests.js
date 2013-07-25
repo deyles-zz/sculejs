@@ -24,4 +24,17 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-module.exports = (__dirname + '/com.scule');
+
+var assert = require('assert');
+var Scule = require('../lib/com.scule');
+
+describe('ObjectId', function() {
+    describe('constructor', function() {
+        it('should construct a new ObjectId instance', function() {
+            var oid1 = Scule.getObjectId();
+            var oid2 = Scule.getObjectId();
+            assert.equal(oid1.id.length, 24);
+            assert.equal(false, oid1.id == oid2.id);            
+        });
+    });
+});

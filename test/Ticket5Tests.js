@@ -24,4 +24,46 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-module.exports = (__dirname + '/com.scule');
+
+var Scule = require('../lib/com.scule');
+
+exports['test Ticket5'] = function(beforeExit, assert) {
+    
+    Scule.dropAll();
+    var collection = Scule.factoryCollection('scule+dummy://test');
+    collection.save({
+        a: 1
+    });
+    collection.save({
+        a: 2
+    });
+    collection.save({
+        a: 3
+    });
+    collection.save({
+        a: 4
+    });
+    collection.save({
+        a: 5
+    });
+    var o1 = collection.find({}, { $sort: { a: 1 } });
+    var o2 = collection.find({}, { $sort: { a: -1 } });
+    var o3 = collection.find({}, {
+        $limit: 2
+    });
+
+    for (var i=0; i < o1.length; i++) {
+        if (i > 0) {
+            assert.equal(true, o1[i-1].a < o1[i].a);
+        }
+    }
+
+    for (var i=0; i < o2.length; i++) {
+        if (i > 0) {
+            assert.equal(true, o2[i-1].a > o2[i].a);
+        }
+    }
+
+    assert.equal(o3.length, 2);
+
+};

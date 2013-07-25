@@ -39,29 +39,29 @@ var timer = scule.getTimer();
 var names = ['Tom', 'Dick', 'Harry', 'John'];
 for(var i=0; i < 5000; i++) {
 	var a = [];
-	var n = scule.Scule.functions.randomFromTo(3, 12);
+	var n = scule.global.functions.randomFromTo(3, 12);
 	for(var j=0; j < n; j++) {
-		a.push(scule.Scule.functions.randomFromTo(0, 100));
+		a.push(scule.global.functions.randomFromTo(0, 100));
 	}
 	var o = {
 		i:i,
-		n:scule.Scule.functions.randomFromTo(10, 30),
-		s:names[scule.Scule.functions.randomFromTo(0, 3)],
+		n:scule.global.functions.randomFromTo(10, 30),
+		s:names[scule.global.functions.randomFromTo(0, 3)],
 		a:a,
 		as:a.length,
 		term: Math.random().toString(36).substring(7),
 		ts:(new Date()).getTime(),
 		foo:['bar','bar2'],
 		o: {
-			a: scule.Scule.functions.randomFromTo(1, 30),
-			b: scule.Scule.functions.randomFromTo(1, 30),
-			c: scule.Scule.functions.randomFromTo(1, 30),
-			d: scule.Scule.functions.randomFromTo(1, 30),
-			e: scule.Scule.functions.randomFromTo(1, 30)
+			a: scule.global.functions.randomFromTo(1, 30),
+			b: scule.global.functions.randomFromTo(1, 30),
+			c: scule.global.functions.randomFromTo(1, 30),
+			d: scule.global.functions.randomFromTo(1, 30),
+			e: scule.global.functions.randomFromTo(1, 30)
 		},
 		loc: {
-			lng: scule.Scule.functions.randomFromTo(-130, 130),
-			lat: scule.Scule.functions.randomFromTo(-130, 130)
+			lng: scule.global.functions.randomFromTo(-130, 130),
+			lat: scule.global.functions.randomFromTo(-130, 130)
 		}
 	};
 	scollection.save(o);

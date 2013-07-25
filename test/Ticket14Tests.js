@@ -24,4 +24,54 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-module.exports = (__dirname + '/com.scule');
+
+var Scule = require('../lib/com.scule');
+
+exports['test Ticket14a'] = function(beforeExit, assert) {
+
+    Scule.debug(false);
+
+    var collection = Scule.factoryCollection('scule+dummy://test', {
+        secret:'mysecretkey'
+    });
+    
+    for (var i=0; i < 1000; i++) {
+        collection.save({
+            _id:i, 
+            index:i, 
+            remainder:(i%10)
+        });
+    }
+
+    collection.update({_id:500}, {$set:{index:1909, foo:'bar'}}, {}, true);
+    collection.commit();
+    
+    var o = collection.findOne(500);    
+    assert.equal(1909, o.index);
+    assert.equal('bar', o.foo);
+    assert.equal(500, o._id.toString());
+   
+};
+
+exports['test Ticket14b'] = function(beforeExit, assert) {
+
+    Scule.debug(false);
+
+    var collection = Scule.factoryCollection('scule+dummy://test', {
+        secret:'mysecretkey'
+    });
+    collection.clear();
+    collection.save({
+        _id: 1, 
+        a: 10
+    });
+    
+    collection.update({_id:1}, {$set:{a:20, b:50}}, {}, true);
+    collection.commit();
+    
+    var o = collection.findOne(1);
+    assert.equal(1, o._id.toString());
+    assert.equal(20, o.a);
+    assert.equal(50, o.b);
+
+};

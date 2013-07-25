@@ -24,4 +24,33 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-module.exports = (__dirname + '/com.scule');
+
+var Scule = require('../lib/com.scule');
+
+exports['test Ticket26'] = function(beforeExit, assert) {
+ 
+    Scule.dropAll();
+    var o = null;
+    var collection = Scule.factoryCollection('scule+nodejs://test', {path:'/tmp'});
+    collection.clear();
+    collection.save({date:Scule.getObjectDate(1372603560, 212), id:1});
+    collection.save({date:Scule.getObjectDateFromDate((new Date(1362395600 * 1000))), id:2});
+    collection.commit();
+    collection.update({id:1}, {$set:{zero:0}}, {}, true);
+    
+    o = collection.find({date:{$gt:(new Date(1372395600 * 1000))}});
+    assert.equal(1, o.length);
+    assert.equal(1, o[0].id);
+    assert.equal(1372603560212, o[0].date.toDate().getTime());
+
+    o = collection.find({date:{$gt:Scule.getObjectDateFromDate((new Date(1362395600 * 1000)))}});
+    assert.equal(1, o.length);
+    assert.equal(1, o[0].id);
+    assert.equal(1372603560212, o[0].date.toDate().getTime());
+
+    o = collection.find({date:{$eq:Scule.getObjectDateFromDate(new Date(1362395600000))}});
+    assert.equal(1, o.length);
+    assert.equal(2, o[0].id);
+    assert.equal(1362395600000, o[0].date.toDate().getTime());
+
+};

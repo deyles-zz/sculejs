@@ -24,4 +24,41 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-module.exports = (__dirname + '/com.scule');
+
+var Scule = require('../lib/com.scule');
+
+exports['test Ticket6'] = function(beforeExit, assert) {
+
+    Scule.dropAll();
+    var a = [];
+    var collection = Scule.factoryCollection('scule+dummy://test');
+    for (var i=0; i < 100; i++) {
+        var o = {i: i};
+        collection.save(o);
+        a.push(o);
+    }
+    
+    var o = null;
+    o = collection.find({}, {$skip:5});
+    assert.equal(95, o.length);
+    assert.equal(o[0].i, a[5].i);
+    
+    o = collection.find({}, {$skip:5, $limit:10});
+    assert.equal(10, o.length);
+    assert.equal(o[0].i, a[5].i);
+    assert.equal(o[9].i, a[14].i);
+  
+    o = collection.find({}, {$skip:5, $limit:10, $sort:{i:-1}});
+    assert.equal(10, o.length);
+    assert.equal(o[0].i, a[94].i);
+    assert.equal(o[9].i, a[85].i);
+
+    o = collection.find({}, {$skip:100});
+    assert.equal(o.length, 0);
+
+    o = collection.find({i:{$gte:50}}, {$skip:30});
+    assert.equal(o.length, 20);
+    assert.equal(o[0].i, a[80].i);
+    assert.equal(o[19].i, a[99].i);
+
+};
