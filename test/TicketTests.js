@@ -216,6 +216,9 @@ describe('Tickets', function() {
         for (var i=0; i < 100; i++) {
             collection.save({name:'testName' + i});
         }
+        collection.remove({name:'testName60'}, {}, function(results) {
+            assert.equal('testName60', results[0].name);
+        });        
         collection.remove({name:'testName50'}, {}, function(results) {
             assert.equal('testName50', results[0].name);
         });
