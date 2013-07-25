@@ -2640,6 +2640,8 @@ function runAllTests() {
 
             var o = collection.findOne(500);    
             
+            console.log(o);
+            
             JSUNIT.assertEquals(1909, o.index);
             JSUNIT.assertEquals('bar', o.foo);
             JSUNIT.assertEquals(500, o._id.id);
