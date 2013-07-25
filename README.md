@@ -24,7 +24,6 @@ Data structures currently included in *SculeJS* are:
 * [Hash Map](http://en.wikipedia.org/wiki/Hash_Table  "Hash Map")
 * [Hash Table](http://en.wikipedia.org/wiki/Hash_Table "Hash Table")
 * [Binary Search Tree](http://en.wikipedia.org/wiki/Binary_Search_Tree "Binary Search Tree")
-* [B+ Tree](http://en.wikipedia.org/wiki/B%2B_tree "B+ Tree")
 * [Bloom Filter](http://en.wikipedia.org/wiki/Bloom_Filter "Bloom Filter")
 * [Linked List](http://en.wikipedia.org/wiki/Linked_List "Linked List")
 * [Doubly Linked List](http://en.wikipedia.org/wiki/Linked_List#Doubly_linked_list "Doubly Linked List")
@@ -51,7 +50,7 @@ If you have any specific questions about how to use _SculeJS_ then head on over 
 ## Do you use any coding standards?
 
 I run all core library code through [JSHint](http://jshint.com/) as part of my (currently manual) build process. Building code for other platforms such as web and Titanium
-takes a little bit of manual fiddling, so certain portions don't pass. It all runs though, and all test cases are verified by running expresso before any commits to TRUNK.
+takes a little bit of manual fiddling, so certain portions don't pass. It all runs though, and all test cases are verified by running mocha before any commits to TRUNK.
 
 ## How does it work?
 
