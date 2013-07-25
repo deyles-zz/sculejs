@@ -24,4 +24,25 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-module.exports = (__dirname + '/com.scule');
+
+var assert = require('assert');
+var Scule = require('../lib/com.scule');
+
+describe('hashing', function() {
+    describe('md5', function() {
+        it('should hash the string "foo" using the md5 algorithm', function() {
+            assert.equal('acbd18db4cc2f85cedef654fccc4a4d8', Scule.md5.hash('foo'));
+            
+            var md5 = new Scule.global.classes.md5();
+            assert.equal('acbd18db4cc2f85cedef654fccc4a4d8', md5.hash('foo'));
+        });
+    });
+    describe('sha1', function() {
+        it('should hash the string "foo" using the sha1 algorithm', function() {
+            assert.equal('0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33', Scule.sha1.hash('foo'));
+            
+            var sha1 = new Scule.global.classes.sha1();
+            assert.equal('0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33', sha1.hash('foo'));
+        });
+    });
+});

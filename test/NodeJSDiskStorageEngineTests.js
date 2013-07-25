@@ -24,4 +24,53 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-module.exports = (__dirname + '/com.scule');
+
+var assert = require('assert');
+var Scule = require('../lib/com.scule');
+
+var fs    = require('fs');
+
+describe('NodeJSDiskStorageEngine', function() {
+    it('should test writes', function() {
+        var object = {
+            foo: 'bar',
+            bar: 'foo',
+            arr: [1, 3, 2, 4, 5, 7],
+            obj: {
+                me: 'string'
+            }
+        }
+        var storage = Scule.getNodeJSDiskStorageEngine({
+            secret: 'mysecretkey',
+            path: '/tmp'
+        });
+        storage.write('unittest', object, function(o) {
+            fs.stat('/tmp/unittest.json', function(err, stats) {
+                assert.equal(true, !err);
+                assert.equal(true, stats.isFile());
+                assert.equal(true, stats.size > 0);
+            });
+        });        
+    });
+    it('should test reads', function() {
+        var storage = Scule.getNodeJSDiskStorageEngine({
+            secret: 'mysecretkey',
+            path: '/tmp'
+        });
+        try {
+            storage.read('unittest', function(o) {
+                assert.ok(o);
+                assert.equal(o.foo, 'bar');
+                assert.equal(o.bar, 'foo');
+                assert.equal(o.arr.length, 6);
+                assert.equal(o.arr[5], 7);
+                assert.equal(o.obj.me, 'string');
+            });
+            storage.read('blahblah', function(o) {
+                assert.equal('{}', JSON.stringify(o));
+            });
+        } catch (e) {
+            assert.equal(false, true);
+        }        
+    });
+});
