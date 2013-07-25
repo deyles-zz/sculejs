@@ -3475,6 +3475,26 @@ var sfunc  = scule.Scule.functions;
 		
 		};
 
+		function testTicket34() {
+		    scule.dropAll();
+		    var collection = scule.factoryCollection('scule+dummy://ticket34');
+		    for (var i=0; i < 100; i++) {
+		        collection.save({name:'testName' + i});
+		    }
+		    collection.remove({name:'testName50'}, {}, function(results) {
+		        jsunit.assertEquals('testName50', results[0].name);
+		    });
+		    collection.remove({name:'testName30'}, {}, function(results) {
+		        jsunit.assertEquals('testName30', results[0].name);
+		    });
+		    collection.remove({name:'testName20'}, {}, function(results) {
+		        jsunit.assertEquals('testName20', results[0].name);
+		    });
+		    collection.remove({name:'testName10'}, {}, function(results) {
+		        jsunit.assertEquals('testName10', results[0].name);
+		    });			
+		};
+
     (function() {
         jsunit.resetTests();
         jsunit.addTest(testQueryEngine);
@@ -3488,6 +3508,7 @@ var sfunc  = scule.Scule.functions;
         jsunit.addTest(testTicket6);
         jsunit.addTest(testTicket33Sort);
         jsunit.addTest(testTicket33Skip);
+        jsunit.addTest(testTicket34);
         jsunit.runTests();
     }());
 

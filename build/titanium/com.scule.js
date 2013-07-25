@@ -2861,11 +2861,12 @@ module.exports.Scule.classes.HashTable = function() {
      * @param {Mixed} key the key to use when removing a value from the table
      * @returns {Boolean}
      */
-    this.remove = function(key) {
-        if(this.contains(key)) {
+    this.remove = function (key) {
+        if (this.contains(key)) {
+            var value = this.table[key];
             delete this.table[key];
-            this.length--;
-            return true;
+            this.length = this.length - 1;
+            return value;
         }
         return false;
     };
