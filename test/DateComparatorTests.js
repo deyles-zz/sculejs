@@ -44,6 +44,14 @@ describe('DateComparator', function() {
         assert.equal(true, comparator.$eq(new Date(1372395600 * 1000), Scule.getObjectDate(1372395600, 0)));
         assert.equal(true, comparator.$eq(Scule.getObjectDate(1372395600, 0), new Date(1372395600 * 1000)));
         assert.equal(true, comparator.$eq(Scule.getObjectDate(1372395600, 0), Scule.getObjectDate(1372395600, 0)));
+        assert.equal(true, comparator.$eq(Scule.getObjectDateFromDate(new Date(1372395600 * 1000)), Scule.getObjectDate(1372395600, 0)));
+        var exception = false;
+        try {
+            Scule.getObjectDateFromDate('foo');
+        } catch (e) {
+            exception = true;
+        }
+        assert.equal(true, exception);
     });
     it('verifies that $gt date comparison logic functions as expected', function() {
         assert.equal(true, comparator.$gt(new Date(1372395630 * 1000), new Date(1372395600 * 1000)));
