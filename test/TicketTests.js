@@ -213,11 +213,34 @@ describe('Tickets', function() {
     it('should test conditions for Ticket #34', function() {
         Scule.dropAll();
         var collection = Scule.factoryCollection('scule+dummy://ticket34');
+        var names = [];
         for (var i=0; i < 100; i++) {
             collection.save({name:'testName' + i});
+            if (i === 0 
+                    || i === 3
+                    || i === 60 
+                    || i === 50 
+                    || i === 30 
+                    || i === 35
+                    || i === 20 
+                    || i === 10 
+                    || i === 99) {
+                continue;
+            }
+            names.push('testName' + i);
         }
+
+        collection.remove({name:'testName3'}, {}, function(results) {
+            assert.equal('testName3', results[0].name);
+        });
+        collection.remove({name:'testName0'}, {}, function(results) {
+            assert.equal('testName0', results[0].name);
+        });         
         collection.remove({name:'testName60'}, {}, function(results) {
             assert.equal('testName60', results[0].name);
+        });  
+        collection.remove({name:'testName35'}, {}, function(results) {
+            assert.equal('testName35', results[0].name);
         });        
         collection.remove({name:'testName50'}, {}, function(results) {
             assert.equal('testName50', results[0].name);
@@ -230,6 +253,28 @@ describe('Tickets', function() {
         });
         collection.remove({name:'testName10'}, {}, function(results) {
             assert.equal('testName10', results[0].name);
-        });        
+        });
+        collection.remove({name:'testName99'}, {}, function(results) {
+            assert.equal('testName99', results[0].name);
+        });
+        
+        var j = 0;
+        collection.documents.queue.toArray().forEach(function(document) {
+            assert.equal(names[j++], document.name);
+        });
+        
+        var l = 90;
+        names.forEach(function(n) {
+            collection.remove({name:n}, {}, function(results) {
+                assert.equal(n, results[0].name);
+            });
+            assert.equal(l--, collection.getLength());            
+        });
+        
+        for (i=0; i < 10; i++) {
+            assert.equal(i, collection.getLength());
+            collection.save({name:'testName' + i});
+        }
+        
     });
 });
