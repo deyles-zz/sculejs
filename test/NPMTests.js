@@ -24,5 +24,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-var Scule = require(__dirname + '/com.scule');
-module.exports = Scule;
+
+var assert = require('assert');
+var Scule = require('../lib/index.js');
+
+describe('NPM', function() {
+    it('should verify that the NPM package structure is valid', function() {
+        var h = Scule.getHashTable();
+    });
+});

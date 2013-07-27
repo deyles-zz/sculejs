@@ -3,4 +3,7 @@ nbproject
 .travis.yml
 .gitignore
 .git
+.npmignore
+examples
+test_web
 build
