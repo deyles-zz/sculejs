@@ -12,7 +12,7 @@
   "dependencies": {},
   "main": "./lib/index.js",
   "scripts": {
-    "test": "expresso tests/*",
+    "test": "mocha test/*",
      "blanket": { 
          "pattern": "lib"
      } 
