@@ -195,7 +195,7 @@ describe('QueryInterpreter', function() {
             a:11
         };
         query = normalizer.normalize(query);
-        assert.equal('{"a":{"$eq":11},"bar":{"$gt":4,"$lte":100},"foo":{"$eq":3},"$or":[{"a":{"$lt":14},"c":113}]}', JSON.stringify(query));        
+        assert.deepEqual({"a":{"$eq":11},"bar":{"$gt":4,"$lte":100},"foo":{"$eq":3},"$or":[{"a":{"$lt":14},"c":{$eq:113}}]}, query);        
     });
     it('should test the query compiler', function() {
         var d = [];
@@ -225,12 +225,7 @@ describe('QueryInterpreter', function() {
             });
 
         var t = Scule.getTimer();
-
-        t.startInterval('closure');
         var r2 = c(d, engine);
-        t.stopInterval('closure');    
-//        t.logToConsole();
-
         assert.equal(r2.length, 33333);        
     });
     it('should test the ElemMatch operator', function() {
@@ -263,14 +258,8 @@ describe('QueryInterpreter', function() {
         var interpreter = Scule.getQueryCompiler();
 
         var c = interpreter.compileQuery({bar:{$eq:3}, arr:{$elemMatch:{j:18, f:0}}});
-
         var t = Scule.getTimer();
-
-        t.startInterval('closure');
         var r = c(d, engine);
-        t.stopInterval('closure');    
-//        t.logToConsole();
-
         assert.equal(r.length, 3);        
     });
     it('should test updates', function() {
@@ -319,5 +308,14 @@ describe('QueryInterpreter', function() {
                 assert.equal('bar', o.arr2[0]);
             }
         }        
+    });
+    it('should test normalization of ORs', function() {
+        var normalizer = Scule.getQueryNormalizer();
+        assert.deepEqual({$or:[{a:{$eq:3}}]}, normalizer.normalize({$or:[{a:3}]}));
+        assert.deepEqual({$or:[{a:{$eq:3}}, {a:{$eq:10}}]}, normalizer.normalize({$or:[{a:3}, {a:10}]}));
+        assert.deepEqual({$or:[{a:{$eq:3}}, {a:{$eq:10}}]}, normalizer.normalize({$or:[{a:3}, {a:{$eq:10}}]}));
+        assert.deepEqual({$or:[{a:{$eq:3}}, {a:{$eq:10, $gte:100}}]}, normalizer.normalize({$or:[{a:3}, {a:{$eq:10, $gte:100}}]}));
+        assert.deepEqual({i:{$eq:44}, $or:[{a:{$eq:3}}]}, normalizer.normalize({i:44, $or:[{a:3}]}));
+        assert.deepEqual({i:{$eq:44}, l:{$gt:400, $lte:500}, $or:[{a:{$eq:3}}]}, normalizer.normalize({i:44, l:{$gt:400, $lte:500}, $or:[{a:3}]}));
     });
 });

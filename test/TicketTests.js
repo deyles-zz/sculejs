@@ -277,4 +277,26 @@ describe('Tickets', function() {
         }
         
     });
+    it('should test conditions for Ticket #35', function() {
+        Scule.dropAll();
+        var collection = Scule.factoryCollection('scule+dummy://ticket35');
+        for (var i=0; i < 1000; i++) {
+            collection.save({
+                username: i + '@foo.com',
+                entity: ((i%2 == 0) ? i + '@foo.com' : 'bar@foo.com')
+            });
+        }
+        var removeUser = function(entity){
+            collection.remove({$or:[{username: entity},{email: entity}]}, {}, function(result){
+                assert.equal(entity, result[0].username);
+                collection.find({username:entity}, {}, function(result) {
+                    assert.deepEqual([], result);
+                });
+            });
+        }
+        removeUser('10@foo.com'); 
+        removeUser('20@foo.com');
+        removeUser('500@foo.com');
+        removeUser('998@foo.com');
+    });
 });

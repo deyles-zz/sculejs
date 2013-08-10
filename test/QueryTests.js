@@ -53,6 +53,7 @@ describe('Queries', function() {
                         term: Math.random().toString(36).substring(7),
                         ts:(new Date()).getTime(),
                         foo:['bar','bar2'],
+                        bar:[{a:i, b:(i+1)}, {a:(i+1), b:(i+2)}, {a:(i+2), b:(i+3)}],
                         o: {
                                 a: i,
                                 b: i+1,
@@ -71,8 +72,66 @@ describe('Queries', function() {
                 }
         }
 
+        timer.startInterval("{bar:{$elemMatch:{a:{$gt:100}, b:{$lt:300}}}}");
+        collection.count({bar:{$elemMatch:{a:{$gt:100}, b:{$lt:300}}}}, {}, function(count) {
+            timer.stopInterval();
+            var o = collection.findAll();
+            var c = 0;
+            o.forEach(function(d) {
+                var doCount = false;
+                d.bar.forEach(function(od) {
+                    if (od.a > 100 && od.b < 300) {
+                        doCount = true;
+                    }
+                });
+                if (doCount) {
+                    c++;
+                }
+            });
+            assert.equal(c, count);
+        });
+
+        timer.startInterval("{i:{$gt:100}, $or:[{i:300}, {i:400}, {'o.a':{$gt:100, $lt:300}}]}");
+        collection.count({i:{$gt:100}, $or:[{i:300}, {i:400}, {'o.a':{$gt:100, $lt:300}}]}, {}, function(count) {
+            timer.stopInterval();
+            var o = collection.findAll();
+            var c = 0;
+            o.forEach(function(d) {
+                if(d.i > 100 && (d.i === 300 || d.i === 400 || (d.o.a > 100 && d.o.a < 300))) {
+                    c++;
+                }
+            });            
+            assert.equal(c, count);            
+        });
+
+        timer.startInterval("collection - {$or:[{i:100}, {'o.a':101}]}");
+        collection.count({$or:[{i:100}, {'o.a':101}]}, {}, function(count) {
+            assert.equal(2, count);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("{i:100, $or:[{i:300}, {i:400}]}");
+        collection.count({i:100, $or:[{i:300}, {i:400}]}, {}, function(count) {
+            assert.equal(0, count);
+        });
+        timer.stopInterval();
+
+        timer.startInterval("collection - {$or:[{i:100}, {o.a:{$gte:1000, $lte:2000}}]}");
+        collection.count({$or:[{i:100}, {'o.a':{$gte:1000, $lte:2000}}]}, {}, function(count) {
+            timer.stopInterval();
+            var o = collection.findAll();
+            var c = 0;
+            o.forEach(function(d) {
+                if(d.i == 100 || (d.o.a >= 1000 && d.o.a <= 2000)) {
+                    c++;
+                }
+            });            
+            assert.equal(c, count);
+        });
+
         timer.startInterval("collection - {i:{$gte:5000}, n:{$lte:80}}");
         collection.count({i:{$gte:5000}, n:{$lte:80}}, {}, function(count) {
+            timer.stopInterval();
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -83,7 +142,6 @@ describe('Queries', function() {
             assert.equal(count, c);
             assert.equal(count, 5000);
         });
-        timer.stopInterval();
 
         timer.startInterval("collection - {i:{$gte:5000}, n:{$lte:80}}");
         collection.count({i:{$gte:5000}, n:{$lte:80}}, {}, function(count) {
@@ -93,6 +151,7 @@ describe('Queries', function() {
 
         timer.startInterval("collection - {i:{$in:[1, 2, 3, 4, 5]}}");
         collection.count({i:{$in:[1, 2, 3, 4, 5]}}, {}, function(count) {
+            timer.stopInterval();
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -103,7 +162,6 @@ describe('Queries', function() {
             assert.equal(count, c);        
             assert.equal(count, 5);
         });
-        timer.stopInterval();
 
         timer.startInterval("collection - {i:{$in:[1, 2, 3, 4, 5]}}");
         collection.count({i:{$in:[1, 2, 3, 4, 5]}}, {}, function(count) {
@@ -113,6 +171,7 @@ describe('Queries', function() {
 
         timer.startInterval("collection - {s:{$size:3}}");
         collection.count({s:{$size:3}}, {}, function(count) {
+            timer.stopInterval();
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -123,7 +182,6 @@ describe('Queries', function() {
             assert.equal(count, c);         
             assert.equal(count, 2500);
         });
-        timer.stopInterval();
 
         timer.startInterval("collection - {s:{$size:3}}");
         collection.count({s:{$size:3}}, {}, function(count) {
@@ -133,6 +191,7 @@ describe('Queries', function() {
 
         timer.startInterval("collection - {o:{$size:5}}");
         collection.count({o:{$size:5}}, {}, function(count) {
+            timer.stopInterval();
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -143,7 +202,6 @@ describe('Queries', function() {
             assert.equal(count, c);        
             assert.equal(count, 10000);
         });
-        timer.stopInterval();
 
         timer.startInterval("collection - {o:{$size:5}}");
         collection.count({o:{$size:5}}, {}, function(count) {
@@ -153,6 +211,7 @@ describe('Queries', function() {
 
         timer.startInterval("collection - {n:{$exists:false}}");
         collection.count({n:{$exists:false}}, {}, function(count) {
+            timer.stopInterval();
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -163,7 +222,6 @@ describe('Queries', function() {
             assert.equal(count, c);        
             assert.equal(count, 0);
         });
-        timer.stopInterval();
 
         timer.startInterval("collection - {n:{$exists:false}}");
         collection.count({n:{$exists:false}}, {}, function(count) {
@@ -173,6 +231,7 @@ describe('Queries', function() {
 
         timer.startInterval("collection - {n:{$exists:true}}");
         collection.count({n:{$exists:true}}, {}, function(count) {
+            timer.stopInterval();
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -183,7 +242,6 @@ describe('Queries', function() {
             assert.equal(count, c);         
             assert.equal(count, 10000);
         });
-        timer.stopInterval();
 
         timer.startInterval("collection - {n:{$exists:true}}");
         collection.count({n:{$exists:true}}, {}, function(count) {
@@ -193,6 +251,7 @@ describe('Queries', function() {
 
         timer.startInterval("collection - {i:{$gte:70}}");
         collection.count({i:{$gte:70}}, {}, function(count) {
+            timer.stopInterval();
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -203,7 +262,6 @@ describe('Queries', function() {
             assert.equal(count, c);         
             assert.equal(count, 9930);
         });
-        timer.stopInterval();
 
         timer.startInterval("collection - {i:{$gte:70}}");
         collection.count({i:{$gte:70}}, {}, function(count) {
@@ -213,6 +271,7 @@ describe('Queries', function() {
 
         timer.startInterval("collection - {s:/^T/}");
         collection.count({s:/^T/}, {}, function(count) {
+            timer.stopInterval();
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -223,7 +282,6 @@ describe('Queries', function() {
             assert.equal(count, c);         
             assert.equal(count, 2500);
         });
-        timer.stopInterval();
 
         timer.startInterval("collection - {s:/^T/}");
         collection.count({s:/^T/}, {}, function(count) {
@@ -233,6 +291,7 @@ describe('Queries', function() {
 
         timer.startInterval("collection - {$or:[{n:{$lt:40}}, {i:{$gt:50}}]}");
         collection.count({$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {}, function(count) {
+            timer.stopInterval();
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -243,7 +302,6 @@ describe('Queries', function() {
             assert.equal(count, c);        
             assert.equal(count, 10000);
         });
-        timer.stopInterval();
 
         timer.startInterval("collection - {$or:[{n:{$lt:40}}, {i:{$gt:50}}]}");
         collection.count({$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {}, function(count) {
@@ -253,6 +311,7 @@ describe('Queries', function() {
 
         timer.startInterval("collection - {$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}");
         collection.count({$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}, function(count) {
+            timer.stopInterval();
             var o = collection.findAll();
             var c = 0;
             for (var i=0; i < o.length; i++) {
@@ -267,7 +326,6 @@ describe('Queries', function() {
             assert.equal(count, c);        
             assert.equal(count, 30);
         });
-        timer.stopInterval();
 
         timer.startInterval("collection - {$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}");
         collection.count({$or:[{n:{$lt:40}}, {i:{$gt:50}}]}, {$sort:{i:-1}, $limit:30}, function(count) {
@@ -277,6 +335,7 @@ describe('Queries', function() {
 
         timer.startInterval("collection - {i:{$lte:90}}, {$set:{n:10, s:'Steve'}}");
         collection.update({i:{$lte:90}}, {$set:{n:10, s:'Steve'}}, {}, false, function(count) {
+            timer.stopInterval();
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -292,10 +351,10 @@ describe('Queries', function() {
                 assert.equal(d.s, 'Steve');
             });
         });
-        timer.stopInterval();
 
         timer.startInterval("collection - {i:10}, {$push:{foo:'bar3'}}");
         collection.update({i:10}, {$push:{foo:'bar3'}}, {}, true, function(count) {
+            timer.stopInterval();
             var o = collection.findAll();
             var c = 0;
             o.forEach(function(d) {
@@ -310,10 +369,10 @@ describe('Queries', function() {
                 assert.equal(d.foo[d.foo.length - 1], 'bar3');
             });
         });
-        timer.stopInterval();
 
         timer.startInterval("collection - {i:10}, {$pushAll:{foo:['bar3', 'bar4']}}");
         collection.update({i:10}, {$pushAll:{foo:['bar3', 'bar4']}}, {}, false, function(count) {
+            timer.stopInterval();
             assert.equal(count.length, 1);
             o = collection.find({i:10});
             o.forEach(function(d) {
@@ -321,9 +380,7 @@ describe('Queries', function() {
                 assert.equal(d.foo[d.foo.length - 2], 'bar3');
             });        
         });
-        timer.stopInterval();
 
-//        console.log('');
-//        timer.logToConsole();        
+        timer.logToConsole();        
     });
 });
