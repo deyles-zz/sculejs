@@ -1,6 +1,6 @@
 {
   "private": false,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "name": "sculejs",
   "description": "Data structures for the web",
   "author": "Dan Eyles <dan@irlgaming.com>",
