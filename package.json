@@ -1,6 +1,6 @@
 {
   "private": false,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "sculejs",
   "description": "Data structures for the web",
   "author": "Dan Eyles <dan@irlgaming.com>",
@@ -17,6 +17,11 @@
          "pattern": "lib"
      } 
   },
+  "keywords": [
+      "nosql",
+      "database",
+      "data structures"
+  ],
   "readmeFilename": "README.md",
   "directories": {
     "test": "tests"
