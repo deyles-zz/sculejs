@@ -24,7 +24,7 @@
   ],
   "readmeFilename": "README.md",
   "directories": {
-    "test": "tests"
+    "test": "test"
   },
   "license": "BSD"
 }

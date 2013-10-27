@@ -28,7 +28,7 @@
 var assert = require('assert');
 var Scule = require('../lib/com.scule');
 
-describe('Queries', function() {
+describe('Queries', function() {    
     it('should test various query expressions', function() {
         Scule.dropAll();
 
