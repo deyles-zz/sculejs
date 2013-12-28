@@ -299,4 +299,23 @@ describe('Tickets', function() {
         removeUser('500@foo.com');
         removeUser('998@foo.com');
     });
+    it('should test conditions for Ticket #38', function() {
+        var collection = Scule.factoryCollection('scule+dummy://test', {
+            secret: 'mysecretkey'
+        });
+        for (var i = 0; i < 1000; i++) {
+            collection.save({
+                _id: i,
+                index: i,
+                remainder: (i % 10)
+            });
+        }
+        collection.update({_id: 5000}, {$set: {index: 1909, foo: 'bar'}}, {}, true);
+        collection.commit();
+        var o = collection.findOne(5000);
+        assert.equal(1909, o.index);
+        assert.equal('bar', o.foo);
+        assert.equal(5000, o._id.id);
+    });
+
 });
