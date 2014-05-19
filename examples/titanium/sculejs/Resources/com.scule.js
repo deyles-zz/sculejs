@@ -6248,7 +6248,7 @@ var Scule = {
     /**
      * We're running inside Titanium
      */
-    if (typeof Titanium !== 'undefined' && typeof Titanium.Platform !== 'undefined') {
+    if (typeof Titanium !== 'undefined' && typeof Titanium.API !== 'undefined') {
         Scule.md5 = {
             hash: function(s) {
                 return Ti.Utils.md5HexDigest(s);
