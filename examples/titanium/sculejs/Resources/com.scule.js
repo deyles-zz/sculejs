@@ -660,7 +660,7 @@ var Scule = {
             c = [];
         }
         for (var a in o) {
-            if (typeof(o[a]) == "object") {
+            if (typeof(o[a]) === "object") {
                 if (o[a] instanceof RegExp) {
                     c[a] = new RegExp(o[a].toString());
                 } else {
@@ -700,7 +700,7 @@ var Scule = {
         probe(attributes);
         var i = 0;
         var trvs = function(attr, o) {
-            if (i == depth) {
+            if (i === depth) {
                 return o;
             }
             for (var k in attr) {
@@ -943,7 +943,7 @@ var Scule = {
         }
         var build = function(struct, elements, count) {
             var element = Scule.global.functions.trim(elements[count]);
-            if (count == (elements.length - 1)) {
+            if (count === (elements.length - 1)) {
                 struct[element] = true;
             } else {
                 var o = {};
@@ -1009,6 +1009,7 @@ var Scule = {
      * Hashes the provided string key to an integer value in the table range (djb2)
      * @private
      * @param {String} key the key to hash
+     * @param {Integer} size the size of the table to hash for
      * @returns {Number}
      */
     Scule.datastructures.variables.djb2_hash = function (key, size) {
@@ -1114,7 +1115,7 @@ var Scule = {
                 var curr = this.head;
                 var i = 0;
                 while (curr) {
-                    if (idx == i) {
+                    if (idx === i) {
                         break;
                     }
                     i++;
@@ -1279,6 +1280,18 @@ var Scule = {
                 this.length--;
             }
             return curr;
+        };
+
+        /**
+         * Removes the last entry from the list, shortening it by one
+         * @public
+         * @returns {DoublyLinkedListNode}
+         */
+        this.trim = function() {
+            if (this.isEmpty()) {
+                return null;
+            }
+            return this.remove(this.length - 1);
         };
 
         /**
@@ -1537,7 +1550,7 @@ var Scule = {
                 var curr = this.head;
                 var i = 0;
                 while (curr) {
-                    if (idx == i) {
+                    if (idx === i) {
                         break;
                     }
                     i++;
@@ -2647,6 +2660,7 @@ var Scule = {
         /**
          * Removes a key/value pair from the table
          * @public
+         * @param {String} key
          * @returns {Boolean}
          */
         this.remove = function(key) {
@@ -3310,6 +3324,16 @@ var Scule = {
             return this.root;
         };
 
+        /**
+         * Removes all entries from the tree
+         * @public
+         * @returns {Void}
+         */
+        this.clear = function() {
+            this.root = null;
+            this.length = 0;
+        };
+
     };
 
     /**
@@ -3375,7 +3399,7 @@ var Scule = {
          */    
         this.get = function(index) {
             var o = this.indexToAddress(index);
-            return ((this.words[o.addr] & (1 << o.offs)) != 0);
+            return ((this.words[o.addr] & (1 << o.offs)) !== 0);
         };
 
         /**
@@ -3465,7 +3489,7 @@ var Scule = {
 
         /**
          * Adds a key to the filter
-         * @param {String} the key to hash to a bit position in the filter
+         * @param {String} key the key to hash to a bit position in the filter
          * @returns {Void}
          */
         this.add = function(key) {
@@ -3477,7 +3501,7 @@ var Scule = {
         /**
          * Queries to determine the state of the bit corresponding to the hash
          * for the given key
-         * @param {String} the key to hash to a bit position in the filter
+         * @param {String} key the key to hash to a bit position in the filter
          * @returns {Boolean}
          */
         this.query = function(key) {
@@ -3515,7 +3539,7 @@ var Scule = {
          * Increments the counter using the provided integer value. If not value is
          * provided the counter is incremented by 1
          * @public
-         * @param {Integer} the amount to increment the counter by
+         * @param {Integer} value the amount to increment the counter by
          * @returns {Integer}
          */
         this.increment = function(value) {
@@ -3533,7 +3557,7 @@ var Scule = {
          * Decrements the counter using the provided integer value. If not value is
          * provided the counter is Decremented by 1
          * @public
-         * @param {Integer} the amount to decrement the counter by
+         * @param {Integer} value the amount to decrement the counter by
          * @returns {Integer}
          */
         this.decrement = function(value) {
@@ -3923,8 +3947,16 @@ var Scule = {
                             $eq:v
                         };
                     } else {
-                        if (key == '$or' || key == '$elemMatch') {
+                        if (key === '$or') {
+                            if (Scule.global.functions.isArray(o[key])) {
+                                o[key].forEach(function(clause) {
+                                    normalize(clause);
+                                });
+                            }
+                        } else if (key === '$elemMatch') {
                             normalize(o[key]);
+                        } else if (key === '$where') {
+                            // do nothing
                         } else {
                             o[key] = Scule.global.functions.sortObjectKeys(o[key]);
                         }
@@ -3953,7 +3985,7 @@ var Scule = {
          */
         this.isDate = function(o) {
             return (o instanceof Date || o instanceof Scule.db.classes.ObjectDate);
-        }
+        };
 
         /**
          * Normalizes the provided object to a JavaScript Date object
@@ -3971,10 +4003,10 @@ var Scule = {
                 return date.getTime();
             }
             return date;
-        }
+        };
 
         this.$eq = function(a, b) {
-            return this.normalizeDate(a) === this.normalizeDate(b);
+            return this.normalizeDate(a) == this.normalizeDate(b);
         };
 
         this.$gt = function(a, b) {
@@ -4042,7 +4074,7 @@ var Scule = {
                 if (this.comparator.isDate(a) && this.comparator.isDate(b)) {
                     return this.comparator.$eq(a, b);
                 }                
-                return a === b;
+                return a == b;
             }
         };
 
@@ -4110,6 +4142,10 @@ var Scule = {
             return true;
         };
 
+        this.$where = function(o, callback) {
+            return callback.call(o);
+        };
+
         this.$elemMatch = function(o, c) {
             if (!Scule.global.functions.isArray(o)) {
                 return false;
@@ -4126,7 +4162,7 @@ var Scule = {
             if (!Scule.global.functions.isInteger(b)) {
                 return false;
             }
-            return Scule.global.functions.sizeOf(a) == b;
+            return Scule.global.functions.sizeOf(a) === b;
         };
 
         this.$exists = function (a, b) {
@@ -4301,6 +4337,8 @@ var Scule = {
 
         /**
          * @access private
+         * @param {Object} conditions the conditions to compile
+         * @return {String}
          */        
         this.compileConditions = function(conditions) {
             var source = '';
@@ -4308,7 +4346,7 @@ var Scule = {
             if (conditions.hasOwnProperty('$sort')) {
                 o = conditions.$sort;
                 k = Scule.global.functions.objectKeys(o);
-                if (k.length == 1) {
+                if (k.length === 1) {
                     source += '\tengine.$sort(' + o[k[0]] + ', r, "' + k[0] + '");\n';
                 }            
             }
@@ -4342,11 +4380,13 @@ var Scule = {
                 }
                 ors.push(ands.join(' && '));
             });
-            return ors.join(' || ');
+            return '(' + ors.join(') || (') + ')';
         };
 
         /**
          * @access private
+         * @param {Object} query the query expressions to compile
+         * @return {String}
          */        
         this.compileExpressions = function(query) {
             query = this.normalizer.normalize(query);
@@ -4366,26 +4406,26 @@ var Scule = {
                 if (!this.engine.hasOwnProperty(operator)) {
                     continue;
                 }
-                if (operator == '$elemMatch') {
+                if (operator === '$elemMatch') {
                     var sands = this.compileExpressions(subQuery[operator]);
                     var src = 'function(o) { return (' + sands.join(' && ') + '); }';
                     if (key.indexOf('.') < 0) {
                         clauses.push('engine.$elemMatch(o.' + key + ', ' + src + ')'); 
                     } else {
                         clauses.push('engine.$elemMatch(engine.traverse(' + JSON.stringify(key) + ', o), ' + src + ')');                
-                    }                
+                    } 
                 } else {
+                    var v = null;
+                    if (subQuery[operator] instanceof RegExp) {
+                        v = subQuery[operator].toString();
+                    } else if (subQuery[operator] instanceof Date) {
+                        v = "new Date(\"" + subQuery[operator].toString() + "\")";
+                    } else if (subQuery[operator] instanceof Scule.db.classes.ObjectDate) {
+                        v = "new Date(\"" + subQuery[operator].toDate().toString() + "\")";
+                    } else {
+                        v = JSON.stringify(subQuery[operator]);
+                    }
                     if (key.indexOf('.') < 0) {
-                        var v = null;
-                        if (subQuery[operator] instanceof RegExp) {
-                            v = subQuery[operator].toString();
-                        } else if (subQuery[operator] instanceof Date) {
-                            v = "new Date(\"" + subQuery[operator].toString() + "\")";
-                        } else if (subQuery[operator] instanceof Scule.db.classes.ObjectDate) {
-                            v = "new Date(\"" + subQuery[operator].toDate().toString() + "\")";
-                        } else {
-                            v = JSON.stringify(subQuery[operator]);
-                        }
                         clauses.push('engine.' + operator + '(o.' + key + ', ' + v + ')'); 
                     } else {
                         clauses.push('engine.' + operator + '(engine.traverse(' + JSON.stringify(key) + ', o), ' + v + ')');                
@@ -4414,6 +4454,7 @@ var Scule = {
          * source as a {String}
          * @param {Object} query the query to evaluate
          * @param {Boolean} upsert a flag indicating whether or not the engine should upsert
+         * @param {Boolean} ignoreCache a flag indicating whether or not to ignore the query cache
          * @returns {String}
          */  
         this.compileUpdate = function(query, upsert, ignoreCache) {
@@ -4435,7 +4476,7 @@ var Scule = {
             }
         
             closure     += updates.join('\n');
-            closure     += '\n\t});\n'
+            closure     += '\n\t});\n';
             closure     += '\treturn objects;\n';
             closure     += '}\n';
 
@@ -4466,7 +4507,7 @@ var Scule = {
                         }
                     }
                 }
-            }
+            };
             serialize(o);
             return JSON.stringify(o);
         };  
@@ -4476,6 +4517,7 @@ var Scule = {
          * source as a {String}
          * @param {Object} query the query to evaluate
          * @param {Object} conditions the conditions for the query
+         * @param {boolean} ignoreCache a flag indicating whether or not to ignore the query cache
          * @returns {String}
          */      
         this.compileQuery = function(query, conditions, ignoreCache) {
@@ -4498,8 +4540,10 @@ var Scule = {
                     if (!query.hasOwnProperty(key)) {
                         continue;
                     }
-                    if (key == '$or') {
+                    if (key === '$or') {
                         ors = '(' + this.compileClauseList(query[key]) + ')';
+                    } else if (key === '$where') {
+                        ands = ands.concat(['engine.$where(o, ' + query[key].toString() + ')']);
                     } else {
                         ands = ands.concat(this.compileQueryClauses(key, query[key]));
                     }
@@ -4509,11 +4553,11 @@ var Scule = {
                         ors = ' && ' + ors;
                     }
                     closure += '\t\tif ((' + ands.join(' && ') + ')' + ors + ') {\n';
-                    closure += '\t\t\tr[r.length] = o;\n'
+                    closure += '\t\t\tr[r.length] = o;\n';
                     closure += '\t\t}\n';
                 } else if (ors.length > 0) {
                     closure += '\t\tif (' + ors + ') {\n';
-                    closure += '\t\t\tr[r.length] = o;\n'
+                    closure += '\t\t\tr[r.length] = o;\n';
                     closure += '\t\t}\n';            
                 }
                 closure += '\t});\n';
@@ -4596,6 +4640,7 @@ var Scule = {
          * @param {Object} query the query object
          * @param {Object} updates the updates to run against the query results
          * @param {Object} conditions the conditions for the quer
+         * @param {Boolean} upsert a boolean flag indicating whether or not upsert
          * @param {Boolean} explain a boolean flag indicating whether or not to explain the query or evaluate it
          * @returns {Array}
          */
@@ -4717,7 +4762,7 @@ var Scule = {
         this.verifyObjectSignature = function(object, secret, salt) {
             var oldSig = object._sig;
             var newSig = this.signObject(object, secret, salt);
-            return oldSig == newSig;      
+            return oldSig === newSig;      
         };
 
     };
@@ -5376,6 +5421,14 @@ var Scule = {
                 next.prev = prev;
             }
             node.detach();
+            if (node === this.queue.head) {
+                this.queue.head = next;
+            } else if (node === this.queue.tail) {
+                this.queue.tail = prev;
+            }
+            if(this.queue.head === this.queue.tail) {
+                this.queue.tail = null;
+            }
             this.queue.length--;
 
             return node.element;
@@ -5395,6 +5448,15 @@ var Scule = {
 
         this.toArray = function() {
             return this.queue.toArray();
+        };
+        
+        this.toString = function() {
+            var str = '(h) ';
+            this.queue.forEach(function(object) {
+                str += JSON.stringify(object.element) + ' -> ';
+            });
+            str += '(t)';
+            return str;
         };
 
     };
@@ -6049,7 +6111,7 @@ var Scule = {
      */
     Scule.db.functions.parseCollectionURL = function(url) {
         var matches = url.match(/^([^\+]*)\+([^\/]*)\:\/\/(.*)/);
-        if (!matches || matches.length != 4) {
+        if (!matches || matches.length !== 4) {
             throw url + ' is an invalid collection url';
         }
         return {
