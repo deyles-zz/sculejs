@@ -428,7 +428,7 @@ function runAllTests() {
                 a:11
             };
             query = normalizer.normalize(query);
-            JSUNIT.assertEquals('{"a":{"$eq":11},"bar":{"$gt":4,"$lte":100},"foo":{"$eq":3},"$or":[{"a":{"$lt":14},"c":113}]}', JSON.stringify(query));
+            JSUNIT.assertEquals('{"a":{"$eq":11},"bar":{"$gt":4,"$lte":100},"foo":{"$eq":3},"$or":[{"a":{"$lt":14},"c":{"$eq":113}}]}', JSON.stringify(query));
 
         };
 
@@ -2840,7 +2840,7 @@ function runAllTests() {
         function testTicket32() {
             
             Scule.dropAll();
-            var collection1 = Scule.factoryCollection('scule+local://ticket32', {'secret':'test'});
+            var collection1 = Scule.factoryCollection('scule+local://ticket32', {secret:'test'});
             collection1.clear();
             for (var i=0; i < 100; i++) {
                 collection1.save({i: i});
@@ -2857,6 +2857,84 @@ function runAllTests() {
                     });                
                 });
             }, 100);
+            
+        };
+
+        function testTicket38() {
+            
+            Scule.dropAll();
+            var collection = Scule.factoryCollection('scule+dummy://test', {
+                secret: 'mysecretkey'
+            });
+            for (var i = 0; i < 1000; i++) {
+                collection.save({
+                    _id: i,
+                    index: i,
+                    remainder: (i % 10)
+                });
+            }
+            
+            collection.update({_id: 999}, {$set: {index: 1909, foo: 'bar'}}, {}, true);
+            collection.commit();
+            var o = collection.findOne(999);
+            JSUNIT.assertEquals(1909, o.index);
+            JSUNIT.assertEquals('bar', o.foo);
+            JSUNIT.assertEquals(999, o._id.id);
+            
+        };
+        
+        function testTicket38a() {
+            
+            var collection = Scule.factoryCollection('scule+dummy://test', {
+                secret: 'mysecretkey'
+            });
+            for (var i = 0; i < 1000; i++) {
+                var event = 2;
+                if (i%2 > 0) {
+                    event = 1;
+                }
+                collection.save({
+                    _id: i,
+                    event: event,
+                    remainder: (i % 10)
+                });
+            }
+            
+            collection.update({event: 1}, {$set: {name:"mike"}}, {}, true);
+            var o = collection.find({event:1});
+            JSUNIT.assertEquals(o[0].name, 'mike');
+            JSUNIT.assertEquals(o[0].event, 1);
+            JSUNIT.assertEquals(o[1].name, 'mike');
+            JSUNIT.assertEquals(o[1].event, 1);    
+            
+        };
+        
+        function testTicket38b() {
+            
+            var collection = Scule.factoryCollection('scule+dummy://test', {
+                secret: 'mysecretkey'
+            });
+            for (var i = 0; i < 1000; i++) {
+                var event = 2;
+                if (i%2 > 0) {
+                    event = 1;
+                }
+                collection.save({
+                    _id: i,
+                    event: event,
+                    remainder: (i % 10)
+                });
+            }
+            
+            collection.update({event:{$gte:2}}, {$set:{foo:'bar'}}, {$limit:10}, true);
+            var o = collection.find({event:{$gte:2}});
+            for (var i=0; i < 100; i++) {
+                if (i < 10) {
+                    JSUNIT.assertEquals(o[i].foo, 'bar');
+                } else {
+                    JSUNIT.assertEquals(false, o[i].hasOwnProperty('foo'));
+                }
+            }
             
         };
 
@@ -2953,6 +3031,9 @@ function runAllTests() {
             JSUNIT.addTest(testTicket32);
             JSUNIT.addTest(testTicket33a);
             JSUNIT.addTest(testTicket33b);
+            JSUNIT.addTest(testTicket38);
+            JSUNIT.addTest(testTicket38a);
+            JSUNIT.addTest(testTicket38b);
             JSUNIT.runTests('Query tests', Scule.tests.functions.renderTest);
         }());    
        
