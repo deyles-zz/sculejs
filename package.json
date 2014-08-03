@@ -8,7 +8,7 @@
     "type": "git",
     "url": "git@github.com:dan-eyles/sculejs.git"
   },
-  "engine": "node >= 0.8",
+  "engine": "node >= 0.10",
   "dependencies": {},
   "main": "./lib/index.js",
   "scripts": {
