@@ -101,16 +101,9 @@ describe('Tickets', function() {
         for (var i = 0; i < 1000; i++) {
             collection.save({a: 'test' + i});
         }
-        var i;
-        for (i = 0; i < 100; i++) {
-            assert.equal(111, collection.count({a: /test[1]/g}));
-        }
-        for (i = 0; i < 100; i++) {
-            assert.equal(333, collection.count({a: /test[1-3]/g}));
-        }
-        for (i = 0; i < 100; i++) {
-            assert.equal(100, collection.count({a: /test([1-9][0-9]?$|100$)/g}));
-        }        
+        assert.equal(111, collection.count({a: /test[1]/g}));
+        assert.equal(333, collection.count({a: /test[1-3]/g}));
+        assert.equal(100, collection.count({a: /test([1-9][0-9]?$|100$)/g}));
     });
     it('should test conditions for Ticket #26', function() {
         Scule.dropAll();
@@ -310,12 +303,58 @@ describe('Tickets', function() {
                 remainder: (i % 10)
             });
         }
-        collection.update({_id: 5000}, {$set: {index: 1909, foo: 'bar'}}, {}, true);
+        collection.update({_id: 999}, {$set: {index: 1909, foo: 'bar'}}, {}, true);
         collection.commit();
-        var o = collection.findOne(5000);
+        var o = collection.findOne(999);
         assert.equal(1909, o.index);
         assert.equal('bar', o.foo);
-        assert.equal(5000, o._id.id);
+        assert.equal(999, o._id.id);
     });
-
+    it('should test conditions for Ticket #38a', function() {
+        var collection = Scule.factoryCollection('scule+dummy://test', {
+            secret: 'mysecretkey'
+        });
+        for (var i = 0; i < 1000; i++) {
+            var event = 2;
+            if (i%2 > 0) {
+                event = 1;
+            }
+            collection.save({
+                _id: i,
+                event: event,
+                remainder: (i % 10)
+            });
+        }
+        collection.update({event: 1}, {$set: {name:"mike"}}, {}, true);
+        var o = collection.find({event:1});
+        assert.equal(o[0].name, 'mike');
+        assert.equal(o[0].event, 1);
+        assert.equal(o[1].name, 'mike');
+        assert.equal(o[1].event, 1);        
+    });
+    it('should test conditions for Ticket #38b', function() {
+        var collection = Scule.factoryCollection('scule+dummy://test', {
+            secret: 'mysecretkey'
+        });
+        for (var i = 0; i < 1000; i++) {
+            var event = 2;
+            if (i%2 > 0) {
+                event = 1;
+            }
+            collection.save({
+                _id: i,
+                event: event,
+                remainder: (i % 10)
+            });
+        }
+        collection.update({event:{$gte:2}}, {$set:{foo:'bar'}}, {$limit:10}, true);
+        var o = collection.find({event:{$gte:2}});
+        for (var i=0; i < 100; i++) {
+            if (i < 10) {
+                assert.equal(o[i].foo, 'bar');
+            } else {
+                assert.equal(false, o[i].hasOwnProperty('foo'));
+            }
+        }
+    });    
 });
