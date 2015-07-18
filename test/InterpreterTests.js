@@ -73,9 +73,11 @@ describe('QueryInterpreter', function() {
         assert.equal(false, engine.$elemMatch([{a:0, b:1}, {a:1, b:2}, {a:2, b:3}], function(o) { return o.a == 3 && o.b == 4; }));
 
         assert.equal(true,  engine.$near({lat:53, lon:-67}, {lat:53, lon:-67, distance:100}));
+        assert.equal(true,  engine.$near({lat:53, lon:-67}, {lat:53, lon:-67.01, distance:700}));
         assert.equal(false, engine.$near({lat:53, lon:-60}, {lat:53, lon:-67, distance:1000}));
 
         assert.equal(true,  engine.$within({lat:53, lon:-67}, {lat:53, lon:-67, distance:0}));
+        assert.equal(true,  engine.$within({lat:53, lon:-67}, {lat:53, lon:-67.01, distance:700}));
         assert.equal(false, engine.$within({lat:40, lon:-30}, {lat:53, lon:-67, distance:30}));        
     });
     it('should test all update operators', function() {
