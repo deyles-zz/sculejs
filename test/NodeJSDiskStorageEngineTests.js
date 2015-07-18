@@ -27,7 +27,6 @@
 
 var assert = require('assert');
 var Scule = require('../lib/com.scule');
-
 var fs    = require('fs');
 
 describe('NodeJSDiskStorageEngine', function() {
@@ -72,5 +71,30 @@ describe('NodeJSDiskStorageEngine', function() {
         } catch (e) {
             assert.equal(false, true);
         }        
+    });
+    it('should overwrite existing database files on commit', function() {
+        var object = {
+            foo: 'bar',
+            bar: 'foo',
+            arr: [1, 3, 2, 4, 5, 7],
+            obj: {
+                me: 'string'
+            }
+        }
+        var storage = Scule.getNodeJSDiskStorageEngine({
+            secret: 'mysecretkey',
+            path: '/tmp'
+        });
+        var filename = '/tmp/unittest2.json'
+        fs.writeFile(filename, 'hello, world!', function(err) {
+            assert.equal(true, !err);
+            storage.write('unittest2', object, function(o) {
+                fs.stat(filename, function(err, stats) {
+                    assert.equal(true, !err);
+                    assert.equal(true, stats.isFile());
+                    assert.equal(true, stats.size > 13);
+                });
+            });
+        });        
     });
 });

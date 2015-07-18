@@ -873,7 +873,12 @@ var Scule = {
         switch(type) {
             case -1: // descending
                 collection.sort(function(v1, v2){
-                    return v2[key] - v1[key];
+                    if (v2[key] > v1[key])
+                        return 1;
+                    else if (v2[key] < v1[key])
+                        return -1;
+                    else
+                        return 0;
                 });
                 break;
 
@@ -883,7 +888,12 @@ var Scule = {
 
             case 1: // ascending
                 collection.sort(function(v1, v2){
-                    return v1[key] - v2[key];
+                    if (v2[key] > v1[key])
+                        return -1;
+                    else if (v2[key] < v1[key])
+                        return 1;
+                    else
+                        return 0;
                 });
                 break;
 
@@ -4410,7 +4420,7 @@ var Scule = {
                     var sands = this.compileExpressions(subQuery[operator]);
                     var src = 'function(o) { return (' + sands.join(' && ') + '); }';
                     if (key.indexOf('.') < 0) {
-                        clauses.push('engine.$elemMatch(o.' + key + ', ' + src + ')'); 
+                        clauses.push('engine.$elemMatch(o["' + key + '"], ' + src + ')'); 
                     } else {
                         clauses.push('engine.$elemMatch(engine.traverse(' + JSON.stringify(key) + ', o), ' + src + ')');                
                     } 
@@ -4426,7 +4436,7 @@ var Scule = {
                         v = JSON.stringify(subQuery[operator]);
                     }
                     if (key.indexOf('.') < 0) {
-                        clauses.push('engine.' + operator + '(o.' + key + ', ' + v + ')'); 
+                        clauses.push('engine.' + operator + '(o["' + key + '"], ' + v + ')'); 
                     } else {
                         clauses.push('engine.' + operator + '(engine.traverse(' + JSON.stringify(key) + ', o), ' + v + ')');                
                     }
@@ -5062,8 +5072,11 @@ var Scule = {
                 object._salt = Scule.sha1.hash((new Date()).getTime() + '');
             }
             object._sig = this.crypto.signObject(object, this.configuration.secret, object._salt);
-            var file = Titanium.Filesystem.getFile(this.configuration.path, name + '.json');
+            var realPath = name + '.json';
+            var tmpPath = realPath + '.tmp';
+            var file = Titanium.Filesystem.getFile(this.configuration.path, tmpPath);
             file.write(JSON.stringify(object));
+            file.rename(realPath);
             if(callback) {
                 callback(object);
             }
@@ -5124,18 +5137,25 @@ var Scule = {
          * @returns {Void}
          */ 
         this.write = function (name, object, callback) {
-            var path = this.configuration.path + '/' + name + '.json';
+            var self = this;
+            var realPath = this.configuration.path + '/' + name + '.json';
+            var tmpPath = realPath + '.tmp';
             if (!object._salt) {
                 object._salt = Scule.sha1.hash((new Date()).getTime() + '');
             }
             object._sig = this.crypto.signObject(object, this.configuration.secret, object._salt);
-            this.filesystem.writeFile(path, JSON.stringify(object), function (err) {
+            self.filesystem.writeFile(tmpPath, JSON.stringify(object), function (err) {
                 if (err) {
                     throw err;
                 }
-                if (callback) {
-                    callback(object);
-                }
+                self.filesystem.rename(tmpPath, realPath, function(err) {
+                    if (err) {
+                        throw err;
+                    }
+                    if (callback) {
+                        callback(object);
+                    }
+                });
             });
         };
 
@@ -5474,50 +5494,62 @@ var Scule = {
         /**
          * @private
          * @type {HashTable}
-         */    
+         */
         this.documents  = Scule.getPrimaryKeyIndex();
 
         /**
          * @private
          * @type {QueryInterpreter}
-         */    
+         */
         this.interpreter = Scule.getQueryInterpreter();
 
         /**
          * @private
          * @type {Number}
-         */    
+         */
         this.version     = 3.0;
 
         /**
          * @private
          * @type {ObjectId}
-         */    
+         */
         this.lastId      = null;
 
         /**
          * @private
          * @type {String}
-         */    
+         */
         this.name        = name;
 
         /**
          * @private
          * @type {Boolean}
-         */    
+         */
         this.autoCommit  = false;
 
         /**
          * @private
          * @type {Boolean}
-         */    
+         */
         this.isOpen      = false;
+
+        /**
+         * @private
+         * @type {Boolean}
+         */
+        this.isOpening   = false;
+
+        /**
+         * @private
+         * @type {Array}
+         */
+        this.callWhenOpen = [];
 
         /**
          * @private
          * @see {StorageEngine}
          * @type {StorageEngine}
-         */    
+         */
         this.storage     = null;
 
         /**
@@ -5576,8 +5608,16 @@ var Scule = {
          */
         this.open = function(callback) {
             if (this.isOpen) {
+                if (callback)
+                    callback(this);
                 return;
             }
+            if (this.isOpening) {
+                if (callback)
+                    this.callWhenOpen.push(callback);
+                return;
+            }
+            this.isOpening = true;
             var self = this;
             this.storage.read(this.name, function(o) {
                 if (!o) {
@@ -5591,9 +5631,12 @@ var Scule = {
                     }
                 }
                 self.isOpen = true;
-                if (callback) {
-                    callback(this);
-                }
+                self.isOpening = false;
+                if (callback)
+                    callback(self);
+                var cb;
+                while (cb = self.callWhenOpen.shift())
+                    cb(self);
             });
         };
 
@@ -5625,10 +5668,13 @@ var Scule = {
          * @returns {Array}
          */
         this.find = function(query, conditions, callback) {
+            var result;
+
             if (Scule.global.constants.ID_FIELD in query) {
-                return [this.findOne(query[Scule.global.constants.ID_FIELD])];
+                result = this.findOne(query[Scule.global.constants.ID_FIELD]);
+                return (result) ? [result] : [];
             }
-            var result = this.interpreter.interpret(this, query, conditions);
+            result = this.interpreter.interpret(this, query, conditions);
             if (callback) {
                 callback(result);
             }

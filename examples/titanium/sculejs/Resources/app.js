@@ -28,7 +28,7 @@
 var scule  = require('com.scule');
 scule.debug(false);
 
-var scollection = scule.factoryCollection('scule+dummy://test', {secret:'mysecretkey'});
+var scollection = scule.factoryCollection('scule+titanium://test', {secret:'mysecretkey'});
 scollection.clear();
 
 var timer = scule.getTimer();
@@ -68,6 +68,9 @@ for(var i=0; i < 5000; i++) {
  * commits the collection to disk
  */
 scollection.commit();
+scollection.commit();
+
+scollection = scule.factoryCollection('scule+titanium://test', {secret:'mysecretkey'});
 
 /**
  * count all objects where i is less than or equal to 20

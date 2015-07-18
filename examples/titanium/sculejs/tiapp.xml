@@ -1,49 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ti:app xmlns:ti="http://ti.appcelerator.org">
-    <id>com.irlgaming.sculejs</id>
-    <name>sculejs</name>
-    <version>1.0</version>
-    <publisher>dan</publisher>
-    <url>http://irlaming.com</url>
-    <description>not specified</description>
-    <copyright>2012 by dan</copyright>
-    <icon>appicon.png</icon>
-    <persistent-wifi>false</persistent-wifi>
-    <prerendered-icon>false</prerendered-icon>
-    <statusbar-style>default</statusbar-style>
-    <statusbar-hidden>false</statusbar-hidden>
-    <fullscreen>false</fullscreen>
-    <navbar-hidden>false</navbar-hidden>
-    <analytics>true</analytics>
-    <guid>c443aac2-3b69-4323-91fb-f65672858564</guid>
-    <property name="ti.ui.defaultunit" type="string">system</property>
-    <iphone>
-        <orientations device="iphone">
-            <orientation>Ti.UI.PORTRAIT</orientation>
-        </orientations>
-        <orientations device="ipad">
-            <orientation>Ti.UI.PORTRAIT</orientation>
-            <orientation>Ti.UI.UPSIDE_PORTRAIT</orientation>
-            <orientation>Ti.UI.LANDSCAPE_LEFT</orientation>
-            <orientation>Ti.UI.LANDSCAPE_RIGHT</orientation>
-        </orientations>
-    </iphone>
-    <android xmlns:android="http://schemas.android.com/apk/res/android"/>
+<ti:app 
+  xmlns:ti="http://ti.appcelerator.org">
+  <id>com.irlgaming.sculejs</id>
+  <name>sculejs</name>
+  <version>1.0</version>
+  <publisher>dan</publisher>
+  <url>http://irlaming.com</url>
+  <description>not specified</description>
+  <copyright>2012 by dan</copyright>
+  <icon>appicon.png</icon>
+  <persistent-wifi>false</persistent-wifi>
+  <prerendered-icon>false</prerendered-icon>
+  <statusbar-style>default</statusbar-style>
+  <statusbar-hidden>false</statusbar-hidden>
+  <fullscreen>false</fullscreen>
+  <navbar-hidden>false</navbar-hidden>
+  <analytics>true</analytics>
+  <guid>2de453f2-0017-4548-9ddd-890cf2aace33</guid>
+  <property name="ti.ui.defaultunit" type="string">system</property>
+  <iphone>
+    <orientations device="iphone">
+      <orientation>Ti.UI.PORTRAIT</orientation>
+    </orientations>
+    <orientations device="ipad">
+      <orientation>Ti.UI.PORTRAIT</orientation>
+      <orientation>Ti.UI.UPSIDE_PORTRAIT</orientation>
+      <orientation>Ti.UI.LANDSCAPE_LEFT</orientation>
+      <orientation>Ti.UI.LANDSCAPE_RIGHT</orientation>
+    </orientations>
+  </iphone>
+  <android 
+    xmlns:android="http://schemas.android.com/apk/res/android"/>
     <mobileweb>
-        <precache/>
-        <splash>
-            <enabled>true</enabled>
-            <inline-css-images>true</inline-css-images>
-        </splash>
-        <theme>default</theme>
+      <precache/>
+      <splash>
+        <enabled>true</enabled>
+        <inline-css-images>true</inline-css-images>
+      </splash>
+      <theme>default</theme>
     </mobileweb>
-    <modules/>
+    <modules>
+      <module platform="commonjs">ti.cloud</module>
+    </modules>
     <deployment-targets>
-        <target device="blackberry">false</target>
-        <target device="android">true</target>
-        <target device="ipad">true</target>
-        <target device="iphone">true</target>
-        <target device="mobileweb">true</target>
+      <target device="blackberry">false</target>
+      <target device="android">true</target>
+      <target device="ipad">true</target>
+      <target device="iphone">true</target>
+      <target device="mobileweb">true</target>
     </deployment-targets>
-    <sdk-version>3.2.3.GA</sdk-version>
-</ti:app>
+    <sdk-version>4.1.0.GA</sdk-version>
+    <property name="appc-app-id" type="string">55a9bd8fe05a890d32c736cb</property>
+    <property name="acs-authbase-url-development" type="string">https://secure-identity.cloud.appcelerator.com</property>
+    <property name="acs-base-url-development" type="string">https://api.cloud.appcelerator.com</property>
+    <property name="acs-oauth-secret-development" type="string">t4FfYo5yJLmp5ybzUGPdmvGRbETpByXz</property>
+    <property name="acs-oauth-key-development" type="string">bPkBpjbykVLmHS8v3ds8ulOk7AWx7qXf</property>
+    <property name="acs-api-key-development" type="string">7I6sNGpsD509tvhUKeogwpn0Bj11Kadl</property>
+    <property name="acs-username-development" type="string">appc_app_user_dev</property>
+    <property name="acs-password-development" type="string">DoLnBWFWMMKNHIYFQx</property>
+    <property name="acs-authbase-url-production" type="string">https://secure-identity.cloud.appcelerator.com</property>
+    <property name="acs-base-url-production" type="string">https://api.cloud.appcelerator.com</property>
+    <property name="acs-oauth-secret-production" type="string">oHzdYR0L8YgwSGvAw3oSn95kfWA4XuR5</property>
+    <property name="acs-oauth-key-production" type="string">CW9Wl01JYb3DW5T6H5voPuBzrGv4IJkI</property>
+    <property name="acs-api-key-production" type="string">Cxyu7YTZ2wdeodAjGbuUPTgRlfoOMvHz</property>
+    <property name="acs-username-production" type="string">appc_app_user</property>
+    <property name="acs-password-production" type="string">6u9CNILJhBtW4eSXFP</property>
+    <property name="appc-org-id" type="string">100050639</property>
+    <property name="appc-creator-user-id" type="string">9401089f-1f47-4162-b6e4-5860f311db78</property>
+  </ti:app>
