@@ -29,6 +29,13 @@ var assert = require('assert');
 var Scule = require('../lib/com.scule');
 
 describe('Tickets', function() {
+    it('should test conditions for ticket #36', function(done) {
+        Scule.dropAll();
+        var collection = Scule.factoryCollection('scule+dummy://test');
+        assert.throws(function() { collection.save({ 'foo.bar': 1 }) });
+        assert.ok(collection.save({ foo: 1 }));
+        done(); 
+    });
     it('should test conditions for ticket #23', function(done) {
         Scule.dropAll();
         var collection = Scule.factoryCollection('scule+nodejs://test', {path:'/tmp'});
