@@ -29,6 +29,24 @@ var assert = require('assert');
 var Scule = require('../lib/com.scule');
 
 describe('Tickets', function() {
+    it('should test conditions for ticket #53', function() {
+        Scule.dropAll();
+        var val = 1;
+        var collection = Scule.factoryCollection('scule+dummy://test');
+        for (var i=0; i < 100; i++) {
+            collection.save({
+                prop1: 'value',
+                prop2: 'value',
+                complexProp: {
+                    myVal: i
+                }
+            });
+        }
+        collection.find({ 'complexProp.myVal': val }, { }, function(documents) {
+           assert.equal(documents.length, 1);
+           assert.equal(documents[0].complexProp.myVal, val); 
+        });
+    });
     it('should test conditions for Ticket #6', function() {
         Scule.dropAll();
         var a = [];
