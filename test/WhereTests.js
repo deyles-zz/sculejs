@@ -29,7 +29,7 @@ var assert = require('assert');
 var Scule = require('../lib/com.scule');
 
 describe('Where', function() {    
-    it('should test the $where operator', function() {
+    it('should test the $where operator', function(done) {
         Scule.dropAll();
 
         var collection = Scule.factoryCollection('scule+dummy://unittest');    
@@ -62,5 +62,6 @@ describe('Where', function() {
         });
         
         assert.equal(5, o.length);
+        done();
     });
 });

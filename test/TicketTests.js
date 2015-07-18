@@ -29,7 +29,18 @@ var assert = require('assert');
 var Scule = require('../lib/com.scule');
 
 describe('Tickets', function() {
-    it('should test conditions for ticket #53', function() {
+    it('should test conditions for ticket #23', function(done) {
+        Scule.dropAll();
+        var collection = Scule.factoryCollection('scule+nodejs://test', {path:'/tmp'});
+        collection.setAutoCommit(true);
+        for (var i=0; i < 100; i++) {
+            collection.save({k:i}, function(lastId) {
+                assert.ok(lastId);
+            });
+        }
+        done();
+    });    
+    it('should test conditions for ticket #53', function(done) {
         Scule.dropAll();
         var val = 1;
         var collection = Scule.factoryCollection('scule+dummy://test');
@@ -45,9 +56,10 @@ describe('Tickets', function() {
         collection.find({ 'complexProp.myVal': val }, { }, function(documents) {
            assert.equal(documents.length, 1);
            assert.equal(documents[0].complexProp.myVal, val); 
+           done();
         });
     });
-    it('should test conditions for Ticket #6', function() {
+    it('should test conditions for Ticket #6', function(done) {
         Scule.dropAll();
         var a = [];
         var collection = Scule.factoryCollection('scule+dummy://test');
@@ -73,9 +85,10 @@ describe('Tickets', function() {
         o = collection.find({i: {$gte: 50}}, {$skip: 30});
         assert.equal(o.length, 20);
         assert.equal(o[0].i, a[80].i);
-        assert.equal(o[19].i, a[99].i);        
+        assert.equal(o[19].i, a[99].i);
+        done();
     });
-    it('should test conditions for Ticket #14a', function() {
+    it('should test conditions for Ticket #14a', function(done) {
         var collection = Scule.factoryCollection('scule+dummy://test', {
             secret: 'mysecretkey'
         });
@@ -91,9 +104,10 @@ describe('Tickets', function() {
         var o = collection.findOne(500);
         assert.equal(1909, o.index);
         assert.equal('bar', o.foo);
-        assert.equal(500, o._id.id);        
+        assert.equal(500, o._id.id);
+        done();
     });
-    it('should test conditions for Ticket #14a', function() {
+    it('should test conditions for Ticket #14a', function(done) {
         var collection = Scule.factoryCollection('scule+dummy://test', {
             secret: 'mysecretkey'
         });
@@ -108,8 +122,9 @@ describe('Tickets', function() {
         assert.equal(1, o._id.id);
         assert.equal(20, o.a);
         assert.equal(50, o.b);
+        done();
     });
-    it('should test conditions for Ticket #22', function() {
+    it('should test conditions for Ticket #22', function(done) {
         Scule.dropAll();
         var collection = Scule.factoryCollection('scule+dummy://test', {
             secret: 'mysecretkey'
@@ -122,8 +137,9 @@ describe('Tickets', function() {
         assert.equal(111, collection.count({a: /test[1]/g}));
         assert.equal(333, collection.count({a: /test[1-3]/g}));
         assert.equal(100, collection.count({a: /test([1-9][0-9]?$|100$)/g}));
+        done();
     });
-    it('should test conditions for Ticket #26', function() {
+    it('should test conditions for Ticket #26', function(done) {
         Scule.dropAll();
         var o = null;
         var collection = Scule.factoryCollection('scule+dummy://test');
@@ -143,9 +159,10 @@ describe('Tickets', function() {
         o = collection.find({date: {$eq: Scule.getObjectDateFromDate(new Date(1362395600000))}});
         assert.equal(1, o.length);
         assert.equal(2, o[0].id);
-        assert.equal(1362395600000, o[0].date.toDate().getTime());        
+        assert.equal(1362395600000, o[0].date.toDate().getTime()); 
+        done();
     });
-    it('should test conditions for Ticket #29', function() {
+    it('should test conditions for Ticket #29', function(done) {
         var ht = Scule.getHashTable();
         ht.put('hasOwnProperty', true);
         ht.put('bar', 'foo');
@@ -157,9 +174,10 @@ describe('Tickets', function() {
         assert.equal(true, ht.contains('bar'));
         assert.equal('foo', ht.get('bar'));
         assert.equal(2, ht.getKeys().length);
-        assert.equal('[true,"foo"]', JSON.stringify(ht.getValues()));        
+        assert.equal('[true,"foo"]', JSON.stringify(ht.getValues())); 
+        done();
     });
-    it('should test conditions for Ticket #32', function() {
+    it('should test conditions for Ticket #32', function(done) {
         Scule.dropAll();
         var collection1 = Scule.factoryCollection('scule+nodejs://ticket32', {secret:'test', path:'/tmp'});
         collection1.clear();
@@ -174,11 +192,12 @@ describe('Tickets', function() {
             collection2.open(function() {
                 collection2.findAll(function(o) {
                     assert.equal(100, o.length);
+                    done();
                 });
             });
         }, 100);        
     });
-    it('should test conditions for Ticket #33a', function() {
+    it('should test conditions for Ticket #33a', function(done) {
         var lastNames = ['Edgar', 'Adams', 'Jones', 'Bryan', 'Smith', 'Doe', 'Lennard', 'Turkish', 'Allan', 'Collins'];
         Scule.dropAll();
         var collection = Scule.factoryCollection('scule+dummy://ticket33');
@@ -195,9 +214,10 @@ describe('Tickets', function() {
             for (var i = 0; i < players.length; i++) {
                 assert.equal(a[i], players[i].last_name);
             }
-        });        
+        });  
+        done();
     });
-    it('should test conditions for Ticket #33b', function() {
+    it('should test conditions for Ticket #33b', function(done) {
         var lastNames = ['Edgar', 'Adams', 'Jones', 'Bryan', 'Smith', 'Doe', 'Lennard', 'Turkish', 'Allan', 'Collins'];
         Scule.dropAll();
         var collection = Scule.factoryCollection('scule+dummy://ticket33');
@@ -219,9 +239,10 @@ describe('Tickets', function() {
             for (var i = 0; i < players.length; i++) {
                 assert.equal(a[i + 15], players[i].position);
             }
-        });        
+        });  
+        done();
     });
-    it('should test conditions for Ticket #34', function() {
+    it('should test conditions for Ticket #34', function(done) {
         Scule.dropAll();
         var collection = Scule.factoryCollection('scule+dummy://ticket34');
         var names = [];
@@ -287,8 +308,9 @@ describe('Tickets', function() {
             collection.save({name:'testName' + i});
         }
         
+        done();
     });
-    it('should test conditions for Ticket #35', function() {
+    it('should test conditions for Ticket #35', function(done) {
         Scule.dropAll();
         var collection = Scule.factoryCollection('scule+dummy://ticket35');
         for (var i=0; i < 1000; i++) {
@@ -309,8 +331,9 @@ describe('Tickets', function() {
         removeUser('20@foo.com');
         removeUser('500@foo.com');
         removeUser('998@foo.com');
+        done();
     });
-    it('should test conditions for Ticket #38', function() {
+    it('should test conditions for Ticket #38', function(done) {
         var collection = Scule.factoryCollection('scule+dummy://test', {
             secret: 'mysecretkey'
         });
@@ -327,8 +350,9 @@ describe('Tickets', function() {
         assert.equal(1909, o.index);
         assert.equal('bar', o.foo);
         assert.equal(999, o._id.id);
+        done();
     });
-    it('should test conditions for Ticket #38a', function() {
+    it('should test conditions for Ticket #38a', function(done) {
         var collection = Scule.factoryCollection('scule+dummy://test', {
             secret: 'mysecretkey'
         });
@@ -348,9 +372,10 @@ describe('Tickets', function() {
         assert.equal(o[0].name, 'mike');
         assert.equal(o[0].event, 1);
         assert.equal(o[1].name, 'mike');
-        assert.equal(o[1].event, 1);        
+        assert.equal(o[1].event, 1); 
+        done();
     });
-    it('should test conditions for Ticket #38b', function() {
+    it('should test conditions for Ticket #38b', function(done) {
         var collection = Scule.factoryCollection('scule+dummy://test', {
             secret: 'mysecretkey'
         });
@@ -374,5 +399,6 @@ describe('Tickets', function() {
                 assert.equal(false, o[i].hasOwnProperty('foo'));
             }
         }
+        done();
     });    
 });

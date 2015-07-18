@@ -30,7 +30,7 @@ var Scule = require('../lib/com.scule');
 var fs    = require('fs');
 
 describe('NodeJSDiskStorageEngine', function() {
-    it('should test writes', function() {
+    it('should test writes', function(done) {
         var object = {
             foo: 'bar',
             bar: 'foo',
@@ -38,6 +38,9 @@ describe('NodeJSDiskStorageEngine', function() {
             obj: {
                 me: 'string'
             }
+        }
+        if (fs.existsSync('/tmp/unittest.json')) {
+            fs.unlinkSync('/tmp/unittest.json');
         }
         var storage = Scule.getNodeJSDiskStorageEngine({
             secret: 'mysecretkey',
@@ -48,31 +51,29 @@ describe('NodeJSDiskStorageEngine', function() {
                 assert.equal(true, !err);
                 assert.equal(true, stats.isFile());
                 assert.equal(true, stats.size > 0);
+                done();
             });
         });        
     });
-    it('should test reads', function() {
+    it('should test reads', function(done) {
         var storage = Scule.getNodeJSDiskStorageEngine({
             secret: 'mysecretkey',
             path: '/tmp'
         });
-        try {
-            storage.read('unittest', function(o) {
-                assert.ok(o);
-                assert.equal(o.foo, 'bar');
-                assert.equal(o.bar, 'foo');
-                assert.equal(o.arr.length, 6);
-                assert.equal(o.arr[5], 7);
-                assert.equal(o.obj.me, 'string');
-            });
-            storage.read('blahblah', function(o) {
-                assert.equal('{}', JSON.stringify(o));
-            });
-        } catch (e) {
-            assert.equal(false, true);
-        }        
+        storage.read('unittest', function(o) {
+            assert.ok(o);
+            assert.equal(o.foo, 'bar');
+            assert.equal(o.bar, 'foo');
+            assert.equal(o.arr.length, 6);
+            assert.equal(o.arr[5], 7);
+            assert.equal(o.obj.me, 'string');
+        });
+        storage.read('blahblah', function(o) {
+            assert.equal('{}', JSON.stringify(o));
+            done();
+        });
     });
-    it('should overwrite existing database files on commit', function() {
+    it('should overwrite existing database files on commit', function(done) {
         var object = {
             foo: 'bar',
             bar: 'foo',
@@ -80,6 +81,9 @@ describe('NodeJSDiskStorageEngine', function() {
             obj: {
                 me: 'string'
             }
+        }
+        if (fs.existsSync('/tmp/unittest2.json')) {
+            fs.unlinkSync('/tmp/unittest2.json');
         }
         var storage = Scule.getNodeJSDiskStorageEngine({
             secret: 'mysecretkey',
@@ -93,6 +97,7 @@ describe('NodeJSDiskStorageEngine', function() {
                     assert.equal(true, !err);
                     assert.equal(true, stats.isFile());
                     assert.equal(true, stats.size > 13);
+                    done();
                 });
             });
         });        

@@ -26,10 +26,26 @@
  */
 
 var assert = require('assert');
-var Scule = require('../lib/com.scule');
+var fs     = require('fs');
+var Scule  = require('../lib/com.scule');
 
 describe('CollectionFactory', function() {
-    it('should verify the factory pattern is correctly implemented', function() {
+    it('should automatically commit changes to a collection', function(done) {
+        if (fs.existsSync('/tmp/autocommittest.json')) {
+            fs.unlinkSync('/tmp/autocommittest.json');
+        }
+        Scule.dropAll();
+        var collection = Scule.factoryCollection('scule+nodejs://autocommittest', {secret:'test', path:'/tmp'});
+        collection.clear();
+        collection.setAutoCommit(true, function(result) {
+            assert.equal(Object.keys(result._objects).length, 1000);
+            done();
+        });
+        for (var i=0; i < 1000; i++) {
+            collection.save({k:i});
+        }
+    });
+    it('should verify the factory pattern is correctly implemented', function(done) {
         Scule.dropAll();
         var collection = Scule.factoryCollection('scule+dummy://unittest');
         collection.clear();
@@ -47,9 +63,13 @@ describe('CollectionFactory', function() {
         assert.equal(collection.getLength(), 1000);
         assert.ok(collection.getLastInsertId());
         collection.clear();
-        assert.equal(collection.getLength(), 0);        
+        assert.equal(collection.getLength(), 0);
+        done();
     });
-    it('should factory a NodeJS disk based collection', function() {
+    it('should factory a NodeJS disk based collection', function(done) {
+        if (fs.existsSync('/tmp/collection.json')) {
+            fs.unlinkSync('/tmp/collection.json');
+        }
         Scule.dropAll();
         var collection = Scule.factoryCollection('scule+nodejs://collection', {secret:'test', path:'/tmp'});
         setTimeout(function() {
@@ -67,10 +87,12 @@ describe('CollectionFactory', function() {
             }
             assert.equal(5, collection.getLength());
             assert.ok(collection.getLastInsertId());
-            collection.commit();        
+            collection.commit(function(result) {
+                done();
+            });
         }, 500);        
     });
-    it('should merge two collections', function() {
+    it('should merge two collections', function(done) {
         Scule.dropAll();
         var collection1 = Scule.factoryCollection('scule+dummy://unittest1');
         var collection2 = Scule.factoryCollection('scule+dummy://unittest2');  
@@ -104,6 +126,7 @@ describe('CollectionFactory', function() {
             collection2.save(o);
         } 
         collection1.merge(collection2);
-        assert.equal(collection1.getLength(), 2000);         
+        assert.equal(collection1.getLength(), 2000);
+        done();
     });
 });
