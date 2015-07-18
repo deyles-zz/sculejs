@@ -2,27 +2,36 @@
 <html>
     <head>
         <title></title>
-        <script src="../lib/com.scule.min.js"></script>
-        <script src="http://f0e43e0449ff85b5a83a-8d88610b03123726d01e576fafeaf9d4.r60.cf2.rackcdn.com/taffy-min.js"></script>
+        <script type="text/javascript" src="../build/com.scule.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/taffydb/2.7.2/taffy-min.js"></script>
     </head>
     <body>
         <script>
             var database   = new TAFFY();
             var collection = Scule.factoryCollection('scule+dummy://test');
- 
+            var timer = Scule.getTimer();
             var i = 0;
             var o = null;
+            
+            timer.startInterval('SculeJS record insertion');
             for (i=0; i < 200000; i++) {
                 o = {
                     index: i,
                     tag: 'tag_' + i
                 };
                 collection.save(o);
-                database.insert(o);
             }
-            console.log('saved');
+            timer.stopInterval();
             
-            var timer = Scule.getTimer();
+            timer.startInterval('TaffyDB record insertion');
+            for (i=0; i < 200000; i++) {
+                o = {
+                    index: i,
+                    tag: 'tag_' + i
+                };
+                database.insert(o);
+            }            
+            timer.stopInterval();
                         
             var ranges = [];
             for (i=0; i < 100; i++) {
