@@ -9,18 +9,20 @@
     "url": "git@github.com:dan-eyles/sculejs.git"
   },
   "engine": "node >= 0.10",
-  "dependencies": {},
+  "dependencies": {
+    "uuid": "^3.0.0"
+  },
   "main": "./lib/index.js",
   "scripts": {
     "test": "mocha test/*",
-     "blanket": { 
-         "pattern": "lib"
-     } 
+    "blanket": {
+      "pattern": "lib"
+    }
   },
   "keywords": [
-      "nosql",
-      "database",
-      "data structures"
+    "nosql",
+    "database",
+    "data structures"
   ],
   "readmeFilename": "README.md",
   "directories": {
